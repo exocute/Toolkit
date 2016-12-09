@@ -3,5 +3,5 @@
   */
 class empty {
 	var empty = 0
-	  //
+	  //kkkk
 }
