@@ -1,0 +1,5 @@
+	// different names, same activity call
+
+Graph graph
+	Activity act1 act.ex
+	Activity act2 act.ex

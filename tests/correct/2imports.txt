@@ -1,0 +1,6 @@
+Graph graph
+	Import imp1
+	Export exp2
+	Import imp2
+	// 2 imports. only one is saved (imp2)
+	Activity act1 act.ex

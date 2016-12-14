@@ -1,0 +1,5 @@
+// non unique activity names
+
+Graph graph
+	Activity act1 act.ex
+	Activity act1 act.ex
