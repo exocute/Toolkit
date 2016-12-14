@@ -1,0 +1,14 @@
+// Double import. Success expected
+
+Graph com.exocute.pipeline.BranchingPipeline
+	Import com.exocute.element.LindenElement
+	Export java.lang.String
+	Activity a com.exocute.activity.Linden:7
+		Import com.exocute.element.LindenElement
+		Import com.este.excelente.LindoElemento
+		Export java.lang.String
+	Activity b com.exocute.activity.Linden:3
+		Import com.exocute.element.LindenElement
+		Import com.executa.elemento.LindoElemento
+		Export java.lang.String
+	connection[b;c,s][c;b,d]
