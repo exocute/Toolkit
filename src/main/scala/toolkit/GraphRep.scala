@@ -1,10 +1,12 @@
 package toolkit
 
+import exceptions.{ActivitiesWithoutUniqueID, ActivityWithWrongParameters, NoSuchIDToActivity}
+
 /**
   * Created by Eduardo Rodrigues on 12/12/2016.
   */
 
-class GraphRep(name: String, var importName: String, var exportName: String, activities: GraphImplementation) {
+class GraphRep(name: String, var importName: String, var exportName: String, activitiesGraph: GraphImplementation) {
 
   var lastACT: ActivityRep = _
 
@@ -25,12 +27,12 @@ class GraphRep(name: String, var importName: String, var exportName: String, act
     * @param activityRep
     */
   def addActivity(activityRep: ActivityRep) = {
-    if (activities.addNode(activityRep)) {
+    if (activitiesGraph.addNode(activityRep)) {
       if (lastACT == null) {
         lastACT = activityRep
       }
       else {
-        if (activities.addEdge(lastACT, activityRep))
+        if (activitiesGraph.addEdge(lastACT, activityRep))
           lastACT = activityRep
         else
           throw new ActivityWithWrongParameters
@@ -46,7 +48,7 @@ class GraphRep(name: String, var importName: String, var exportName: String, act
     * @param activityRep
     */
   def addSingleActivity(activityRep: ActivityRep) = {
-    if (!activities.addNode(activityRep))
+    if (!activitiesGraph.addNode(activityRep))
       throw new ActivitiesWithoutUniqueID
   }
 
@@ -66,18 +68,18 @@ class GraphRep(name: String, var importName: String, var exportName: String, act
     //check valid activities
     for {
       x <- activityRepTo :: activityRepFrom
-      if !activities.hasActivity(x)
+      if !activitiesGraph.hasActivity(x)
     } throw new NoSuchIDToActivity(x)
 
     //remove all edges
     for {
       x <- activityRepFrom
-    } if (!activities.removeAllEdge(activityById(x))) throw new ActivityWithWrongParameters
+    } if (!activitiesGraph.removeAllEdge(activityById(x))) throw new ActivityWithWrongParameters
 
     //add new edges to make join
     for {
       x <- activityRepFrom
-    } if (!activities.addEdge(activityById(x), actTo)) throw new ActivityWithWrongParameters
+    } if (!activitiesGraph.addEdge(activityById(x), actTo)) throw new ActivityWithWrongParameters
   }
 
   /**
@@ -96,17 +98,17 @@ class GraphRep(name: String, var importName: String, var exportName: String, act
     //check valid activities
     for {
       x <- activityRepFrom :: activityRepTo
-      if !activities.hasActivity(x)
+      if !activitiesGraph.hasActivity(x)
     } throw new NoSuchIDToActivity(x)
 
     //get an activity by name
-    if (!activities.removeAllEdge(actFrom))
+    if (!activitiesGraph.removeAllEdge(actFrom))
       throw new ActivityWithWrongParameters
 
     //add new edges to make fork
     for {
       x <- activityRepTo
-    } if (!activities.addEdge(actFrom, activityById(x))) throw new ActivityWithWrongParameters
+    } if (!activitiesGraph.addEdge(actFrom, activityById(x))) throw new ActivityWithWrongParameters
   }
 
 
@@ -117,7 +119,7 @@ class GraphRep(name: String, var importName: String, var exportName: String, act
     * @param activityTo
     */
   def addConnection(activityFrom: String, activityTo: String) = {
-    if (!activities.addEdge(activityById(activityFrom), activityById(activityTo)))
+    if (!activitiesGraph.addEdge(activityById(activityFrom), activityById(activityTo)))
       throw new ActivityWithWrongParameters
   }
 
@@ -133,7 +135,7 @@ class GraphRep(name: String, var importName: String, var exportName: String, act
     val from = activityById(activityFrom)
     for {
       to <- activityTo
-    } if (!activities.addEdge(from, activityById(to))) throw new ActivityWithWrongParameters
+    } if (!activitiesGraph.addEdge(from, activityById(to))) throw new ActivityWithWrongParameters
   }
 
   /**
@@ -141,15 +143,17 @@ class GraphRep(name: String, var importName: String, var exportName: String, act
     * @return - ActivityRep with ID
     */
   def activityById(id: String): ActivityRep = {
-    val act = activities.getActById(id)
+    val act = activitiesGraph.getActById(id)
     act match {
       case None => throw new NoSuchIDToActivity(id)
       case Some(x) => x
     }
   }
 
+  def getConnections(activity: ActivityRep) = activitiesGraph.getAdj(activity)
+
   def showIfNotEmpty(s: String, value: String) = if (!value.isEmpty) s + ": " + value + "\n" else ""
 
   override def toString: String = s"Name: $name\n" +
-    showIfNotEmpty("ImportName", importName) + showIfNotEmpty("ExportName", exportName) + s"$activities"
+    showIfNotEmpty("ImportName", importName) + showIfNotEmpty("ExportName", exportName) + s"$activitiesGraph"
 }

@@ -8,11 +8,11 @@ import scala.collection.mutable.HashMap
   * Graph is defined has a HashMap of Activities to LinkedList of AcitivityRep
   */
 class GraphImplementation {
-
   /**
     * key: id of the activity
     */
   val activities = new HashMap[String, ActivityRep]
+
 
   val adj = new HashMap[ActivityRep, List[ActivityRep]]
 
@@ -88,10 +88,12 @@ class GraphImplementation {
     getActById(idName).isDefined
   }
 
+  def getAdj(activity: ActivityRep): List[ActivityRep] = adj(activity)
+
   override def toString: String = activities.values.mkString("\n") + "\n" +
     adj.flatMap { case (act, list) => {
       if (list.isEmpty) Nil
       else List(act.id + ":" + list.map(_.id).mkString(","))
-    }}.mkString("\n")
-
+    }
+    }.mkString("\n")
 }
