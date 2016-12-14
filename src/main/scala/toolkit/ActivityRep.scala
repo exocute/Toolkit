@@ -1,18 +1,12 @@
-import java.util
+package toolkit
+
+import java.io.Serializable
 
 /**
   * Created by Eduardo Rodrigues on 12/12/2016.
   */
 case class ActivityRep(id: String, name: String, var parameters: List[String], var importName: List[String], var exportName: String) {
 
-  var connections: List[ActivityRep] = Nil
-
-  /**
-    * prints the id of the activity
-    *
-    * @return id
-    */
-  override def toString: String = s"$id, $name, $parameters, $importName, $exportName"
 
   /**
     * two activities are equals when their id are the same
@@ -26,6 +20,14 @@ case class ActivityRep(id: String, name: String, var parameters: List[String], v
   }
 
   override def hashCode(): Int = id.hashCode
+
+
+  def getListOfActivityParameters = List(("Id", id), ("Name", name), ("Import", importName.mkString(",")), ("Export", exportName), ("Parameters", parameters.mkString(",")))
+
+  def showValidParameters(list: List[(String, String)]) = list.filter(_._2.nonEmpty).map { case (name, value) => name + ": " + value }
+
+  override def toString: String = showValidParameters(getListOfActivityParameters).mkString(", ")
+
 }
 
 object ActivityRep {

@@ -1,3 +1,5 @@
+package toolkit
+
 /**
   * Created by Eduardo Rodrigues on 12/12/2016.
   */
@@ -146,45 +148,8 @@ class GraphRep(name: String, var importName: String, var exportName: String, act
     }
   }
 
-  override def toString: String = s"$activities \n ImportName: $importName ExportName: $exportName Name $name"
+  def showIfNotEmpty(s: String, value: String) = if (!value.isEmpty) s + ": " + value + "\n" else ""
+
+  override def toString: String = s"Name: $name\n" +
+    showIfNotEmpty("ImportName", importName) + showIfNotEmpty("ExportName", exportName) + s"$activities"
 }
-
-object test {
-  def main(args: Array[String]): Unit = {
-//    val l = new PipelineRep("pipeline")
-//    val a = ActivityRep("a", "b", "c", "d", "e")
-//    val b = ActivityRep("b", "b", "c", "d", "e")
-//    val c = ActivityRep("c", "b", "c", "d", "e")
-//    val d = ActivityRep("d", "a")
-//    val e = ActivityRep("e", "", "c", "d", "e")
-
-//    l.addSingleActivity(a)
-//    l.addSingleActivity(b)
-//    l.addSingleActivity(c)
-//    l.addSingleActivity(d)
-//    l.addSingleActivity(e)
-//    l.addConnection("a", "e")
-//    l.addConnection("a", "c")
-//    l.addConnection("b", List("a", "c"))
-//    println(l)
-  }
-}
-
-/**
-  * When activities doesn't have unique id's
-  *
-  * Every Activity should have a unique ID given by the user
-  */
-class ActivitiesWithoutUniqueID extends Exception("Activities With Wrong ID")
-
-/**
-  * Some parameters in the creation of the activity aren't correct
-  */
-class ActivityWithWrongParameters extends Exception("Wrong Parameters in Activity")
-
-/**
-  * Some ID are not defined yet
-  *
-  * downstream and upstream keys should be placed in the end of the pln file
-  */
-class NoSuchIDToActivity(id: String) extends Exception("ID doesn't exist: " + id)

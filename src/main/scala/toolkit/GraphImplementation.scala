@@ -1,4 +1,4 @@
-import java.util
+package toolkit
 
 import scala.collection.mutable.HashMap
 
@@ -12,9 +12,9 @@ class GraphImplementation {
   /**
     * key: id of the activity
     */
-  var activities = new HashMap[String, ActivityRep]
+  val activities = new HashMap[String, ActivityRep]
 
-  //  var adj = new HashMap[ActivityRep, util.LinkedList[ActivityRep]]
+  val adj = new HashMap[ActivityRep, List[ActivityRep]]
 
   /**
     * Adds a new activity Rep
@@ -24,7 +24,12 @@ class GraphImplementation {
     * @return false if activity already present, true otherwise
     */
   def addNode(activityRep: ActivityRep): Boolean = {
-    activities.put(activityRep.id, activityRep).isEmpty
+    if (!adj.contains(activityRep)) {
+      activities.put(activityRep.id, activityRep)
+      adj.put(activityRep, Nil)
+      true
+    }
+    else false
   }
 
   /**
@@ -35,14 +40,12 @@ class GraphImplementation {
     * @return true if all activities are presents in graph and are as excepted, false otherwise
     */
   def addEdge(activityRepFrom: ActivityRep, activityRepTo: ActivityRep): Boolean = {
-    if (activityRepFrom.id != activityRepTo.id && activities.contains(activityRepFrom.id)
-      && activities.contains(activityRepTo.id)
-      && !activities(activityRepFrom.id).connections.contains(activityRepTo)) {
-        val act = activities(activityRepFrom.id)
-        act.connections = activityRepTo :: act.connections
-        true
-    } else
-      false
+    if (activityRepFrom != activityRepTo && adj.contains(activityRepFrom) &&
+      adj.contains(activityRepTo) && !adj(activityRepFrom).contains(activityRepTo)) {
+      adj.update(activityRepFrom, activityRepTo :: adj(activityRepFrom))
+      true
+    }
+    else false
   }
 
   /**
@@ -52,8 +55,7 @@ class GraphImplementation {
     * @param activityRepTo
     */
   def removeEdge(activityRepFrom: ActivityRep, activityRepTo: ActivityRep): Unit = {
-    val act = activities(activityRepFrom.id)
-    act.connections = act.connections.filterNot(_ == activityRepTo)
+    ???
   }
 
   /**
@@ -63,13 +65,7 @@ class GraphImplementation {
     * @return
     */
   def removeAllEdge(activityRepFrom: ActivityRep): Boolean = {
-    //    adj(activityRepFrom).remove()
-    //    addNode(activityRepFrom)
-    if (activities.contains(activityRepFrom.id)) {
-      activities(activityRepFrom.id).connections = Nil
-      true
-    } else
-      false
+    ???
   }
 
   /**
@@ -92,7 +88,10 @@ class GraphImplementation {
     getActById(idName).isDefined
   }
 
-  override def toString: String = activities.toString()
-
+  override def toString: String = activities.values.mkString("\n") + "\n" +
+    adj.flatMap { case (act, list) => {
+      if (list.isEmpty) Nil
+      else List(act.id + ":" + list.map(_.id).mkString(","))
+    }}.mkString("\n")
 
 }
