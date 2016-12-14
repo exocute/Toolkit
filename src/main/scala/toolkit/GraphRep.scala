@@ -150,8 +150,19 @@ class GraphRep(name: String, var importName: String, var exportName: String, act
     }
   }
 
+  /**
+    * gets the next activities from a single activity
+    * @param activity
+    * @return next activities
+    */
   def getConnections(activity: ActivityRep) = activitiesGraph.getAdj(activity)
 
+  /**
+    * returns the string of a value if the value its defined
+    * @param s
+    * @param value
+    * @return
+    */
   def showIfNotEmpty(s: String, value: String) = if (!value.isEmpty) s + ": " + value + "\n" else ""
 
   override def toString: String = s"Name: $name\n" +

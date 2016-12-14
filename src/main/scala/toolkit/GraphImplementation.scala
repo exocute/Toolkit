@@ -88,6 +88,11 @@ class GraphImplementation {
     getActById(idName).isDefined
   }
 
+  /**
+    * gets the adj of a single activity
+    * @param activity
+    * @return
+    */
   def getAdj(activity: ActivityRep): List[ActivityRep] = adj(activity)
 
   override def toString: String = activities.values.mkString("\n") + "\n" +
