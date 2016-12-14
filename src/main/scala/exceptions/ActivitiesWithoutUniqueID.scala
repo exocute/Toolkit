@@ -1,4 +1,4 @@
-package toolkit
+package exceptions
 
 /**
   * When activities doesn't have unique id's

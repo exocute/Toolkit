@@ -1,4 +1,4 @@
-package toolkit
+package exceptions
 
 /**
   * Some ID are not defined yet

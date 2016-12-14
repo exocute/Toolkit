@@ -1,4 +1,4 @@
-package toolkit
+package exceptions
 
 /**
   * Some parameters in the creation of the activity aren't correct
