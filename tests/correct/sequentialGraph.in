@@ -1,0 +1,17 @@
+Graph Sport.Lisboa.e.Benfica
+	Import Penalty.por.assinalar
+	Export dois.um
+	Activity goloSLB1 Eduardo.Salvio:24:Rafael.Silva
+		Import Penalty.por.assinalar
+		Export Bola.ao.poste
+	Activity goloSLB2 Raul.Jimenez:47:Nelson.Semedo
+		Import Bola.ao.poste
+		Export Lindelof.a.dormir
+	Activity goloSCP1 Bas.Dost:69:Joel.Campbell
+		Import Lindelof.a.dormir
+		Export esperanca.no.empate
+	Activity fim Bas.Dost:69:Joel.Campbell
+		Import esperanca.no.empate
+		Export dois.um
+		
+	connection [goloSLB1;goloSLB2][goloSLB2;goloSCP1][goloSCP1;fim]
