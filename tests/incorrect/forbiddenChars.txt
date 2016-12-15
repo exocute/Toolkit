@@ -1,5 +1,0 @@
-// forbidden chars
-
-Graph graph
-	Import imp1.*/-#
-	Export exp2

@@ -1,6 +1,0 @@
-Graph com.exocute.pipeline.BranchingPipeline 
-	Import com.exocute.element.LindenElement
-	Export java.lang.String
-		Import com.exocute.element.LindenElement
-		
-Activity a a:bla

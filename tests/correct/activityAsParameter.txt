@@ -1,7 +1,0 @@
-	// Activity as parameter
-
-Graph graph
-	Import imp1
-	Export exp2
-	Activity act1 act.ex:Activity act2 act.ex.other
-	Activity act3 act.ex.other.other

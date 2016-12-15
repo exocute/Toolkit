@@ -1,5 +1,0 @@
-// non unique ID2
-
-Graph graph
-	Activity act1 act.ex
-	Activity act1 act.ex.other
