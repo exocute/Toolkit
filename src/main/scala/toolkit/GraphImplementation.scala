@@ -47,8 +47,8 @@ class GraphImplementation {
   def addEdge(activityRepFrom: ActivityRep, activityRepTo: ActivityRep): Boolean = {
     if (activityRepFrom != activityRepTo && adj.contains(activityRepFrom) &&
       adj.contains(activityRepTo) && !adj(activityRepFrom).contains(activityRepTo)) {
-      adj.update(activityRepFrom, activityRepTo :: adj(activityRepFrom))
-      adjInverse.update(activityRepTo, activityRepFrom :: adjInverse(activityRepTo))
+      adj.update(activityRepFrom, adj(activityRepFrom):+ activityRepTo)
+      adjInverse.update(activityRepTo, adjInverse(activityRepTo):+ activityRepFrom)
       true
     }
     else false
@@ -99,21 +99,37 @@ class GraphImplementation {
     * @param activity
     * @return
     */
-  def getAdj(activity: ActivityRep): List[ActivityRep] = adj(activity)
+  def getAdj(activity: ActivityRep): List[ActivityRep] = {
+    adj(activity)
+  }
 
 
   /**
     * returns the nodes number of the graph
     * @return
     */
-  def numberNodes() = {
+  def numberNodes() : Int = {
     adj.size
   }
 
-  def nodesWithoutConnections() : Boolean = ???
+  def nodesWithoutConnections() : Boolean = {
+   ???
+  }
 
   def getRoot() : ActivityRep = {
     ???
+  }
+
+  def hasRoot() : Boolean = {
+    var root = 0
+    for{
+      act <- adjInverse.keySet
+    } if(adjInverse(act).isEmpty) root+=1
+    root == 1
+  }
+
+  def hasSink() : Boolean = {
+  ???
   }
 
   def getSink() : ActivityRep = {
