@@ -107,9 +107,10 @@ class ActivityParser(val input: ParserInput) extends Parser {
     * @return
     */
   def Connections(graph: GraphRep): Rule0 = rule {
-    ignoreCase("connection") ~ oneOrMore(WS0 ~ "[" ~ WS0 ~ Id ~ WS0 ~ ";" ~ WS0 ~ Id ~ oneOrMore(WS0 ~ ',' ~ WS0 ~ Id) ~ WS0 ~ "]" ~> (
+    ignoreCase("connection") ~ oneOrMore(WS0 ~ "[" ~ WS0 ~ Id ~ WS0 ~ ";"
+      ~ WS0 ~ Id ~ zeroOrMore(WS0 ~ ',' ~ WS0 ~ Id) ~ WS0 ~ "]" ~> (
       (a, b, seq) => {
-        graph.addConnection(a, b :: seq.toList)
+        graph.addConnection(a, b :: seq.asInstanceOf[Seq[String]].toList)
       })) ~ NLS
   }
 
