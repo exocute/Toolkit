@@ -1,0 +1,22 @@
+Graph com.zink.Imager
+	Activity com.zink.Imager.QuadTile 
+		Import com.zink.ImageBuffer
+		Export List[com.zink.ImageBuffer]
+		Connection [injector; com.zink.exocute.SpliterFlattener]
+	Activity com.zink.exocute.SpliterFlattener
+		Import List[com.zink.ImageBuffer]
+		Export com.zink.ImageBuffer
+		Connection [com.zink.Imager.QuadTile;com.zink.exocute.Foci,com.zink.RGBMusher]
+	Actvity com.zink.Foci
+		Import com.zink.ImageBuffer
+		Export com.zink.ClusterCentre
+		Connection [com.zink.exocute.Spliter; com.zink com.zink.FociCombiner]
+	Actvity com.zink.com.zink.RGBMusher
+		Import com.zink.ImageBuffer
+		Export com.zink.RGB
+		Connection [com.zink.exocute.Spliter; com.zink.FociCombiner]
+	Activity com.zink.FociCombiner
+		Import com.zink.RGB
+		Import com.zink.ClusterCentre
+		Export com.zink.WeightedCluster
+		Connection [com.zink.Foci, com.zink.RGB;collector]
