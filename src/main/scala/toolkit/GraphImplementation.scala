@@ -8,6 +8,8 @@ import scala.collection.mutable.HashMap
   * Graph is defined has a HashMap of Activities to LinkedList of AcitivityRep
   */
 class GraphImplementation {
+
+
   /**
     * key: id of the activity
     */
@@ -15,6 +17,8 @@ class GraphImplementation {
 
 
   val adj = new HashMap[ActivityRep, List[ActivityRep]]
+
+  val adjInverse = new HashMap[ActivityRep,List[ActivityRep]]
 
   /**
     * Adds a new activity Rep
@@ -27,6 +31,7 @@ class GraphImplementation {
     if (!adj.contains(activityRep)) {
       activities.put(activityRep.id, activityRep)
       adj.put(activityRep, Nil)
+      adjInverse.put(activityRep,Nil)
       true
     }
     else false
@@ -43,6 +48,7 @@ class GraphImplementation {
     if (activityRepFrom != activityRepTo && adj.contains(activityRepFrom) &&
       adj.contains(activityRepTo) && !adj(activityRepFrom).contains(activityRepTo)) {
       adj.update(activityRepFrom, activityRepTo :: adj(activityRepFrom))
+      adjInverse.update(activityRepTo, activityRepFrom :: adjInverse(activityRepTo))
       true
     }
     else false
@@ -94,6 +100,29 @@ class GraphImplementation {
     * @return
     */
   def getAdj(activity: ActivityRep): List[ActivityRep] = adj(activity)
+
+
+  /**
+    * returns the nodes number of the graph
+    * @return
+    */
+  def numberNodes() = {
+    adj.size
+  }
+
+  def nodesWithoutConnections() : Boolean = ???
+
+  def getRoot() : ActivityRep = {
+    ???
+  }
+
+  def getSink() : ActivityRep = {
+    ???
+  }
+
+  def referencedByNodes(activityRep: ActivityRep) : Int = {
+    adjInverse(activityRep).size
+  }
 
   override def toString: String = activities.values.mkString("\n") + "\n" +
     adj.flatMap { case (act, list) => {

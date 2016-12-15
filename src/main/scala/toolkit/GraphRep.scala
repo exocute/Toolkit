@@ -157,6 +157,25 @@ class GraphRep(name: String, var importName: String, var exportName: String, act
     else true
   }
 
+  def validCollector(value: ActivityRep, exportName: String) : Boolean = ???
+
+  def validInjector(value: ActivityRep, importName: String) : Boolean = ???
+
+  def checkValidGraph() : Boolean = {
+    //graph with one connection
+    if(activitiesGraph.numberNodes()==1 && validConnection(activitiesGraph.getRoot().id, activitiesGraph.getSink().id))
+      true
+    //graph with more than one connection
+    else {
+            //do not exist nodes without connections
+      activitiesGraph.nodesWithoutConnections() &&
+      //import and export of graph are correct with the activities
+      validInjector(activitiesGraph.getRoot(),importName) && validCollector(activitiesGraph.getSink(),exportName)
+      //final export its just one activity
+
+    }
+  }
+
   /**
     * @param id - ID of Activity
     * @return - ActivityRep with ID
