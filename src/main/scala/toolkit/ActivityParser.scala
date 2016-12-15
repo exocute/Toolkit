@@ -46,8 +46,8 @@ class ActivityParser(val input: ParserInput) extends Parser {
     */
   def GraphRule: Rule0 = rule {
     ignoreCase("graph") ~ WS1 ~ Id ~ NLS ~>
-      ((id: String) => {
-        graph = new GraphRep(id)
+      ((graphName: String) => {
+        graph = new GraphRep(graphName)
         CreateGraph(graph)
       })
   }
@@ -59,8 +59,8 @@ class ActivityParser(val input: ParserInput) extends Parser {
     * @return
     */
   def CreateGraph(graph: GraphRep): Rule0 = rule {
-    zeroOrMore(ignoreCase("import") ~ WS1 ~ Id ~ NLS ~> ((id: String) => graph.importName = id)
-      | ignoreCase("export") ~ WS1 ~ Id ~ NLS ~> ((id: String) => graph.exportName = id)) ~
+    zeroOrMore(ignoreCase("import") ~ WS1 ~ Type ~ NLS ~> ((importName: String) => graph.importName = importName)
+      | ignoreCase("export") ~ WS1 ~ Type ~ NLS ~> ((exportName: String) => graph.exportName = exportName)) ~
       ReadActivity(graph) ~ zeroOrMore(ReadActivity(graph) | Connections(graph))
   }
 
@@ -96,8 +96,8 @@ class ActivityParser(val input: ParserInput) extends Parser {
     * @return
     */
   def ReadActivityIE(act: ActivityRep) = rule {
-    zeroOrMore(ignoreCase("import") ~ WS1 ~ Id ~ NLS ~> ((importName: String) => act.importName = importName :: act.importName)
-      | ignoreCase("export") ~ WS1 ~ Id ~ NLS ~> ((exportName: String) => act.exportName = exportName))
+    zeroOrMore(ignoreCase("import") ~ WS1 ~ Type ~ NLS ~> ((importName: String) => act.importName = importName :: act.importName)
+      | ignoreCase("export") ~ WS1 ~ Type ~ NLS ~> ((exportName: String) => act.exportName = exportName))
   }
 
   /**
@@ -130,6 +130,10 @@ class ActivityParser(val input: ParserInput) extends Parser {
     */
   def Id: Rule1[String] = rule {
     capture(oneOrMore(CharPredicate.AlphaNum | '_' | '.')) ~> ((str: String) => str)
+  }
+
+  def Type: Rule1[String] = rule {
+    capture(oneOrMore(CharPredicate.AlphaNum | '_' | '.' | '[' | ']')) ~> ((str: String) => str)
   }
 
   /**
