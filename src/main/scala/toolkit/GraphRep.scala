@@ -1,6 +1,6 @@
 package toolkit
 
-import exceptions.{ActivitiesWithoutUniqueID, ActivityWithWrongParameters, NoSuchIDToActivity}
+import exceptions.{ActivitiesWithoutUniqueID, ActivityWithWrongParameters, ImportAndExportParametersInConsecutiveActivitiesNotMatch, NoSuchIDToActivity}
 
 /**
   * Created by Eduardo Rodrigues on 12/12/2016.
@@ -119,9 +119,10 @@ class GraphRep(name: String, var importName: String, var exportName: String, act
     * @param activityTo
     */
   def addConnection(activityFrom: String, activityTo: String) = {
-    if (!activitiesGraph.addEdge(activityById(activityFrom), activityById(activityTo)))
+    if (!activitiesGraph.addEdge(activityById(activityFrom), activityById(activityTo)) && !validConnection(activityFrom,activityTo))
       throw new ActivityWithWrongParameters
   }
+
 
   /**
     * Forks activities
@@ -135,7 +136,25 @@ class GraphRep(name: String, var importName: String, var exportName: String, act
     val from = activityById(activityFrom)
     for {
       to <- activityTo
-    } if (!activitiesGraph.addEdge(from, activityById(to))) throw new ActivityWithWrongParameters
+    } if (!activitiesGraph.addEdge(from, activityById(to)) && !validConnection(activityFrom,activityTo))
+          throw new ActivityWithWrongParameters
+  }
+
+  def validConnection(activityFrom: String, activityTo: String) : Boolean = {
+    val from = activityById(activityFrom).exportName
+    val to = activityById(activityTo).importName
+    if(to.size==1)
+      from == to.head
+    else if(to.size == 2)
+      from == to.head || from == to.tail.head
+    else
+      true
+  }
+
+  def validConnection(activityFrom: String, activityTo: List[String]) : Boolean = {
+    if(!validConnection(activityFrom,activityTo.head) && validConnection(activityFrom,activityTo.tail))
+      throw new ImportAndExportParametersInConsecutiveActivitiesNotMatch
+    else true
   }
 
   /**
