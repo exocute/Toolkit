@@ -1,0 +1,17 @@
+Graph MixString
+	Import String
+	Export String
+	Activity A FilterCommas
+	Import String
+	Export String
+	Activity B RemoveFirst
+	Import String
+	Export String
+	Activity C RemoveLast
+	Import String
+	Export String
+	Activity D JoinStrings
+	Import String
+	Export String
+	
+	Connection [A;B,C] [B;D] [C;D]

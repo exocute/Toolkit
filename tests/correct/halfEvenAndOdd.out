@@ -1,0 +1,10 @@
+Name: HalfEvenAndOdd
+ImportName: Vector[Int]
+ExportName: Boolean
+Id: D, Name: HalfEvenAndOdd, Import: Boolean,Boolean, Export: Boolean
+Id: A, Name: SplitVector, Import: Vector[Int], Export: Vector[Int]
+Id: C, Name: TestOdd, Import: Vector[Int], Export: Boolean
+Id: B, Name: TestEven, Import: Vector[Int], Export: Boolean
+A:B,C
+C:D
+B:D
