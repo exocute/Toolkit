@@ -5,6 +5,6 @@ Id: act1, Name: act.ex
 Id: act4, Name: act.ex.other.something
 Id: act3, Name: act.ex.other.other
 Id: act2, Name: act.ex.other
-act1:act2,act3
+act1:act3,act2
 act3:act4
 act2:act4

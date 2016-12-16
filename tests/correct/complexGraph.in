@@ -21,4 +21,4 @@ Import com.zink.RGB
 Import com.zink.ClusterCentre
 Export com.zink.WeightedCluster
 
-connection [QT; SF] [SF; FO, RGBM] [FO; FC] [RGBM; FC]
+connection [QT; SF] [SF; FO, RGBM] [RGBM; FC][FO; FC] 

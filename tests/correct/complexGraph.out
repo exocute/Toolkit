@@ -4,7 +4,7 @@ Id: QT, Name: com.zinke.Imager.QuadTile, Import: com.zink.ImageBuffer, Export: L
 Id: RGBM, Name: com.zink.com.zink.RGBMusher, Import: com.zink.ImageBuffer, Export: com.zink.RGB
 Id: FC, Name: com.zink.FociCombiner, Import: com.zink.ClusterCentre,com.zink.RGB, Export: com.zink.WeightedCluster
 Id: FO, Name: com.zink.Foci, Import: com.zink.ImageBuffer, Export: com.zink.ClusterCentre
-SF:RGBM,FO
+SF:FO,RGBM
 QT:SF
 RGBM:FC
 FO:FC

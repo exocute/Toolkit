@@ -108,32 +108,59 @@ class GraphImplementation {
     * returns the nodes number of the graph
     * @return
     */
-  def numberNodes() : Int = {
+  def numberNodes : Int = {
     adj.size
   }
 
+
+
+
+  def hasCyclesAndSubGraphs : Boolean = {
+    var marked = Set[ActivityRep]()
+    var onStack = List[ActivityRep]()
+    var cycleFound = false
+    findCycle(getRoot.get)
+
+    def findCycle(init : ActivityRep) : Unit = {
+      marked = marked + init
+      onStack = init :: onStack
+      for(
+        x <- adj(init)
+      ) if(!marked.contains(x)) findCycle(x)
+      else if(onStack.contains(x)){
+        cycleFound = true
+        return
+      }
+      onStack = onStack.filter(_!=init)
+    }
+
+    cycleFound && marked.size != adj.size
+  }
+
   def nodesWithoutConnections() : Boolean = {
-   ???
+   hasRoot && hasSink && !hasCyclesAndSubGraphs
   }
 
-  def getRoot() : ActivityRep = {
-    ???
+  def getRoot : Option[ActivityRep] = {
+    if(hasRoot)
+      Some(adjInverse.filter{case(act,list) => list.isEmpty}.head._1)
+    else
+      None
   }
 
-  def hasRoot() : Boolean = {
-    var root = 0
-    for{
-      act <- adjInverse.keySet
-    } if(adjInverse(act).isEmpty) root+=1
-    root == 1
+  def hasRoot : Boolean = {
+    adjInverse.count{case (act,list) => list.isEmpty}==1
   }
 
-  def hasSink() : Boolean = {
-  ???
+  def hasSink : Boolean = {
+    adj.count{case (act,list) => list.isEmpty}==1
   }
 
-  def getSink() : ActivityRep = {
-    ???
+  def getSink : Option[ActivityRep] = {
+    if(hasRoot)
+      Some(adj.filter{case(act,list) => list.isEmpty}.head._1)
+    else
+      None
   }
 
   def referencedByNodes(activityRep: ActivityRep) : Int = {

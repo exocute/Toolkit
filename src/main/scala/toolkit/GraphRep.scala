@@ -136,7 +136,7 @@ class GraphRep(name: String, var importName: String, var exportName: String, act
     val from = activityById(activityFrom)
     for {
       to <- activityTo
-    } if (!activitiesGraph.addEdge(from, activityById(to)) && !validConnection(activityFrom,activityTo))
+    } if (!activitiesGraph.addEdge(from, activityById(to)) || !validConnection(activityFrom,activityTo))
           throw new ActivityWithWrongParameters
   }
 
@@ -157,21 +157,17 @@ class GraphRep(name: String, var importName: String, var exportName: String, act
     else true
   }
 
-  def validCollector(value: ActivityRep, exportName: String) : Boolean = value.exportName == exportName
+  def validCollector(value: ActivityRep, exportName: String) : Boolean = if(exportName.isEmpty || value.exportName.isEmpty) true  else  value.exportName == exportName
 
-  def validInjector(value: ActivityRep, importName: String) : Boolean = value.importName == importName
+  def validInjector(value: ActivityRep, importName: String) : Boolean = if(importName.isEmpty || value.importName.isEmpty) true  else value.importName == importName
 
   def checkValidGraph() : Boolean = {
-    //graph with one connection
-    if(activitiesGraph.numberNodes()==1 && validConnection(activitiesGraph.getRoot().id, activitiesGraph.getSink().id))
-      true
-    //graph with more than one connection
-    else {
-      //do not exist nodes without connections
-      activitiesGraph.nodesWithoutConnections() &&
-      //import and export of graph are correct with the activities
-      validInjector(activitiesGraph.getRoot(),importName) && validCollector(activitiesGraph.getSink(),exportName)
-    }
+    if(activitiesGraph.numberNodes==1 && !activitiesGraph.hasSink && !activitiesGraph.hasRoot && !validConnection(activitiesGraph.getRoot.get.id, activitiesGraph.getSink.get.id))
+      false
+    else
+      if(!activitiesGraph.hasCyclesAndSubGraphs && !activitiesGraph.hasSink && !activitiesGraph.hasRoot && !validInjector(activitiesGraph.getRoot.get,importName) && !validCollector(activitiesGraph.getSink.get,exportName))
+        false
+    else true
   }
 
   /**

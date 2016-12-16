@@ -1,8 +1,6 @@
 Graph Sport.Lisboa.e.Benfica
 	Import Sporting.Clube.de.Portugal
 	Export dois.um
-	Activity inicioJogo apito.inicial:Jorge.Sousa
-	Activity golos quem.marcou
 	Activity goloSLB1 Eduardo.Salvio:24:Rafael.Silva
 		Import Sporting.Clube.de.Portugal
 		Export protestos.jogadores.do.Sporting
@@ -12,12 +10,6 @@ Graph Sport.Lisboa.e.Benfica
 	Activity goloSCP1 Bas.Dost:69:Joel.Campbell
 		Import contra.ataque.mortifero
 		Export dois.um
-	Activity fim Bas.Dost:69:Joel.Campbell
-		Import dois.um
-		Import contra.ataque.mortifero
-		Export dois.um
-	connection [inicioJogo;golos]
-	connection [golos;goloSLB1,goloSLB2]
-	connection [goloSCP1;fim]
-	connection [goloSLB2;fim]
+	connection [goloSLB1;goloSLB2]
+	connection [goloSLB2;goloSCP1]
 	
