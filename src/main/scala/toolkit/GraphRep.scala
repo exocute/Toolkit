@@ -197,6 +197,8 @@ class GraphRep(name: String, var importName: String, var exportName: String, act
     */
   def getConnections(activity: ActivityRep) = activitiesGraph.getAdj(activity)
 
+  def isJoin(activityRep: ActivityRep) : Boolean = activitiesGraph.referencedByNodes(activityRep)==2
+
   /**
     * returns the string of a value if the value its defined
     * @param s
