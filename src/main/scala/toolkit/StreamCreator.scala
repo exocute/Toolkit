@@ -33,7 +33,7 @@ class StreamCreator(val rep: GraphRep) {
       }
       case List(act1, act2) => {
         val (o1, o2) = actOutput.asInstanceOf[(Serializable, Serializable)]
-        strConstruction += ".split(" + act1.name + "," + act2.name + ")"
+        strConstruction += ".split(" + act1.name + ", " + act2.name + ")"
         val (v1, join) = runAuxJoin(o1, act1)
         val (v2, _) = runAuxJoin(o2, act2)
         strConstruction += ".join(" + join.name + ")"
@@ -72,28 +72,28 @@ object TestStream {
 
     def test1() = {
 
-      val actA = new ActivityRep2("A", "com.A", Nil, Nil, "") {
+      val actA = new ActivityRep2("A", "SplitVector", Nil, Nil, "") {
         override def process(input: Serializable, params: List[String]) = {
           val vec = input.asInstanceOf[Vector[Int]]
           vec.splitAt(vec.size / 2)
         }
       }
 
-      val actB = new ActivityRep2("B", "com.B", Nil, Nil, "") {
+      val actB = new ActivityRep2("B", "TestEven", Nil, Nil, "") {
         override def process(input: Serializable, params: List[String]) = {
           val value = input.asInstanceOf[Vector[Int]]
           value.forall(_ % 2 == 0)
         }
       }
 
-      val actC = new ActivityRep2("C", "com.C", Nil, Nil, "") {
+      val actC = new ActivityRep2("C", "TestOdd", Nil, Nil, "") {
         override def process(input: Serializable, params: List[String]) = {
           val value = input.asInstanceOf[Vector[Int]]
-          value.forall(_ % 2 == 0)
+          value.forall(_ % 2 == 1)
         }
       }
 
-      val actD = new ActivityRep2("D", "com.D", Nil, Nil, "") {
+      val actD = new ActivityRep2("D", "HalfEvenAndOdd", Nil, Nil, "") {
         override def process(input: Serializable, params: List[String]) = {
           val (bool1, bool2) = input.asInstanceOf[(Boolean, Boolean)]
           bool1 && bool2
@@ -115,28 +115,28 @@ object TestStream {
 
     def test2(): StreamCreator = {
 
-      val actA = new ActivityRep2("A", "com.A", List("2"), Nil, "") {
+      val actA = new ActivityRep2("A", "FilterCommas", List("2"), Nil, "") {
         override def process(input: Serializable, params: List[String]) = {
           val str = input.asInstanceOf[String].replace(",", "")
           (str, str)
         }
       }
 
-      val actB = new ActivityRep2("B", "com.B", Nil, Nil, "") {
+      val actB = new ActivityRep2("B", "RemoveFirst", Nil, Nil, "") {
         override def process(input: Serializable, params: List[String]) = {
           val str = input.asInstanceOf[String]
           str.init
         }
       }
 
-      val actC = new ActivityRep2("C", "com.C", Nil, Nil, "") {
+      val actC = new ActivityRep2("C", "RemoveLast", Nil, Nil, "") {
         override def process(input: Serializable, params: List[String]) = {
           val str = input.asInstanceOf[String]
           str.tail
         }
       }
 
-      val actD = new ActivityRep2("D", "com.D", Nil, Nil, "") {
+      val actD = new ActivityRep2("D", "JoinStrings", Nil, Nil, "") {
         override def process(input: Serializable, params: List[String]) = {
           val (str1, str2) = input.asInstanceOf[(String, String)]
           str1 + str2
@@ -155,7 +155,6 @@ object TestStream {
       new StreamCreator(graph)
     }
 
-
     {
       val stream = test2()
 
@@ -170,7 +169,7 @@ object TestStream {
     {
       val stream = test1()
 
-      val input = Stream(Vector(1, 2, 3, 4), Vector(-2, 4, 26, 6), Vector())
+      val input = Stream(Vector(4, 2, 3, 5), Vector(-3, 4, 5, 6), Vector())
       //Stream.continually(randomAlpha(3))
       val output = stream.run(input)
       println("Graph: " + stream.strConstruction)
