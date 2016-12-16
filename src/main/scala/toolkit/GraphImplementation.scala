@@ -3,7 +3,7 @@ package toolkit
 import scala.collection.mutable.HashMap
 
 /**
-  * Created by Eduardo Rodrigues on 12/12/2016.
+  * Created by #ScalaTeam on 12/12/2016.
   *
   * Graph is defined has a HashMap of Activities to LinkedList of AcitivityRep
   */

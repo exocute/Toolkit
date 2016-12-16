@@ -3,7 +3,7 @@ package toolkit
 import java.io.{File, Serializable}
 
 /**
-  * Created by Admin on 14-12-2016.
+  * Created by #ScalaTeam on 14-12-2016.
   */
 class StreamCreator(val rep: GraphRep) {
 

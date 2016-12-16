@@ -3,7 +3,7 @@ package toolkit
 import exceptions.{ActivitiesWithoutUniqueID, ActivityWithWrongParameters, ImportAndExportParametersInConsecutiveActivitiesNotMatch, NoSuchIDToActivity}
 
 /**
-  * Created by Eduardo Rodrigues on 12/12/2016.
+  * Created by #ScalaTeam on 12/12/2016.
   */
 
 class GraphRep(name: String, var importName: String, var exportName: String, activitiesGraph: GraphImplementation) {

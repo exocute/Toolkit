@@ -3,7 +3,7 @@ package toolkit
 import java.io.Serializable
 
 /**
-  * Created by Eduardo Rodrigues on 12/12/2016.
+  * Created by #ScalaTeam on 12/12/2016.
   */
 case class ActivityRep(id: String, name: String, var parameters: List[String], var importName: List[String], var exportName: String) {
 

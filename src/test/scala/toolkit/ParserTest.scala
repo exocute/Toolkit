@@ -7,6 +7,8 @@ import scala.util.{Try, Success}
 
 
 /**
+  * Created by #ScalaTeam on 15/12/2016.
+  *
   * Takes two directories: correct and incorrect
   * correct directory should have: file.in with the pln file and file.out with the expected representation of the file
   * incorrect directory just needs the incorrect input files
