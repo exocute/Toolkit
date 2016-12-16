@@ -140,6 +140,14 @@ class GraphRep(name: String, var importName: String, var exportName: String, act
           throw new ActivityWithWrongParameters
   }
 
+  def getRoot = activitiesGraph.getRoot
+
+  def hasRoot = activitiesGraph.hasRoot
+
+  def getSink = activitiesGraph.getSink
+
+  def hasSink = activitiesGraph.hasSink
+
   def validConnection(activityFrom: String, activityTo: String) : Boolean = {
     val from = activityById(activityFrom).exportName
     val to = activityById(activityTo).importName
