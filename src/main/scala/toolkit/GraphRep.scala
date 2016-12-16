@@ -167,13 +167,14 @@ class GraphRep(name: String, var importName: String, var exportName: String, act
 
   def validCollector(value: ActivityRep, exportName: String) : Boolean = if(exportName.isEmpty || value.exportName.isEmpty) true  else  value.exportName == exportName
 
-  def validInjector(value: ActivityRep, importName: String) : Boolean = if(importName.isEmpty || value.importName.isEmpty) true  else value.importName == importName
+  def validInjector(value: ActivityRep, importName: String) : Boolean = if(importName.isEmpty || value.importName.isEmpty) true  else value.importName.head == importName
 
   def checkValidGraph() : Boolean = {
-    if(activitiesGraph.numberNodes==1 && !activitiesGraph.hasSink && !activitiesGraph.hasRoot && !validConnection(activitiesGraph.getRoot.get.id, activitiesGraph.getSink.get.id))
+    if(activitiesGraph.numberNodes==1 && (!activitiesGraph.hasSink || !activitiesGraph.hasRoot || !validConnection(activitiesGraph.getRoot.get.id, activitiesGraph.getSink.get.id)))
       false
     else
-      if(!activitiesGraph.hasCyclesAndSubGraphs && !activitiesGraph.hasSink && !activitiesGraph.hasRoot && !validInjector(activitiesGraph.getRoot.get,importName) && !validCollector(activitiesGraph.getSink.get,exportName))
+      if(!activitiesGraph.hasSink || !activitiesGraph.hasRoot || activitiesGraph.hasCyclesAndSubGraphs
+        || !validInjector(activitiesGraph.getRoot.get,importName) || !validCollector(activitiesGraph.getSink.get,exportName))
         false
     else true
   }

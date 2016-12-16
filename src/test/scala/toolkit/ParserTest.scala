@@ -90,7 +90,6 @@ class AutomaticTesterOfParser extends FlatSpec {
     val plnClean = clearCommnents(pln)
     val parser = new ActivityParser(plnClean)
     val res: Try[Unit] = parser.InputLine.run()
-    println(parser.graph.toString)
     res match {
       case Success(_) =>
         if (!testContent) parser.graph.checkValidGraph()
