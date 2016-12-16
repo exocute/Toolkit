@@ -112,15 +112,17 @@ class GraphImplementation {
     adj.size
   }
 
-
-
-
+  /**
+    * verifies if a graph has cycles and subgraphs in a DFS style implementation
+    * @return true if has cycless, false otherwise
+    */
   def hasCyclesAndSubGraphs : Boolean = {
     var marked = Set[ActivityRep]()
     var onStack = List[ActivityRep]()
     var cycleFound = false
     findCycle(getRoot.get)
 
+    //DFS running
     def findCycle(init : ActivityRep) : Unit = {
       marked = marked + init
       onStack = init :: onStack
@@ -134,13 +136,23 @@ class GraphImplementation {
       onStack = onStack.filter(_!=init)
     }
 
+    //has subgraphs if not all nodes were visited
     cycleFound && marked.size != adj.size
   }
 
+  /**
+    * verifies if a graph has subgraphs not connected, connections not used and lost nodes
+    * also verifies if the graph has a absolute Root and Sink
+    * @return
+    */
   def nodesWithoutConnections() : Boolean = {
    hasRoot && hasSink && !hasCyclesAndSubGraphs
   }
 
+  /**
+    * if exists returns the root node
+    * @return rootNode
+    */
   def getRoot : Option[ActivityRep] = {
     if(hasRoot)
       Some(adjInverse.filter{case(act,list) => list.isEmpty}.head._1)
@@ -148,14 +160,26 @@ class GraphImplementation {
       None
   }
 
+  /**
+    * verifies if a graph has a Root node
+    * @return true if it has a root, false otherwise
+    */
   def hasRoot : Boolean = {
     adjInverse.count{case (act,list) => list.isEmpty}==1
   }
 
+  /**
+    * verifies if a graph has a Sink node
+    * @return true if it has a sink, false otherwise
+    */
   def hasSink : Boolean = {
     adj.count{case (act,list) => list.isEmpty}==1
   }
 
+  /**
+    * gets a Sink node
+    * @return
+    */
   def getSink : Option[ActivityRep] = {
     if(hasRoot)
       Some(adj.filter{case(act,list) => list.isEmpty}.head._1)
@@ -163,10 +187,19 @@ class GraphImplementation {
       None
   }
 
+  /**
+    * returns the of nodes that has a connection to that node
+    * @param activityRep
+    * @return
+    */
   def referencedByNodes(activityRep: ActivityRep) : Int = {
     adjInverse(activityRep).size
   }
 
+  /**
+    * new toString method to GraphImplemetation
+    * @return
+    */
   override def toString: String = activities.values.mkString("\n") + "\n" +
     adj.flatMap { case (act, list) => {
       if (list.isEmpty) Nil

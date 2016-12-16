@@ -140,14 +140,37 @@ class GraphRep(name: String, var importName: String, var exportName: String, act
           throw new ActivityWithWrongParameters
   }
 
+  /**
+    * get Root activity
+    * @return
+    */
   def getRoot = activitiesGraph.getRoot
 
+  /**
+    * verifies is the graph has a Root
+    * @return
+    */
   def hasRoot = activitiesGraph.hasRoot
 
+
+  /**
+    * get Sink activity
+    * @return
+    */
   def getSink = activitiesGraph.getSink
 
+  /**
+    * verifies is the Graph has a Sink
+    * @return
+    */
   def hasSink = activitiesGraph.hasSink
 
+  /**
+    * checks the import and export parameters of a connection
+    * @param activityFrom
+    * @param activityTo
+    * @return true if its valid, false otherwise
+    */
   def validConnection(activityFrom: String, activityTo: String) : Boolean = {
     val from = activityById(activityFrom).exportName
     val to = activityById(activityTo).importName
@@ -159,16 +182,38 @@ class GraphRep(name: String, var importName: String, var exportName: String, act
       true
   }
 
+  /**
+    * checks the import and export parameters of a connection
+    * @param activityFrom
+    * @param activityTo
+    * @return true if its valid, false otherwise
+    */
   def validConnection(activityFrom: String, activityTo: List[String]) : Boolean = {
     if(!validConnection(activityFrom,activityTo.head) && validConnection(activityFrom,activityTo.tail))
       throw new ImportAndExportParametersInConsecutiveActivitiesNotMatch
     else true
   }
 
+  /**
+    * verifies if the parameter's value to export it's the same has the export parameter of the Sink
+    * @param value
+    * @param exportName
+    * @return
+    */
   def validCollector(value: ActivityRep, exportName: String) : Boolean = if(exportName.isEmpty || value.exportName.isEmpty) true  else  value.exportName == exportName
 
+  /**
+    * verifies if the parameter's value to import it's the same has the import parameter of the Root
+    * @param value
+    * @param importName
+    * @return
+    */
   def validInjector(value: ActivityRep, importName: String) : Boolean = if(importName.isEmpty || value.importName.isEmpty) true  else value.importName.head == importName
 
+  /**
+    * checks if a graph has a Sink, Root and do not has cycles or subgraphs
+    * @return true if it's a valid graph, false otherwise
+    */
   def checkValidGraph() : Boolean = {
     if(activitiesGraph.numberNodes==1 && (!activitiesGraph.hasSink || !activitiesGraph.hasRoot || !validConnection(activitiesGraph.getRoot.get.id, activitiesGraph.getSink.get.id)))
       false
@@ -198,6 +243,11 @@ class GraphRep(name: String, var importName: String, var exportName: String, act
     */
   def getConnections(activity: ActivityRep) = activitiesGraph.getAdj(activity)
 
+  /**
+    * compares the number of nodes that references a single activity
+    * @param activityRep
+    * @return if two activities references that activity it's true because we have a join, false otherwise
+    */
   def isJoin(activityRep: ActivityRep) : Boolean = activitiesGraph.referencedByNodes(activityRep)==2
 
   /**
