@@ -10,6 +10,6 @@ Graph Sport.Lisboa.e.Benfica
 	Activity goloSCP1 Bas.Dost:69:Joel.Campbell
 		Import contra.ataque.mortifero
 		Export dois.um
-	connection [goloSLB1;goloSLB2]
-	connection [goloSLB2;goloSCP1]
+	connection goloSLB1->goloSLB2
+	connection goloSLB2->goloSCP1
 	

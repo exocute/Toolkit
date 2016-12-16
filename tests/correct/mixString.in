@@ -14,4 +14,4 @@ Graph MixString
 	Import String
 	Export String
 	
-	Connection [A;B,C] [B;D] [C;D]
+	Connection A->B,C:B->D:C->D

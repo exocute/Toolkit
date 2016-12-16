@@ -3,4 +3,4 @@
 Graph graph
 	Activity act1 act.ex
 	Activity act2 act.ex
-	connection [act1;act2]
+	connection act1->act2

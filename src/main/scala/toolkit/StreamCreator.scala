@@ -122,14 +122,14 @@ object TestStream {
         }
       }
 
-      val actB = new ActivityRep2("B", "RemoveFirst", Nil, Nil, "") {
+      val actB = new ActivityRep2("B", "RemoveLast", Nil, Nil, "") {
         override def process(input: Serializable, params: List[String]) = {
           val str = input.asInstanceOf[String]
           str.init
         }
       }
 
-      val actC = new ActivityRep2("C", "RemoveLast", Nil, Nil, "") {
+      val actC = new ActivityRep2("C", "RemoveFirst", Nil, Nil, "") {
         override def process(input: Serializable, params: List[String]) = {
           val str = input.asInstanceOf[String]
           str.tail
@@ -165,7 +165,8 @@ object TestStream {
 
       println(input.take(10).toList.zip(output.take(10).force).map { case (a, b) => a + "->" + b }.mkString(" | "))
     }
-    println;
+    println()
+
     {
       val stream = test1()
 

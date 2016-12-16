@@ -14,4 +14,4 @@ Graph Sport.Lisboa.e.Benfica
 		Import esperanca.no.empate
 		Export dois.um
 		
-	connection [goloSLB1;goloSLB2][goloSLB2;goloSCP1][goloSCP1;fim]
+	connection goloSLB1->goloSLB2:goloSLB2->goloSCP1:goloSCP1->fim

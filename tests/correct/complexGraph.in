@@ -21,4 +21,4 @@ Graph com.zink.Imager
 	Import com.zink.ClusterCentre
 	Export com.zink.WeightedCluster
 
-	connection [QT; SF] [SF; FO, RGBM] [RGBM; FC] [FO; FC]
+	connection QT->SF:SF->FO,RGBM:RGBM->FC:FO->FC
