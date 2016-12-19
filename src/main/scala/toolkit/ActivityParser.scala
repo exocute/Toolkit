@@ -1,6 +1,7 @@
 package toolkit
 
-import org.parboiled2._
+import org.parboiled2.{Rule1, _}
+import shapeless.{::, HNil}
 
 /**
   * Created by #ScalaTeam on 12/12/2016.
@@ -11,95 +12,69 @@ import org.parboiled2._
   */
 class ActivityParser(val input: ParserInput) extends Parser {
 
-  //  /**
-  //    * GraphClass
-  //    * Representation of a graph:
-  //    *   imp: imports
-  //    *   exp: exports
-  //    *   acts: activities performed by the graph
-  //    *   cnt: connections and dependencies between the different activities
-  //    * @param name
-  //    */
-  //  class GraphClass(name: String) {
-  //    var imp: String = _
-  //    var exp: String = _
-  //    var acts: List[ActivityClass] = Nil
-  //    var cnt: List[(String, List[String])] = Nil
-  //    override def toString: String = s"$name:\n Import: $imp,\n Export: $exp,\n Activities: $acts, $cnt"
-  //  }
-  //
-  //  class ActivityClass(id: String, name: String) {
-  //    var imp: List[String] = Nil
-  //    var exp: String = _
-  //    var params: List[String] = Nil
-  //    override def toString: String = s"$id, $name: $imp, $exp, $params"
-  //  }
-
-  def InputLine = rule {
+  def InputLine: Rule1[GraphRep] = rule {
     ANY_WS ~ GraphRule ~ ANY_WS ~ EOI
   }
-
-  var graph: GraphRep = _
 
   /**
     * instantiates a GraphClass object
     *
     * @return
     */
-  def GraphRule: Rule0 = rule {
+  def GraphRule: Rule1[GraphRep] = rule {
     ignoreCase("graph") ~ WS1 ~ Id ~ NLS ~>
       ((graphName: String) => {
-        graph = new GraphRep(graphName)
-        CreateGraph(graph)
+        push(new GraphRep(graphName)) ~ CreateGraph
       })
   }
 
   /**
     * is responsible for instantiating all the fields of the GraphClass
     *
-    * @param graph The GraphClass object to be instantiated
     * @return
     */
-  def CreateGraph(graph: GraphRep): Rule0 = rule {
-    zeroOrMore(ignoreCase("import") ~ WS1 ~ Type ~ NLS ~> ((importName: String) => graph.importName = importName)
-      | ignoreCase("export") ~ WS1 ~ Type ~ NLS ~> ((exportName: String) => graph.exportName = exportName)) ~
-      ReadActivity(graph) ~ zeroOrMore(ReadActivity(graph) | Connections(graph))
+  def CreateGraph: Rule[GraphRep :: HNil, GraphRep :: HNil] = rule {
+    GraphImportExport ~> ((graph: GraphRep) => {
+      ReadActivity(graph) ~ zeroOrMore(ReadActivity(graph) | Connections(graph)) ~ push(graph)
+    })
+  }
+
+  def GraphImportExport: Rule[GraphRep :: HNil, GraphRep :: HNil] = rule {
+    zeroOrMore((ignoreCase("import") ~ WS1 ~ Type ~ NLS ~> ((graph: GraphRep, importName: String) => graph.setImport(importName)))
+      | (ignoreCase("export") ~ WS1 ~ Type ~ NLS ~> ((graph: GraphRep, exportName: String) => graph.setExport(exportName))))
   }
 
   /**
     * collects the imports, exports and parameters for each Activity
     *
-    * @param graph The GraphClass object to have his List[ActivityClass] instantiated
     * @return
     */
-  def ReadActivity(graph: GraphRep): Rule0 = rule {
+  def ReadActivity(graphRep: GraphRep): Rule0 = rule {
     ignoreCase("activity") ~ WS1 ~ Id ~ WS1 ~ Id ~> (
       (id: String, name: String) => {
-        val act = ActivityRep(id, name)
-        graph.addSingleActivity(act)
-        ReadActivityParams(act) ~ NLS ~ ReadActivityIE(act)
+        push(ActivityRep(id, name)) ~ ReadActivityParams ~ NLS ~ ReadActivityIE ~> {
+          (act: ActivityRep) => graphRep.addSingleActivity(act)
+        }
       })
   }
 
   /**
     * collects the parameters of an Activity and saves it in the ActivityClass
     *
-    * @param act The ActivityClass object to be instantiated
     * @return
     */
-  def ReadActivityParams(act: ActivityRep) = rule {
-    zeroOrMore(':' ~ ParamStr ~> ((param: String) => act.parameters = param :: act.parameters))
+  def ReadActivityParams: Rule[ActivityRep :: HNil, ActivityRep :: HNil] = rule {
+    zeroOrMore(':' ~ ParamStr ~> ((act: ActivityRep, parameter: String) => act.addParameter(parameter)))
   }
 
   /**
     * collects the imports and exports of an Activity and saves it in the ActivityClass
     *
-    * @param act The ActivityClass object to be instantiated
     * @return
     */
-  def ReadActivityIE(act: ActivityRep) = rule {
-    zeroOrMore(ignoreCase("import") ~ WS1 ~ Type ~ NLS ~> ((importName: String) => act.importName = importName :: act.importName)
-      | ignoreCase("export") ~ WS1 ~ Type ~ NLS ~> ((exportName: String) => act.exportName = exportName))
+  def ReadActivityIE: Rule[ActivityRep :: HNil, ActivityRep :: HNil] = rule {
+    zeroOrMore(ignoreCase("import") ~ WS1 ~ Type ~ NLS ~> ((act: ActivityRep, importName: String) => act.addImport(importName))
+      | ignoreCase("export") ~ WS1 ~ Type ~ NLS ~> ((act: ActivityRep, exportName: String) => act.setExport(exportName)))
   }
 
   /**
@@ -113,25 +88,23 @@ class ActivityParser(val input: ParserInput) extends Parser {
   }
 
   /**
-    * collects the connections and dependencies between the different Graph Activities
+    * collect a single connection and dependencies between the different Graph Activities
     *
     * @param graph The GraphClass object to be instantiated
     * @return
     */
   def Connection(graph: GraphRep): Rule0 = rule {
-    WS0 ~ Id ~ WS0 ~ "->" ~ WS0 ~ Id ~ zeroOrMore(WS0 ~ "," ~ WS0 ~ Id) ~> (
-      (a: String, b: String, seq: Any) => {
-        graph.addConnection(a, b :: seq.asInstanceOf[Seq[String]].toList)
-      })
-  }
+    //    WS0 ~ Id ~ WS0 ~ "->" ~ WS0 ~ Id ~ zeroOrMore(WS0 ~ "," ~ WS0 ~ Id) ~> (
+    //      (a: String, b: String, seq: Any) => {
+    //        graph.addConnection(a, b :: seq.asInstanceOf[Seq[String]].toList)
+    //      })
 
-  /**
-    * reads one paramater of an Activity and creates a String. Parameters are separated by ':'.
-    *
-    * @return The string containing the parameter
-    */
-  def ParamStr: Rule1[String] = rule {
-    capture(oneOrMore(noneOf(":\n"))) ~ WS0 ~> ((str: String) => str)
+    WS0 ~ Id ~ WS0 ~ "->" ~ WS0 ~> ((a: String) => {
+      (Id * (WS0 ~ ',' ~ WS0)) ~> (_ match {
+        case seq: Seq[String] =>
+          graph.addConnection(a, seq.toList)
+      })
+    })
   }
 
   /**
@@ -145,6 +118,15 @@ class ActivityParser(val input: ParserInput) extends Parser {
 
   def Type: Rule1[String] = rule {
     capture(oneOrMore(CharPredicate.AlphaNum | '_' | '.' | '[' | ']')) ~> ((str: String) => str)
+  }
+
+  /**
+    * reads one paramater of an Activity and creates a String. Parameters are separated by ':'.
+    *
+    * @return The string containing the parameter
+    */
+  def ParamStr: Rule1[String] = rule {
+    capture(oneOrMore(noneOf(":\n"))) ~ WS0
   }
 
   /**
@@ -179,7 +161,7 @@ class ActivityParser(val input: ParserInput) extends Parser {
     *
     * @return
     */
-  def NL = rule {
+  def NL: Rule0 = rule {
     oneOrMore('\n')
   }
 
@@ -188,7 +170,72 @@ class ActivityParser(val input: ParserInput) extends Parser {
     *
     * @return
     */
-  def NLS = rule {
+  def NLS: Rule0 = rule {
     WS0 ~ optional('\n') ~ ANY_WS
   }
+
 }
+
+//class TestParser(val input: ParserInput) extends Parser {
+//
+//  def InputLine = rule {
+//    push(50) ~ Test8
+//  }
+//
+//  def factor: Rule1[Int] = rule {
+//    push(20)
+//  }
+//
+//  //  def Test5: Rule1[Int] = rule {
+//  //    factor ~ Test3
+//  //  }
+//
+//  //  def Test1: Rule1[Int] = rule {
+//  //    push(5) ~ Test2
+//  //  }
+//  //
+//  //  def Test2: Rule[Int :: HNil, Int :: HNil] = rule {
+//  //    push(5) ~> ((a: Int, b: Int) => a + b)
+//  //  }
+//
+//  //  def Test3: Rule[Int :: HNil, Int :: HNil] = rule {
+//  //    zeroOrMore('*' ~ factor ~> ((a: Int, b: Int) => {
+//  //      a - b
+//  //    }))
+//  //  }
+//
+//  //  def Test4: Rule1[Int] = rule {
+//  //    push(50) ~ zeroOrMore('*' ~ factor ~> ((a: Int, b) => {
+//  //      a - b
+//  //    }))
+//  //  }
+//  //
+//
+//  //
+//  //  def Test6: Rule[::[Int, HNil], ::[Int, HNil]] = rule {
+//  //    '+' ~> ((a: Int) => {
+//  //      a
+//  //    })
+//  //  }
+//  //
+//  //  def Test7: Rule[HNil, ::[String, HNil]] = rule {
+//  //    capture(CharPredicate.Digit) ~ optional(ch('h') ~> ((s: String) => s + "hex"))
+//  //  }
+//
+//  def Test8: Rule[Int :: HNil, Int :: HNil] = rule {
+//    oneOrMore('*' ~ factor ~> ((a: Int, b) => a - b))
+//  }
+//
+//  def Test9: Rule[Int :: HNil, Int :: HNil] = rule {
+//    '*' ~ factor ~> ((a: Int, b) => a - b)
+//  }
+//
+//
+//
+//}
+//
+//object Main {
+//  def main(args: Array[String]): Unit = {
+//    println(new TestParser("*").InputLine.run())
+//  }
+//}

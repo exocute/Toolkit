@@ -1,12 +1,12 @@
 package toolkit
 
-import exceptions.{ActivitiesWithoutUniqueID, ActivityWithWrongParameters, ImportAndExportParametersInConsecutiveActivitiesNotMatch, NoSuchIDToActivity}
+import exceptions.{ActivitiesWithoutUniqueID, ActivityWithWrongParameters, InvalidConnections, NoSuchIDToActivity}
 
 /**
   * Created by #ScalaTeam on 12/12/2016.
   */
 
-class GraphRep(name: String, var importName: String, var exportName: String, activitiesGraph: GraphImplementation) {
+class GraphRep(name: String, importName: String, exportName: String, activitiesGraph: GraphImplementation) {
 
   var lastACT: ActivityRep = _
 
@@ -17,6 +17,14 @@ class GraphRep(name: String, var importName: String, var exportName: String, act
     */
   def this(name: String) {
     this(name, "", "", new GraphImplementation)
+  }
+
+  def setImport(newImportName: String): GraphRep = {
+    new GraphRep(name, newImportName, exportName, activitiesGraph)
+  }
+
+  def setExport(newExportName: String): GraphRep = {
+    new GraphRep(name, importName, newExportName, activitiesGraph)
   }
 
   /**
@@ -38,7 +46,7 @@ class GraphRep(name: String, var importName: String, var exportName: String, act
           throw new ActivityWithWrongParameters
       }
     }
-    else throw new ActivitiesWithoutUniqueID
+    else throw new ActivitiesWithoutUniqueID(activityRep.id)
   }
 
   /**
@@ -49,7 +57,7 @@ class GraphRep(name: String, var importName: String, var exportName: String, act
     */
   def addSingleActivity(activityRep: ActivityRep) = {
     if (!activitiesGraph.addNode(activityRep))
-      throw new ActivitiesWithoutUniqueID
+      throw new ActivitiesWithoutUniqueID(activityRep.id)
   }
 
   /**
@@ -190,7 +198,7 @@ class GraphRep(name: String, var importName: String, var exportName: String, act
     */
   def validConnection(activityFrom: String, activityTo: List[String]) : Boolean = {
     if(!validConnection(activityFrom,activityTo.head) && validConnection(activityFrom,activityTo.tail))
-      throw new ImportAndExportParametersInConsecutiveActivitiesNotMatch
+      throw new InvalidConnections
     else true
   }
 

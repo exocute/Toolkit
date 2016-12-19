@@ -65,36 +65,36 @@ class StreamCreator(val rep: GraphRep) {
 
 object TestStream {
 
-  abstract class ActivityRep2(id: String, name: String, parameters: List[String], importName: List[String],
+  abstract class ActivityRep2(id: String, name: String, parameters: Vector[String], importName: Vector[String],
                               exportName: String) extends ActivityRep(id, name, parameters, importName, exportName) with ActivityTrait
 
   def main(args: Array[String]): Unit = {
 
     def test1() = {
 
-      val actA = new ActivityRep2("A", "SplitVector", Nil, Nil, "") {
-        override def process(input: Serializable, params: List[String]) = {
+      val actA = new ActivityRep2("A", "SplitVector", Vector[String](), Vector[String](), "") {
+        override def process(input: Serializable, params: Vector[String]) = {
           val vec = input.asInstanceOf[Vector[Int]]
           vec.splitAt(vec.size / 2)
         }
       }
 
-      val actB = new ActivityRep2("B", "TestEven", Nil, Nil, "") {
-        override def process(input: Serializable, params: List[String]) = {
+      val actB = new ActivityRep2("B", "TestEven", Vector[String](), Vector[String](), "") {
+        override def process(input: Serializable, params: Vector[String]) = {
           val value = input.asInstanceOf[Vector[Int]]
           value.forall(_ % 2 == 0)
         }
       }
 
-      val actC = new ActivityRep2("C", "TestOdd", Nil, Nil, "") {
-        override def process(input: Serializable, params: List[String]) = {
+      val actC = new ActivityRep2("C", "TestOdd", Vector[String](), Vector[String](), "") {
+        override def process(input: Serializable, params: Vector[String]) = {
           val value = input.asInstanceOf[Vector[Int]]
           value.forall(_ % 2 == 1)
         }
       }
 
-      val actD = new ActivityRep2("D", "HalfEvenAndOdd", Nil, Nil, "") {
-        override def process(input: Serializable, params: List[String]) = {
+      val actD = new ActivityRep2("D", "HalfEvenAndOdd", Vector[String](), Vector[String](), "") {
+        override def process(input: Serializable, params: Vector[String]) = {
           val (bool1, bool2) = input.asInstanceOf[(Boolean, Boolean)]
           bool1 && bool2
         }
@@ -115,29 +115,29 @@ object TestStream {
 
     def test2(): StreamCreator = {
 
-      val actA = new ActivityRep2("A", "FilterCommas", List("2"), Nil, "") {
-        override def process(input: Serializable, params: List[String]) = {
+      val actA = new ActivityRep2("A", "FilterCommas", Vector("2"), Vector[String](), "") {
+        override def process(input: Serializable, params: Vector[String]) = {
           val str = input.asInstanceOf[String].replace(",", "")
           (str, str)
         }
       }
 
-      val actB = new ActivityRep2("B", "RemoveLast", Nil, Nil, "") {
-        override def process(input: Serializable, params: List[String]) = {
+      val actB = new ActivityRep2("B", "RemoveLast", Vector[String](), Vector[String](), "") {
+        override def process(input: Serializable, params: Vector[String]) = {
           val str = input.asInstanceOf[String]
           str.init
         }
       }
 
-      val actC = new ActivityRep2("C", "RemoveFirst", Nil, Nil, "") {
-        override def process(input: Serializable, params: List[String]) = {
+      val actC = new ActivityRep2("C", "RemoveFirst", Vector[String](), Vector[String](), "") {
+        override def process(input: Serializable, params: Vector[String]) = {
           val str = input.asInstanceOf[String]
           str.tail
         }
       }
 
-      val actD = new ActivityRep2("D", "JoinStrings", Nil, Nil, "") {
-        override def process(input: Serializable, params: List[String]) = {
+      val actD = new ActivityRep2("D", "JoinStrings", Vector[String](), Vector[String](), "") {
+        override def process(input: Serializable, params: Vector[String]) = {
           val (str1, str2) = input.asInstanceOf[(String, String)]
           str1 + str2
         }
@@ -193,6 +193,6 @@ trait ActivityTrait {
     * @param  params The list of imports
     * @return output The Serializbale output object
     */
-  def process(input: Serializable, params: List[String]): Serializable
+  def process(input: Serializable, params: Vector[String]): Serializable
 
 }

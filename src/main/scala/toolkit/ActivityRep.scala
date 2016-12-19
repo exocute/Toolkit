@@ -5,8 +5,19 @@ import java.io.Serializable
 /**
   * Created by #ScalaTeam on 12/12/2016.
   */
-case class ActivityRep(id: String, name: String, var parameters: List[String], var importName: List[String], var exportName: String) {
+case class ActivityRep(id: String, name: String, parameters: Vector[String], importName: Vector[String], exportName: String) {
 
+  def addParameter(newParameter: String): ActivityRep = {
+    ActivityRep(id, name, parameters :+ newParameter, importName, exportName)
+  }
+
+  def addImport(newImport: String): ActivityRep = {
+    ActivityRep(id, name, parameters, importName :+ newImport, exportName)
+  }
+
+  def setExport(newExport: String): ActivityRep = {
+    ActivityRep(id, name, parameters, importName, newExport)
+  }
 
   /**
     * two activities are equals when their id are the same
@@ -32,6 +43,6 @@ case class ActivityRep(id: String, name: String, var parameters: List[String], v
 
 object ActivityRep {
   def apply(id: String, name: String): ActivityRep = {
-    ActivityRep(id, name, Nil, Nil, "")
+    ActivityRep(id, name, Vector[String](), Vector[String](), "")
   }
 }

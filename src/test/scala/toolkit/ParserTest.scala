@@ -97,11 +97,12 @@ class AutomaticTesterOfParser extends FlatSpec {
     val pln = readFile(path)
     val plnClean = clearCommnents(pln)
     val parser = new ActivityParser(plnClean)
-    val res: Try[Unit] = parser.InputLine.run()
+    val res: Try[GraphRep] = parser.InputLine.run()
     res match {
-      case Success(_) =>
-        if (!testContent) parser.graph.checkValidGraph()
-        else validateFiles(parser.graph.toString, path) && parser.graph.checkValidGraph()
+      case Success(graph) =>
+        println(graph)
+        if (!testContent) graph.checkValidGraph()
+        else validateFiles(graph.toString, path) && graph.checkValidGraph()
       case exp => {
         println(exp)
         false
