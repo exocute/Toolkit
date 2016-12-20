@@ -29,7 +29,7 @@ class GraphRep(name: String, importName: String, exportName: String, activitiesG
 
   /**
     * Add a single activity to graph
-    * If the activity doesn't follow the correct format exceptions will be thrown
+    * If the activity doesn't follow the correct format toolkit.exceptions will be thrown
     * Activities are added to the graph in sequential order
     *
     * @param activityRep
