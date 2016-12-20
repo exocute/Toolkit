@@ -9,29 +9,29 @@ import com.zink.fly.FlyPrime
 abstract class InChannel(marker: String) {
 
   private val space: FlyPrime = getSpace
-  private val tpl: ExoEntry = new ExoEntry(marker,null)
+  private val tpl: ExoEntry = new ExoEntry(marker, null)
 
   abstract def getSpace: FlyPrime
 
   private var TAKE_TIME = 0
 
-  def getObject : Serializable = {
-    if(space != null){
+  def getObject: Serializable = {
+    if (space != null) {
       var result = new ExoEntry()
-      try{
-        result = space.take(tpl,TAKE_TIME)
+      try {
+        result = space.take(tpl, TAKE_TIME)
       } catch {
-        case e : Exception => e.printStackTrace()
+        case e: Exception => e.printStackTrace()
       }
 
-      if(result != null) {
+      if (result != null) {
         TAKE_TIME = 0
-        try{
+        try {
           return result.payload
-        } catch{
-          case e : Exception => e.printStackTrace()
+        } catch {
+          case e: Exception => e.printStackTrace()
         }
-      } else TAKE_TIME=1000
+      } else TAKE_TIME = 1000
     }
     throw new SpaceNotDefined("SignalSpace")
   }

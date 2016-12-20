@@ -1,24 +1,26 @@
 package clifton.nodes
 
+import clifton.{Info, LogLevel, exoSignal}
+import clifton.signals.LoggingSinal
+
 /**
   * Created by #ScalaTeam on 20/12/2016.
   */
 object Log {
 
-  var logLevel: State = Info
+  private var logLevel: LogLevel = Info
 
-  var log:LoggingSinal = LoggingSinal
+  private var log: LoggingSinal = new LoggingSinal
 
-  val outChannel:OutChannel = SignalOut
+  private val outChannel: OutChannel = new SignalOutChannel(exoSignal)
 
-  var local:Boolean = true
+  private val local: Boolean = true
 
   def sendMessage(msg: String) = {
     log.setLogLevel(logLevel)
     log.setLogMessage(formatMessage(msg))
     outChannel.putObject(log)
-    if(local) println(formatMessage(msg))
-    SpaceCache.
+    if (local) println(formatMessage(msg))
   }
 
   def info(msg: String) = logLevel match {
@@ -30,22 +32,24 @@ object Log {
     sendMessage(msg)
   }
 
-  def setLogLevel(s:State) = {
-    logLevel = s
-    info("Set logging level to "+ logLevel)
+  def setLogLevel(logLevel: LogLevel) = {
+    this.logLevel = logLevel
+    info("Set logging level to " + this.logLevel)
   }
 
-  def formatMessage(msg:String) =  msg+"edited"
+  private var sb = new StringBuilder
 
+  private def formatMessage(msg: String) = {
+    // check an exception and catch the resulting stuff
+    val stack = new Throwable().getStackTrace
+    sb.setLength(0)
+    sb.append(stack(4).getClassName)
+    sb.append(":")
+    sb.append(stack(4).getMethodName)
+    sb.append(":")
+    sb.append(stack(4).getLineNumber)
+    sb.append(":")
+    sb + msg
+  }
 
-}
-
-sealed trait State
-
-case object Info extends State{
-  override def toString: String = "INFO"
-}
-
-case object Error extends State{
-  override def toString: String = "ERROR"
 }

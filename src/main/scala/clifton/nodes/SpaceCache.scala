@@ -19,8 +19,7 @@ object SpaceCache {
   var jarHost: String = ""
   var dataHost: String = ""
 
-
-  def getSpace(tag: String, host: String): Option[FlyPrime] = {
+  private def getSpace(tag: String, host: String): Option[FlyPrime] = {
     spaceMap.get(tag) match {
       case Some(space) => Some(space)
       case None => {
@@ -38,7 +37,6 @@ object SpaceCache {
       }
     }
   }
-
 
   def getSignalSpace: FlyPrime = getSpace(signal, signalHost).get
 
