@@ -18,6 +18,7 @@ object Log {
     log.setLogMessage(formatMessage(msg))
     outChannel.putObject(log)
     if(local) println(formatMessage(msg))
+    SpaceCache.
   }
 
   def info(msg: String) = logLevel match {

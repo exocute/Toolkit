@@ -9,13 +9,15 @@ import scala.collection.mutable.HashMap
   * Created by #ScalaTeam on 20/12/2016.
   */
 object SpaceCache {
-  val data = "DataSpace"
-  val jar = "JarSpace"
-  val signal = "SignalSpace"
+
+  private val data = "DataSpace"
+  private val jar = "JarSpace"
+  private val signal = "SignalSpace"
+  private val spaceMap = new HashMap[String, FlyPrime]()
+
   var signalHost: String = ""
   var jarHost: String = ""
   var dataHost: String = ""
-  val spaceMap = new HashMap[String, FlyPrime]()
 
 
   def getSpace(tag: String, host: String): Option[FlyPrime] = {
@@ -29,7 +31,8 @@ object SpaceCache {
           } else spaceMap.put(tag, FlyFactory.makeFly(host))
           spaceMap.get(tag)
         } catch {
-          case e: Exception => Log.error("Failed to locate space")
+          case e: Exception =>
+            Log.error("Failed to locate space")
             None
         }
       }
