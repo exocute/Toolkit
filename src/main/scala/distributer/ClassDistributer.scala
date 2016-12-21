@@ -1,18 +1,31 @@
 package distributer
 
-import java.io.{File, FilenameFilter};
+import java.io.{File, FilenameFilter}
 
 /**
   * Created by #ScalaTeam on 21/12/2016.
   */
 class ClassDistributer {
-  def main(args: Array[String]): Unit = {
-    val dir:File = new File(args(0))
 
-    if(!dir.isDirectory)
-      throw new Exception()
-    else{
-      //TODO
+  def main(args: Array[String]): Unit = {
+    val directoryName = args(0)
+    val directory: File = new File(directoryName)
+
+    if (!directory.isDirectory)
+      throw new IllegalArgumentException(directoryName + " is not valid directory")
+    else {
+      val filter = new JarFileFilter
+      val writer: JarUpdater =
+        if (args.length > 1)
+          new JarSpaceUpdater(args(1))
+        else
+          new JarSpaceUpdater(null)
+
+      while (!Thread.interrupted) {
+        writer.update(directoryName, directory.list(filter))
+        Thread.sleep(100)
+      }
     }
   }
+
 }

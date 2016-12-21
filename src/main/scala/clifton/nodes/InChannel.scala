@@ -11,7 +11,7 @@ abstract class InChannel(marker: String) {
   private val space: FlyPrime = getSpace
   private val tpl: ExoEntry = new ExoEntry(marker, null)
 
-  abstract def getSpace: FlyPrime
+  def getSpace: FlyPrime
 
   private var TAKE_TIME = 0
 

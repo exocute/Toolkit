@@ -11,7 +11,7 @@ abstract class OutChannel(marker: String, entryLifeTime: Long = 60 * 1000) {
   private val space: FlyPrime = getSpace
   private val out = new ExoEntry(marker, null)
 
-  abstract def getSpace: FlyPrime
+  def getSpace: FlyPrime
 
   def putObject(obj: Serializable) = {
     if (space != null && marker != null && obj != null) {

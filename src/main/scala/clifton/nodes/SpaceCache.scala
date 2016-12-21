@@ -19,28 +19,29 @@ object SpaceCache {
   var jarHost: String = ""
   var dataHost: String = ""
 
-  private def getSpace(tag: String, host: String): Option[FlyPrime] = {
+  private def getSpace(tag: String, host: String): FlyPrime = {
     spaceMap.get(tag) match {
-      case Some(space) => Some(space)
+      case Some(space) => space
       case None => {
         try {
           if (host.isEmpty) {
             val finder: FlyFinder = new FlyFinder()
             spaceMap.put(tag, finder.find(tag))
-          } else spaceMap.put(tag, FlyFactory.makeFly(host))
-          spaceMap.get(tag)
+          } else
+            spaceMap.put(tag, FlyFactory.makeFly(host))
+          spaceMap(tag)
         } catch {
           case e: Exception =>
             Log.error("Failed to locate space")
-            None
+            throw new Exception("Failed to locate space")
         }
       }
     }
   }
 
-  def getSignalSpace: FlyPrime = getSpace(signal, signalHost).get
+  def getSignalSpace: FlyPrime = getSpace(signal, signalHost)
 
-  def getDataSpace: FlyPrime = getSpace(data, dataHost).get
+  def getDataSpace: FlyPrime = getSpace(data, dataHost)
 
-  def getJarSpace: FlyPrime = getSpace(jar, jarHost).get
+  def getJarSpace: FlyPrime = getSpace(jar, jarHost)
 }
