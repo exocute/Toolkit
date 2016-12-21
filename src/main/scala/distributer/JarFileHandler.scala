@@ -30,6 +30,7 @@ class JarFileHandler {
         if (entryName.endsWith("PIPELINE_EXTENSION")) classNames = entryName :: classNames
 
         jis.closeEntry()
+
         je = jis.getNextJarEntry
       }
       jis.close()
