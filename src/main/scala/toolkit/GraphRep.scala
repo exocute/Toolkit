@@ -6,7 +6,7 @@ import exceptions.{ActivitiesWithoutUniqueID, ActivityWithWrongParameters, Inval
   * Created by #ScalaTeam on 12/12/2016.
   */
 
-class GraphRep(name: String, importName: String, exportName: String, activitiesGraph: GraphImplementation) {
+class GraphRep(val name: String, importName: String, exportName: String, activitiesGraph: GraphImplementation) {
 
   var lastACT: ActivityRep = _
 
@@ -127,7 +127,7 @@ class GraphRep(name: String, importName: String, exportName: String, activitiesG
     * @param activityTo
     */
   def addConnection(activityFrom: String, activityTo: String) = {
-    if (!activitiesGraph.addEdge(activityById(activityFrom), activityById(activityTo)) && !validConnection(activityFrom,activityTo))
+    if (!activitiesGraph.addEdge(activityById(activityFrom), activityById(activityTo)) && !validConnection(activityFrom, activityTo))
       throw new ActivityWithWrongParameters
   }
 
@@ -144,18 +144,20 @@ class GraphRep(name: String, importName: String, exportName: String, activitiesG
     val from = activityById(activityFrom)
     for {
       to <- activityTo
-    } if (!activitiesGraph.addEdge(from, activityById(to)) || !validConnection(activityFrom,activityTo))
-          throw new ActivityWithWrongParameters
+    } if (!activitiesGraph.addEdge(from, activityById(to)) || !validConnection(activityFrom, activityTo))
+      throw new ActivityWithWrongParameters
   }
 
   /**
     * get Root activity
+    *
     * @return
     */
   def getRoot = activitiesGraph.getRoot
 
   /**
     * verifies is the graph has a Root
+    *
     * @return
     */
   def hasRoot = activitiesGraph.hasRoot
@@ -163,28 +165,31 @@ class GraphRep(name: String, importName: String, exportName: String, activitiesG
 
   /**
     * get Sink activity
+    *
     * @return
     */
   def getSink = activitiesGraph.getSink
 
   /**
     * verifies is the Graph has a Sink
+    *
     * @return
     */
   def hasSink = activitiesGraph.hasSink
 
   /**
     * checks the import and export parameters of a connection
+    *
     * @param activityFrom
     * @param activityTo
     * @return true if its valid, false otherwise
     */
-  def validConnection(activityFrom: String, activityTo: String) : Boolean = {
+  def validConnection(activityFrom: String, activityTo: String): Boolean = {
     val from = activityById(activityFrom).exportName
     val to = activityById(activityTo).importName
-    if(to.size==1)
+    if (to.size == 1)
       from == to.head
-    else if(to.size == 2)
+    else if (to.size == 2)
       from == to.head || from == to.tail.head
     else
       true
@@ -192,43 +197,46 @@ class GraphRep(name: String, importName: String, exportName: String, activitiesG
 
   /**
     * checks the import and export parameters of a connection
+    *
     * @param activityFrom
     * @param activityTo
     * @return true if its valid, false otherwise
     */
-  def validConnection(activityFrom: String, activityTo: List[String]) : Boolean = {
-    if(!validConnection(activityFrom,activityTo.head) && validConnection(activityFrom,activityTo.tail))
+  def validConnection(activityFrom: String, activityTo: List[String]): Boolean = {
+    if (!validConnection(activityFrom, activityTo.head) && validConnection(activityFrom, activityTo.tail))
       throw new InvalidConnections
     else true
   }
 
   /**
     * verifies if the parameter's value to export it's the same has the export parameter of the Sink
+    *
     * @param value
     * @param exportName
     * @return
     */
-  def validCollector(value: ActivityRep, exportName: String) : Boolean = if(exportName.isEmpty || value.exportName.isEmpty) true  else  value.exportName == exportName
+  def validCollector(value: ActivityRep, exportName: String): Boolean = if (exportName.isEmpty || value.exportName.isEmpty) true else value.exportName == exportName
 
   /**
     * verifies if the parameter's value to import it's the same has the import parameter of the Root
+    *
     * @param value
     * @param importName
     * @return
     */
-  def validInjector(value: ActivityRep, importName: String) : Boolean = if(importName.isEmpty || value.importName.isEmpty) true  else value.importName.head == importName
+  def validInjector(value: ActivityRep, importName: String): Boolean = if (importName.isEmpty || value.importName.isEmpty) true else value.importName.head == importName
 
   /**
     * checks if a graph has a Sink, Root and do not has cycles or subgraphs
+    *
     * @return true if it's a valid graph, false otherwise
     */
-  def checkValidGraph() : Boolean = {
-    if(activitiesGraph.numberNodes==1 && (!activitiesGraph.hasSink || !activitiesGraph.hasRoot || !validConnection(activitiesGraph.getRoot.get.id, activitiesGraph.getSink.get.id)))
+  def checkValidGraph(): Boolean = {
+    if (activitiesGraph.numberNodes == 1 && (!activitiesGraph.hasSink || !activitiesGraph.hasRoot || !validConnection(activitiesGraph.getRoot.get.id, activitiesGraph.getSink.get.id)))
       false
-    else
-      if(!activitiesGraph.hasSink || !activitiesGraph.hasRoot || activitiesGraph.hasCyclesAndSubGraphs
-        || !validInjector(activitiesGraph.getRoot.get,importName) || !validCollector(activitiesGraph.getSink.get,exportName))
-        false
+    else if (!activitiesGraph.hasSink || !activitiesGraph.hasRoot || activitiesGraph.hasCyclesAndSubGraphs
+      || !validInjector(activitiesGraph.getRoot.get, importName) || !validCollector(activitiesGraph.getSink.get, exportName))
+      false
     else true
   }
 
@@ -246,20 +254,31 @@ class GraphRep(name: String, importName: String, exportName: String, activitiesG
 
   /**
     * gets the next activities from a single activity
+    *
     * @param activity
     * @return next activities
     */
   def getConnections(activity: ActivityRep) = activitiesGraph.getAdj(activity)
 
   /**
+    * gets the previous activities from a single activity
+    *
+    * @param activity
+    * @return next activities
+    */
+  def getReverseConnections(activity: ActivityRep) = activitiesGraph.getInverseAdj(activity)
+
+  /**
     * compares the number of nodes that references a single activity
+    *
     * @param activityRep
     * @return if two activities references that activity it's true because we have a join, false otherwise
     */
-  def isJoin(activityRep: ActivityRep) : Boolean = activitiesGraph.referencedByNodes(activityRep)==2
+  def isJoin(activityRep: ActivityRep): Boolean = activitiesGraph.referencedByNodes(activityRep) == 2
 
   /**
     * returns the string of a value if the value its defined
+    *
     * @param s
     * @param value
     * @return

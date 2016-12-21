@@ -1,6 +1,6 @@
 package distributer
 
-import java.io.{File, FilenameFilter}
+import java.io.File
 
 /**
   * Created by #ScalaTeam on 21/12/2016.
