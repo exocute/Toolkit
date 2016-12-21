@@ -2,6 +2,7 @@ package distributer
 
 import java.util
 
+import clifton.nodes.exceptions.SpaceNotDefined
 import com.zink.fly.kit.FlyFinder
 
 /**
@@ -16,23 +17,22 @@ class ClassFinder {
     val space = finder.find(TAG)
 
     if(space == null)
-      throw new Exception() //FIXME
+      throw new SpaceNotDefined(TAG)
 
     println("Please enter class to find on space: ")
     val className = scala.io.StdIn.readLine()
 
     println("Looking for ["+className+"]")
 
-    val je = new FlyJarEntry(null,null)
     val ce = new FlyClassEntry(null,null)
 
-    val entries:util.Collection[FlyClassEntry] = space.readMany(ce,1000000) //FIXME
+    val entries:util.Collection[FlyClassEntry] = space.readMany(ce,1000000)
 
     println("Found "+ entries.size() + " classes in jar space")
 
     for{
-      e <- entries
-    } if(e.fileName.contains(className)) println("Found ["+e.fileName + "] in jar ["+e.jarName+"]")
+      (e : FlyClassEntry) <- entries
+    } if(e.className.contains(className)) println("Found ["+e.className + "] in jar ["+e.jarName+"]")
 
     println("Done!")
   }
