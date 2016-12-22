@@ -28,15 +28,23 @@ class GraphCreator {
 
       signal.setActivityName(act.name + ":" + act.parameters.mkString(":"))
 
-      graph.getConnections(act).foreach(nextAct => {
-        val inMarker = graphInstance + nextAct.id
-        signal.addInMarker(inMarker)
-      })
+      val in = graph.getConnections(act)
+      if (in.isEmpty)
+        signal.addInMarker(injectMarker)
+      else
+        in.foreach(nextAct => {
+          val inMarker = graphInstance + nextAct.id
+          signal.addInMarker(inMarker)
+        })
 
-      graph.getReverseConnections(act).foreach(prevAct => {
-        val outMarker = graphInstance + prevAct.id
-        signal.addOutMarker(outMarker)
-      })
+      val out = graph.getReverseConnections(act)
+      if (out.isEmpty)
+        signal.addOutMarker(collectMarker)
+      else
+        out.foreach(prevAct => {
+          val outMarker = graphInstance + prevAct.id
+          signal.addOutMarker(outMarker)
+        })
 
       outChannel.putObject(signal)
       println(s"Sending signal: $signal")
