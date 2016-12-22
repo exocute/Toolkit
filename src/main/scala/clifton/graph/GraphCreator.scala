@@ -6,6 +6,8 @@ import clifton.nodes.SignalOutChannel
 import clifton.signals.ActivitySignal
 import toolkit.{ActivityRep, GraphRep}
 
+import scala.collection.mutable
+
 /**
   * Created by #ScalaTeam on 20/12/2016.
   */
@@ -23,12 +25,14 @@ class GraphCreator {
     injectMarker = graphInstance + clifton.inoSignal
     collectMarker = graphInstance + clifton.exoSignal
 
+    var seenActivities = mutable.HashSet[String]()
+
     def addSignal(act: ActivityRep): Unit = {
       val signal = new ActivitySignal
 
       signal.setActivityName(act.name + ":" + act.parameters.mkString(":"))
 
-      val in = graph.getConnections(act)
+      val in = graph.getReverseConnections(act)
       if (in.isEmpty)
         signal.addInMarker(injectMarker)
       else
@@ -37,7 +41,7 @@ class GraphCreator {
           signal.addInMarker(inMarker)
         })
 
-      val out = graph.getReverseConnections(act)
+      val out = graph.getConnections(act)
       if (out.isEmpty)
         signal.addOutMarker(collectMarker)
       else
@@ -49,7 +53,11 @@ class GraphCreator {
       outChannel.putObject(signal)
       println(s"Sending signal: $signal")
 
-      graph.getConnections(act).foreach(addSignal)
+      seenActivities += act.id
+      graph.getConnections(act).foreach { nextAct =>
+        if (!seenActivities.contains(nextAct.id))
+          addSignal(nextAct)
+      }
     }
 
     addSignal(graph.getRoot.get)
