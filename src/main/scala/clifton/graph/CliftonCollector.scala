@@ -25,12 +25,11 @@ class CliftonCollector(marker : String) {
     } catch{
       case e : Exception => throw new CollectException("Collector Error")
     }
-
     if(ent != null) ent.payload
     else null
   }
 
-  def collect(numObjects : Int, waitTime : Long) = {
+  def collect(numObjects : Int, waitTime : Long) : Serializable = {
     var serializable: List[Serializable] = Nil
     val start = System.currentTimeMillis()
     var remainingTime = waitTime

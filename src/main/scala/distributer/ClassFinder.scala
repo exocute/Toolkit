@@ -4,6 +4,7 @@ import java.util
 
 import clifton.nodes.exceptions.SpaceNotDefined
 import com.zink.fly.kit.FlyFinder
+import scala.collection.JavaConverters._
 
 /**
   * Created by #ScalaTeam on 21/12/2016.
@@ -27,9 +28,9 @@ class ClassFinder {
 
     val ce = new FlyClassEntry(null,null)
 
-    val entries:util.Collection[FlyClassEntry] = space.readMany(ce,1000000)
+    val entries = space.readMany(ce,1000000).asScala.toList
 
-    println("Found "+ entries.size() + " classes in jar space")
+    println("Found "+ entries.size + " classes in jar space")
 
     for{
       (e : FlyClassEntry) <- entries

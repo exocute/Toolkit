@@ -17,17 +17,17 @@ class CliftonGraph {
   private var injector: CliftonInjector = _
   private var collector: CliftonCollector = _
 
-  def this(file: File, signalHost: String = null, dataHost: String = null) = {
+  def this(file: File, signalHost: String, dataHost: String) = {
     this()
     init(readFile(file.toPath.toString), signalHost, dataHost)
   }
 
-  def this(fileAsText: String, signalHost: String = null, dataHost: String = null) = {
+  def this(fileAsText: String, signalHost: String, dataHost: String) = {
     this()
     init(fileAsText, signalHost, dataHost)
   }
 
-  def this(graph: GraphRep, signalHost: String = null, dataHost: String = null) = {
+  def this(graph: GraphRep, signalHost: String, dataHost: String) = {
     this()
     setInfo(graph, signalHost, dataHost)
   }
@@ -44,8 +44,8 @@ class CliftonGraph {
   }
 
   def setSignals(signalHost: String, dataHost: String) = {
-    if (!signalHost.isEmpty) SpaceCache.signalHost = signalHost
-    if (!dataHost.isEmpty) SpaceCache.dataHost = dataHost
+    if (signalHost!=null) SpaceCache.signalHost = signalHost
+    if (dataHost!=null) SpaceCache.dataHost = dataHost
   }
 
   def init(fileAsText: String, signalHost: String, dataHost: String) = {

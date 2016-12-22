@@ -16,7 +16,10 @@ class JarFileFilter extends java.io.FilenameFilter {
       val file: File = new File(dir, name)
       val lastModified = file.lastModified
       jarMap.get(name) match {
-        case None | Some(date) if date != lastModified =>
+        case None =>
+          jarMap += name -> lastModified
+          true
+        case Some(date) if date != lastModified =>
           jarMap += name -> lastModified
           true
         case _ =>

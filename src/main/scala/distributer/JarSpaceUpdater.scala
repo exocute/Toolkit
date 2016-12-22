@@ -33,7 +33,7 @@ class JarSpaceUpdater(flyHost: String) extends JarUpdater {
     je.fileName = jarFile.getName
     System.out.println("Updating Jar Entry " + je)
     space.take(je, 0L)
-    je.bytes = fileHandler.getJarAsBytes(jarFile)
+    je.bytes = fileHandler.getJarBytes(jarFile)
     space.write(je, JarSpaceUpdater.ENTRY_LEASE)
   }
 

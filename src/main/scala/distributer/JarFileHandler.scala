@@ -17,8 +17,7 @@ class JarFileHandler {
 
     try {
       val jis: JarInputStream = new JarInputStream(new FileInputStream(file))
-      var je: JarEntry = _
-      je = jis.getNextJarEntry
+      var je: JarEntry = jis.getNextJarEntry
       while (je != null) {
 
         var entryName = je.getName
@@ -42,11 +41,10 @@ class JarFileHandler {
 
   def getJarBytes(file: File): Array[Byte] = {
 
-    var roChannel: FileChannel = _
-    var jarAsBytes: Array[Byte] = _
+    var jarAsBytes: Array[Byte] = null
 
     try {
-      roChannel = new RandomAccessFile(file, "r").getChannel
+      val roChannel: FileChannel = new RandomAccessFile(file, "r").getChannel
       val roBuf: ByteBuffer = roChannel.map(FileChannel.MapMode.READ_ONLY, 0, roChannel.size())
       roBuf.clear()
       jarAsBytes = Array.ofDim[Byte](roBuf.capacity())

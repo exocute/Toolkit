@@ -6,8 +6,8 @@ package clifton.signals
 class ActivitySignal extends Serializable {
 
   private var activity: String = _
-  private var inMarkers: Vector[String] = _
-  private var outMarkers: Vector[String] = _
+  private var inMarkers: Vector[String] = Vector[String]()
+  private var outMarkers: Vector[String] = Vector[String]()
 
   def getActivityName: String = activity
 

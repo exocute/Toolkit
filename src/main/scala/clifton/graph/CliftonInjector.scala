@@ -14,7 +14,7 @@ class CliftonInjector(marker : String) {
   var ent = new ExoEntry(marker,null)
   val INJECTION_LEASE = 2 *60 * 1000
 
-  def inject(input: Serializable) =  {
+  def inject(input: Serializable) : Unit =  {
     ent.payload = input
 
     val space : FlyPrime = SpaceCache.getDataSpace
@@ -26,14 +26,14 @@ class CliftonInjector(marker : String) {
     }
   }
 
-  def inject(ocurrences: Int,input:Serializable) = {
+  def inject(ocurrences: Int,input:Serializable) : Unit = {
     if(ocurrences<1) throw new InjectException("Too few occurrences. Occurrences should be >= 1")
     for{
       x <- 0 to ocurrences
     } inject(input)
   }
 
-  def inject(inputs:Array[Serializable]) = {
+  def inject(inputs:Array[Serializable]) : Unit = {
     inputs.foreach(x=>inject(x))
   }
 }
