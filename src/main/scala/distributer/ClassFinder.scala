@@ -1,9 +1,8 @@
 package distributer
 
-import java.util
-
 import clifton.nodes.exceptions.SpaceNotDefined
 import com.zink.fly.kit.FlyFinder
+
 import scala.collection.JavaConverters._
 
 /**

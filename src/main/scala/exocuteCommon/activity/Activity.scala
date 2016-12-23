@@ -7,6 +7,6 @@ import java.io.Serializable
   */
 trait Activity {
 
-  def process(input : Serializable, params : Vector[String])
+  def process(input: Serializable, params: Vector[String]): Serializable
 
 }

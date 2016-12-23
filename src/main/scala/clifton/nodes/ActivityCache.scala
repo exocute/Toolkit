@@ -23,9 +23,12 @@ object ActivityCache {
           val jar = CliftonClassLoader.getJarFromSpace(name)
           if (jar != null) {
             val acl = cl.loadClass(name)
-            val activity = acl.getClass.newInstance.asInstanceOf[Activity]
-            _cache.put(activity.getClass.getName, activity)
-            Some(activity)
+            acl.newInstance match {
+              case activity: Activity =>
+                _cache.put(activity.getClass.getName, activity)
+                Some(activity)
+              case _ => None
+            }
           } else
             None
         } catch {

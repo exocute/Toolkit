@@ -16,7 +16,6 @@ class GraphCreator {
   private var injectMarker: String = _
   private var collectMarker: String = _
 
-
   def injectGraph(graph: GraphRep): Unit = {
     val outChannel = new SignalOutChannel(clifton.inoSignal)
 
@@ -28,26 +27,26 @@ class GraphCreator {
     var seenActivities = mutable.HashSet[String]()
 
     def addSignal(act: ActivityRep): Unit = {
-      val signal = new ActivitySignal
+      val signal = new ActivitySignal()
 
-      signal.setActivityName(act.name + ":" + act.parameters.mkString(":"))
+      signal.name = act.name // + ":" + act.parameters.mkString(":")
 
       val in = graph.getReverseConnections(act)
       if (in.isEmpty)
-        signal.addInMarker(injectMarker)
+        signal.inMarkers += injectMarker
       else
         in.foreach(nextAct => {
           val inMarker = graphInstance + nextAct.id
-          signal.addInMarker(inMarker)
+          signal.inMarkers += inMarker
         })
 
       val out = graph.getConnections(act)
       if (out.isEmpty)
-        signal.addOutMarker(collectMarker)
+        signal.outMarkers += collectMarker
       else
         out.foreach(prevAct => {
           val outMarker = graphInstance + prevAct.id
-          signal.addOutMarker(outMarker)
+          signal.outMarkers += outMarker
         })
 
       outChannel.putObject(signal)

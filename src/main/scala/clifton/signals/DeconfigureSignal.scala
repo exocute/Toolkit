@@ -7,9 +7,9 @@ class DeconfigureSignal extends Serializable {
 
   private var graphInstance: String = _
 
-  def getPipelineInstance: String = graphInstance
+  def getGraphInstance: String = graphInstance
 
-  def setPipelineInstance(graphInstance: String) = this.graphInstance = graphInstance
+  def setGraphInstance(graphInstance: String) = this.graphInstance = graphInstance
 
   override def toString: String = "Deconfigure " + graphInstance
 }
