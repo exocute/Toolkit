@@ -17,9 +17,10 @@ class CliftonGraph {
   private var injector: CliftonInjector = _
   private var collector: CliftonCollector = _
 
-  def this(file: File, signalHost: String, dataHost: String) = {
+  def this(file: File, signalHost: String, dataHost: String, jarHost:String) = {
     this()
     init(readFile(file.toPath.toString), signalHost, dataHost)
+    SpaceCache.jarHost = jarHost
   }
 
   def this(fileAsText: String, signalHost: String, dataHost: String) = {
@@ -32,7 +33,7 @@ class CliftonGraph {
     setInfo(graph, signalHost, dataHost)
   }
 
-  def getGraphRep(parser: ActivityParser): Option[GraphRep] = {
+  private def getGraphRep(parser: ActivityParser): Option[GraphRep] = {
     val res: Try[GraphRep] = parser.InputLine.run()
     res match {
       case Success(graph) => {
@@ -43,12 +44,12 @@ class CliftonGraph {
     }
   }
 
-  def setSignals(signalHost: String, dataHost: String) = {
+  private def setSignals(signalHost: String, dataHost: String) = {
     if (signalHost!=null) SpaceCache.signalHost = signalHost
     if (dataHost!=null) SpaceCache.dataHost = dataHost
   }
 
-  def init(fileAsText: String, signalHost: String, dataHost: String) = {
+  private def init(fileAsText: String, signalHost: String, dataHost: String) = {
     val plnClean = clearCommnents(fileAsText)
     val parser = new ActivityParser(plnClean)
     getGraphRep(parser) match {
@@ -59,7 +60,7 @@ class CliftonGraph {
     }
   }
 
-  def setInfo(graph: GraphRep, signalHost: String, dataHost: String) = {
+  private def setInfo(graph: GraphRep, signalHost: String, dataHost: String) = {
     graphRep = graph
     setSignals(signalHost, dataHost)
     val graphCreator = new GraphCreator()

@@ -17,7 +17,7 @@ import distributer.FlyJarEntry;
 
 public class CliftonClassLoader extends ClassLoader {
 
-    private HashMap<String, byte[]> classByteCodes = new HashMap<String, byte[]>();
+    public HashMap<String, byte[]> classByteCodes = new HashMap<String, byte[]>();
 
     //private static String flyHost;
 
@@ -173,7 +173,7 @@ public class CliftonClassLoader extends ClassLoader {
         return jarAsBytes;
     }
 
-    static byte[] getJarFromSpace(String className) {
+    public static byte[] getJarFromSpace(String className) {
         // get the JarSpace
         if (space == null) {
             space = SpaceCache.getJarSpace();
