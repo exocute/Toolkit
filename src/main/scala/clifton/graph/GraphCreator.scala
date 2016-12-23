@@ -33,20 +33,20 @@ class GraphCreator {
 
       val in = graph.getReverseConnections(act)
       if (in.isEmpty)
-        signal.inMarkers += injectMarker
+        signal.inMarkers = signal.inMarkers :+ injectMarker
       else
         in.foreach(nextAct => {
           val inMarker = graphInstance + nextAct.id
-          signal.inMarkers += inMarker
+          signal.inMarkers = signal.inMarkers :+ inMarker
         })
 
       val out = graph.getConnections(act)
       if (out.isEmpty)
-        signal.outMarkers += collectMarker
+        signal.outMarkers = signal.outMarkers :+ collectMarker
       else
         out.foreach(prevAct => {
           val outMarker = graphInstance + prevAct.id
-          signal.outMarkers += outMarker
+          signal.outMarkers = signal.outMarkers :+ outMarker
         })
 
       outChannel.putObject(signal)

@@ -27,7 +27,7 @@ class ActivitySignal(var name: String, var inMarkers: Vector[String], var outMar
 
   override def toString: String = {
     val ret = new StringBuilder(64)
-    ret.append("Activity :" + activity + "\n"
+    ret.append("Activity :" + name + "\n"
       + "In  " + inMarkers.mkString(", ") + "\n"
       + "Out " + outMarkers.mkString(", ") + "\n")
     ret.toString
