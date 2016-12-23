@@ -1,0 +1,4 @@
+Graph graph
+	Activity A toolkit/Jar/A
+	Activity B toolkit/Jar/B
+	Connection A->B
