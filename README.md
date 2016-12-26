@@ -20,11 +20,11 @@ Graph {name}<br />
 [Import {param}]<br />
 [Export {param}]<br />
 
-Activity ID {name}:{params}    |<br />
-[Import {param}]               |   one or more activities<br />
-[Export {param}]               |<br />
+Activity ID {name}:{params}   
+[Import {param}]              
+[Export {param}]              
 
-Connection from->to : from->to_1,to_2  | zero or more<br />
+Connection from->to : from->to_1,to_2 
 
 Notes: <br />
 1) Connection can be set using the word connection multiple times or separating the connection with ':'<br />
