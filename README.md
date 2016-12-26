@@ -35,9 +35,7 @@ Notes:
 ## Specs
 
 ###Versions and Programs used 
- Scala -> 12.0.2
- Java  -> 1.8
- FlyObject Space -> https://github.com/fly-object-space
+
  
 | Software       | Version       | Link                                   |
 | ---------------|:-------------:| --------------------------------------:|
