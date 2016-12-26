@@ -26,7 +26,7 @@ Activity ID {name}:{params}    |<br />
 
 Connection from->to : from->to_1,to_2  | zero or more<br />
 
-Notes: 
+Notes: <br />
 1) Connection can be set using the word connection multiple times or separating the connection with ':'<br />
 2) ID's should be unique<br />
 3) The construction of the graph should be correct. Every graph should have a source and sink<br />
