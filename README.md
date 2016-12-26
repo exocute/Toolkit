@@ -6,9 +6,10 @@ Scala Version of Exocute Plataform
 
 ## News 
 
-26/12/2016 --> Exocute API V1 BETA - Works for simple sequential graphs with random number of activities
-           --> Allows connections to multiple servers
-           --> Uses Streams to calculate results
+26/12/2016 <br />
+--> Exocute API V1 BETA - Works for simple sequential graphs with random number of activities<br />
+--> Allows connections to multiple servers<br />
+--> Uses Streams to calculate results<br />
 
 -------------------------------------------------------------------------------
 
