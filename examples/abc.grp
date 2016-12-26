@@ -1,5 +1,5 @@
 Graph graph
-	Activity A toolkit.Jar.A
+	Activity A toolkit.Jar.A:100
 	Activity B toolkit.Jar.B
 	Activity C toolkit.Jar.C
 	Connection A->B: B->C

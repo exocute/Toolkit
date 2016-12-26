@@ -9,27 +9,27 @@ import com.zink.fly.FlyPrime
 /**
   * Created by #ScalaTeam on 21/12/2016.
   */
-class CliftonCollector(marker : String) {
+class CliftonCollector(marker: String) {
 
-  var tpl = new ExoEntry(marker,null)
+  var tpl = new ExoEntry(marker, null)
 
-  def collect : Serializable = {
+  def collect: Serializable = {
     collect(0L)
   }
 
-  def collect(waitTime : Long) : Serializable = {
-    val space : FlyPrime = SpaceCache.getDataSpace
-    val ent : ExoEntry = new ExoEntry()
-    try{
-      val ent = space.take(tpl,waitTime)
-    } catch{
-      case e : Exception => throw new CollectException("Collector Error")
+  def collect(waitTime: Long): Serializable = {
+    val space: FlyPrime = SpaceCache.getDataSpace
+    val ent: ExoEntry = new ExoEntry()
+    try {
+      val ent = space.take(tpl, waitTime)
+    } catch {
+      case e: Exception => throw new CollectException("Collector Error")
     }
-    if(ent != null) ent.payload
+    if (ent != null) ent.payload
     else null
   }
 
-  def collect(numObjects : Int, waitTime : Long) : Serializable = {
+  def collect(numObjects: Int, waitTime: Long): Serializable = {
     var serializable: List[Serializable] = Nil
     val start = System.currentTimeMillis()
     var remainingTime = waitTime
@@ -49,7 +49,7 @@ class CliftonCollector(marker : String) {
       }
       remainingTime = waitTime - (System.currentTimeMillis() - start)
     }
-  serializable
+    serializable
   }
 
   def getMarker = marker

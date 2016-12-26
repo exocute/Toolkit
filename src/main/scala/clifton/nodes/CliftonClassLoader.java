@@ -155,7 +155,7 @@ public class CliftonClassLoader extends ClassLoader {
      * @param file
      * @return the whole file as an array of bytes
      */
-    public byte[] getJarAsBytes(File file) {
+    public static byte[] getJarAsBytes(File file) {
         FileChannel roChannel;
         byte[] jarAsBytes = null;
 
