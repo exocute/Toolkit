@@ -36,4 +36,6 @@ class CliftonInjector(marker : String) {
   def inject(inputs:Array[Serializable]) : Unit = {
     inputs.foreach(x=>inject(x))
   }
+
+  def getMarker = marker
 }

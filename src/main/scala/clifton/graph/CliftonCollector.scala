@@ -52,4 +52,6 @@ class CliftonCollector(marker : String) {
   serializable
   }
 
+  def getMarker = marker
+
 }

@@ -183,8 +183,8 @@ public class CliftonClassLoader extends ClassLoader {
         }
 
         byte[] reply = null;
-        FlyClassEntry classTmpl = new FlyClassEntry(className, "");
-        FlyClassEntry fce = space.read(classTmpl, 0L);
+        FlyClassEntry classTmpl = new FlyClassEntry(className, null);
+        FlyClassEntry fce = space.read(classTmpl, 200);
         if (fce != null) {
             FlyJarEntry jarTmpl = new FlyJarEntry(fce.jarName(), null);
             FlyJarEntry fje = space.read(jarTmpl, 0L);

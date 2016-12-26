@@ -28,7 +28,7 @@ object SpaceCache {
             val finder: FlyFinder = new FlyFinder()
             spaceMap.put(tag, finder.find(tag))
           } else
-            spaceMap.put(tag, FlyFactory.makeFly())
+            spaceMap.put(tag, FlyFactory.makeFly(host))
           spaceMap(tag)
         } catch {
           case e: Exception =>

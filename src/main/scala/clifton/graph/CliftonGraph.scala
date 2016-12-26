@@ -19,8 +19,8 @@ class CliftonGraph {
 
   def this(file: File, signalHost: String, dataHost: String, jarHost:String) = {
     this()
-    init(readFile(file.toPath.toString), signalHost, dataHost)
     SpaceCache.jarHost = jarHost
+    init(readFile(file.toPath.toString), signalHost, dataHost)
   }
 
   def this(fileAsText: String, signalHost: String, dataHost: String) = {
@@ -40,7 +40,9 @@ class CliftonGraph {
         if (graph.checkValidGraph()) Some(graph)
         else None
       }
-      case _ => None
+      case _ =>
+        println("ERRO")
+        None
     }
   }
 
@@ -68,5 +70,9 @@ class CliftonGraph {
     injector = new CliftonInjector(graphCreator.getInjectMarker)
     collector = new CliftonCollector(graphCreator.getCollectMarker)
   }
+
+  def getInject = injector
+
+  def getCollector = collector
 
 }
