@@ -51,8 +51,8 @@ object EXOGRAPH_API {
 
     } else {
       val jarHost = "192.168.1.126"
-      val dataHost = "192.168.1.126"
-      val signalHost = "192.168.1.126"
+      val dataHost = "localhost"
+      val signalHost = "localhost"
       val grpName = "examples\\abc.grp"
       println("Connected to " + jarHost + " " + dataHost + " " + signalHost)
       cg = new CliftonGraph(new File(grpName), signalHost, dataHost, jarHost)
@@ -123,7 +123,7 @@ object EXOGRAPH_API {
   def collect(i: Int) = {
     val res = results.take(i).force
     if (!res.isEmpty) {
-      println(results.take(i).force)
+      println(res)
       results = results.drop(i)
     } else println("Nothing to Collect")
   }

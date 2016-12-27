@@ -19,7 +19,7 @@ class GraphCreator {
   private var space:FlyPrime = _
 
   def putObject(signal: ActivitySignal) = {
-    space.write(signal,5000000)
+    space.write(signal,5000000) //FIXME
   }
 
   def injectGraph(graph: GraphRep): Unit = {
