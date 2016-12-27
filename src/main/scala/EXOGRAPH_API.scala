@@ -50,7 +50,6 @@ object EXOGRAPH_API {
       cg = new CliftonGraph(new File(grpName), signalHost, dataHost, jarHost)
 
     } else {
-      val jarHost = "192.168.1.126"
       val dataHost = "localhost"
       val signalHost = "localhost"
       val grpName = "examples\\abc.grp"

@@ -17,7 +17,7 @@ class CliftonGraph {
   private var injector: CliftonInjector = _
   private var collector: CliftonCollector = _
 
-  def this(file: File, signalHost: String, dataHost: String, jarHost:String) = {
+  def this(file: File, signalHost: String, dataHost: String, jarHost: String) = {
     this()
     SpaceCache.jarHost = jarHost
     init(readFile(file.toPath.toString), signalHost, dataHost)
@@ -47,8 +47,8 @@ class CliftonGraph {
   }
 
   private def setSignals(signalHost: String, dataHost: String) = {
-    if (signalHost!=null) SpaceCache.signalHost = signalHost
-    if (dataHost!=null) SpaceCache.dataHost = dataHost
+    if (signalHost != null) SpaceCache.signalHost = signalHost
+    if (dataHost != null) SpaceCache.dataHost = dataHost
   }
 
   private def init(fileAsText: String, signalHost: String, dataHost: String) = {

@@ -9,32 +9,32 @@ import com.zink.fly.FlyPrime
 /**
   * Created by #ScalaTeam on 21/12/2016.
   */
-class CliftonInjector(marker : String) {
+class CliftonInjector(marker: String) {
 
-  var ent = new ExoEntry(marker,null)
-  val INJECTION_LEASE = 2 *60 * 1000
+  var ent = new ExoEntry(marker, null)
+  val INJECTION_LEASE = 2 * 60 * 1000
 
-  def inject(input: Serializable) : Unit =  {
+  def inject(input: Serializable): Unit = {
     ent.payload = input
 
-    val space : FlyPrime = SpaceCache.getDataSpace
+    val space: FlyPrime = SpaceCache.getDataSpace
 
-    try{
-      space.write(ent,INJECTION_LEASE)
+    try {
+      space.write(ent, INJECTION_LEASE)
     } catch {
-      case e:Exception => throw new InjectException("Internal Inject Error")
+      case e: Exception => throw new InjectException("Internal Inject Error")
     }
   }
 
-  def inject(ocurrences: Int,input:Serializable) : Unit = {
-    if(ocurrences<1) throw new InjectException("Too few occurrences. Occurrences should be >= 1")
-    for{
+  def inject(ocurrences: Int, input: Serializable): Unit = {
+    if (ocurrences < 1) throw new InjectException("Too few occurrences. Occurrences should be >= 1")
+    for {
       x <- 0 to ocurrences
     } inject(input)
   }
 
-  def inject(inputs:Array[Serializable]) : Unit = {
-    inputs.foreach(x=>inject(x))
+  def inject(inputs: Array[Serializable]): Unit = {
+    inputs.foreach(x => inject(x))
   }
 
   def getMarker = marker

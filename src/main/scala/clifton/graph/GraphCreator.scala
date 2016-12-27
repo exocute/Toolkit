@@ -16,11 +16,10 @@ class GraphCreator {
 
   private var injectMarker: String = _
   private var collectMarker: String = _
-  private var space:FlyPrime = _
+  private var space: FlyPrime = _
 
   def putObject(signal: ActivitySignal) = {
-    space.write(signal,5000000) //FIXME
-  }
+    space.write(signal,5000000)  }
 
   def injectGraph(graph: GraphRep): Unit = {
     val outChannel = new SignalOutChannel(clifton.inoSignal)
