@@ -6,7 +6,6 @@ import java.util.concurrent.atomic.AtomicInteger
 import clifton.nodes.{ActivityCache, CliftonClassLoader, ExoEntry, SpaceCache}
 import clifton.signals.ActivitySignal
 import com.zink.fly.FlyPrime
-import distributer.FlyJarEntry
 
 /**
   * Created by #ScalaTeam on 23/12/2016.
@@ -52,6 +51,7 @@ object EXOGRAPH_API {
     } else {
       val dataHost = "localhost"
       val signalHost = "localhost"
+      val jarHost = "192.168.1.126"
       val grpName = "examples\\abc.grp"
       println("Connected to " + jarHost + " " + dataHost + " " + signalHost)
       cg = new CliftonGraph(new File(grpName), signalHost, dataHost, jarHost)
