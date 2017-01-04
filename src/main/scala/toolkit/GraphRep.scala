@@ -276,6 +276,8 @@ class GraphRep(val name: String, importName: String, exportName: String, activit
     */
   def isJoin(activityRep: ActivityRep): Boolean = activitiesGraph.referencedByNodes(activityRep) == 2
 
+  def getVectorActivities = activitiesGraph.activities.toVector
+
   /**
     * returns the string of a value if the value its defined
     *
