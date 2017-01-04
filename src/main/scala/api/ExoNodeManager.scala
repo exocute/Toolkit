@@ -33,8 +33,8 @@ object ExoNodeManager extends Thread {
 
       if(!grpFiles.isEmpty){
         val name = grpFiles.head.getName
-        if(grpFiles.head.getActID.size <= newNodes.size) {
-          grpFiles.head.getActID.foreach(x => {
+        if(grpFiles.head.getActsIDs.size <= newNodes.size) {
+          grpFiles.head.getActsIDs.foreach(x => {
             space.write(new ExoEntry(newNodes.dequeue(), ProcessActivitySignal(name + ":" + x)), TIME)
           })
           grpFiles.dequeue()

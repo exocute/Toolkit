@@ -20,7 +20,7 @@ class StarterExoGraph(signalHost: String, dataHost: String, jarHost: String) {
 
   val jarUpdater = new JarSpaceUpdater(jarHost)
 
-  setSignals
+  setSignals()
 
   val space = SpaceCache.getSignalSpace
 
@@ -32,11 +32,11 @@ class StarterExoGraph(signalHost: String, dataHost: String, jarHost: String) {
   def addGraph(grp: File, jars: List[File], time: Int): (CliftonInjector, CliftonCollector) = {
 
     init(readFile(grp.toPath.toString)) match {
-      case Some((x: CliftonInjector, y: CliftonCollector, grp : GraphRep, id)) =>
+      case Some((x: CliftonInjector, y: CliftonCollector, grp: GraphRep, id)) =>
         loadJars(jars)
 
         //gets the space ready for nodes to start interact
-        new grpChecker(new grpInfo(id,grp.getVectorActivities), space).start()
+        new grpChecker(new grpInfo(id, grp.getVectorActivities), space).start()
 
         (x, y)
       case _ => throw new Exception
@@ -70,7 +70,7 @@ class StarterExoGraph(signalHost: String, dataHost: String, jarHost: String) {
     }
   }
 
-  private def setSignals = {
+  private def setSignals() = {
     if (signalHost != null) SpaceCache.signalHost = signalHost
     if (dataHost != null) SpaceCache.dataHost = dataHost
     if (jarHost != null) SpaceCache.jarHost = jarHost
