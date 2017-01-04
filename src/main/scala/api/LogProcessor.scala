@@ -1,8 +1,10 @@
 package api
 
 import java.io.FileWriter
+import java.text.{DateFormat, SimpleDateFormat}
+import java.util.Date
 
-import clifton.nodes.{ExoEntry, SpaceCache}
+import clifton.nodes.{ExoEntry, Log, SpaceCache}
 import clifton.signals.LoggingSignal
 import com.zink.fly.FlyPrime
 
@@ -15,17 +17,22 @@ object LogProcessor extends Thread {
   val space : FlyPrime = SpaceCache.getSignalSpace
   val TAKETIME = 0L
   val tmpl = new ExoEntry("LOG",null)
-  val INTERVALTIME = 100
-
+  val INTERVALTIME = 1000
+  val dateFormat: DateFormat  = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
+  Log.info("test1")
+  Log.info("test2")
+  Log.error("test3")
 
   override def run(): Unit = {
 
     while(true){
       val res = space.take(tmpl,TAKETIME)
       if(res!=null){
+        val date:Date = new Date()
+        System.out.println(dateFormat.format(date))
         val file : FileWriter = new FileWriter("log.txt",true)
         val log = res.payload.asInstanceOf[LoggingSignal]
-        file.write(log.getLogMessage+"\n")
+        file.write(dateFormat.format(date)+":"+log.getLogMessage+"\n")
         file.close()
       }
       Thread.sleep(INTERVALTIME)

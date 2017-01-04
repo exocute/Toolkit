@@ -1,7 +1,7 @@
 package clifton.nodes
 
 import clifton.{Info, LogLevel, exoSignal}
-import clifton.signals.LoggingSinal
+import clifton.signals.LoggingSignal
 
 /**
   * Created by #ScalaTeam on 20/12/2016.
@@ -10,9 +10,9 @@ object Log {
 
   private var logLevel: LogLevel = Info
 
-  private var log: LoggingSinal = new LoggingSinal
+  private var log: LoggingSignal = new LoggingSignal
 
-  private val outChannel: OutChannel = new SignalOutChannel(exoSignal)
+  private val outChannel: OutChannel = new SignalOutChannel("LOG")
 
   private val local: Boolean = true
 
