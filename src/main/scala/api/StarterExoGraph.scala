@@ -22,15 +22,22 @@ class StarterExoGraph(signalHost: String, dataHost: String, jarHost: String) {
 
   setSignals
 
+  val space = SpaceCache.getSignalSpace
+
   def loadJars(jars: List[File]) = {
-    val space = SpaceCache.getSignalSpace
+
     jars.foreach(file => jarUpdater.updateJarEntry(file))
   }
 
   def addGraph(grp: File, jars: List[File], time: Int): (CliftonInjector, CliftonCollector) = {
+
     init(readFile(grp.toPath.toString)) match {
-      case Some((x: CliftonInjector, y: CliftonCollector)) =>
+      case Some((x: CliftonInjector, y: CliftonCollector, grp : GraphRep, id)) =>
         loadJars(jars)
+
+        //gets the space ready for nodes to start interact
+        new grpChecker(new grpInfo(id,grp.getVectorActivities), space).start()
+
         (x, y)
       case _ => throw new Exception
     }
@@ -49,7 +56,7 @@ class StarterExoGraph(signalHost: String, dataHost: String, jarHost: String) {
     }
   }
 
-  private def init(fileAsText: String): Option[(CliftonInjector, CliftonCollector)] = {
+  private def init(fileAsText: String) = {
     val plnClean = clearCommnents(fileAsText)
     val parser = new ActivityParser(plnClean)
     getGraphRep(parser) match {
@@ -57,7 +64,7 @@ class StarterExoGraph(signalHost: String, dataHost: String, jarHost: String) {
         val graphCreator = new GraphCreator()
         graphCreator.injectGraph(graphREP)
         val id = UUID.randomUUID().toString
-        Some(new CliftonInjector(id), new CliftonCollector(id))
+        Some(new CliftonInjector(id), new CliftonCollector(id), graphREP, id)
       }
       case _ => None
     }
