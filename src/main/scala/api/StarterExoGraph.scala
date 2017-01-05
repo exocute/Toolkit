@@ -6,6 +6,7 @@ import java.util.UUID
 import clifton._
 import clifton.graph.{CliftonCollector, CliftonInjector, GraphCreator}
 import clifton.nodes.{CliftonClassLoader, SpaceCache}
+import com.zink.fly.FlyPrime
 import distributer.{FlyClassEntry, FlyJarEntry, JarSpaceUpdater}
 import toolkit.{ActivityParser, GraphRep}
 
@@ -16,16 +17,15 @@ import scala.util.{Success, Try}
   */
 class StarterExoGraph(signalHost: String, dataHost: String, jarHost: String) {
 
-  val TIME = 10 * 60 * 1000
+  val TIME: Long = 10 * 60 * 1000
 
   val jarUpdater = new JarSpaceUpdater(jarHost)
 
   setSignals()
 
-  val space = SpaceCache.getSignalSpace
+  private val space: FlyPrime = SpaceCache.getSignalSpace
 
-  def loadJars(jars: List[File]) = {
-
+  def loadJars(jars: List[File]): Unit = {
     jars.foreach(file => jarUpdater.updateJarEntry(file))
   }
 
@@ -36,7 +36,7 @@ class StarterExoGraph(signalHost: String, dataHost: String, jarHost: String) {
         loadJars(jars)
 
         //gets the space ready for nodes to start interact
-        new grpChecker(new grpInfo(id, grp.getVectorActivities), space).start()
+        new GrpChecker(new GrpInfo(id, grp.getVectorActivities), space).start()
 
         (x, y)
       case _ => throw new Exception
@@ -60,12 +60,11 @@ class StarterExoGraph(signalHost: String, dataHost: String, jarHost: String) {
     val plnClean = clearCommnents(fileAsText)
     val parser = new ActivityParser(plnClean)
     getGraphRep(parser) match {
-      case Some(graphREP) => {
+      case Some(graphREP) =>
         val graphCreator = new GraphCreator()
         graphCreator.injectGraph(graphREP)
         val id = UUID.randomUUID().toString
         Some(new CliftonInjector(id), new CliftonCollector(id), graphREP, id)
-      }
       case _ => None
     }
   }

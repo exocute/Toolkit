@@ -1,6 +1,6 @@
 package clifton.nodes
 
-import clifton.{Info, LogLevel, exoSignal}
+import clifton.{Info, Error, LogLevel}
 import clifton.signals.LoggingSignal
 
 /**
@@ -8,46 +8,33 @@ import clifton.signals.LoggingSignal
   */
 object Log {
 
-  private var logLevel: LogLevel = Info
+  private val log: LoggingSignal = new LoggingSignal
 
-  private var log: LoggingSignal = new LoggingSignal
+  private val TIME = 60 * 60 * 1000
+  private val outChannel: OutChannel = new SignalOutChannel("LOG", TIME)
 
-  private val outChannel: OutChannel = new SignalOutChannel("LOG")
-
-  private val local: Boolean = true
-
-  def sendMessage(msg: String) = {
+  private def sendMessage(msg: String, logLevel: LogLevel) = {
     log.setLogLevel(logLevel)
-    log.setLogMessage(formatMessage(msg))
+    log.setLogMessage(msg)
     outChannel.putObject(log)
-    if (local) println(formatMessage(msg))
   }
 
-  def info(msg: String) = logLevel match {
-    case Info => sendMessage(msg)
-    case _ => ()
-  }
+  def info(msg: String) = sendMessage(msg, Info)
 
-  def error(msg: String) = {
-    sendMessage(msg)
-  }
-
-  def setLogLevel(logLevel: LogLevel) = {
-    this.logLevel = logLevel
-    info("Set logging level to " + this.logLevel)
-  }
+  def error(msg: String) = sendMessage(formatMessage(msg), Error)
 
   private var sb = new StringBuilder
 
   private def formatMessage(msg: String) = {
     // check an exception and catch the resulting stuff
     val stack = new Throwable().getStackTrace
-    sb.setLength(0)
-    sb.append(stack(4).getClassName)
+    sb.clear()
+    val callerTrace = stack(3)
+    sb.append(callerTrace.getClassName)
     sb.append(":")
-    sb.append(stack(4).getMethodName)
+    sb.append(callerTrace.getMethodName)
     sb.append(":")
-    sb.append(stack(4).getLineNumber)
+    sb.append(callerTrace.getLineNumber)
     sb.append(":")
     sb + msg
   }
