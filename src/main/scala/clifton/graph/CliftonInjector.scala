@@ -17,16 +17,16 @@ class CliftonInjector(marker: String, rootAct : String) {
   val INJECTION_LEASE = 2 * 60 * 1000
   val space: FlyPrime = SpaceCache.getDataSpace
 
-  def inject(input: Serializable): Unit = {
-
-    ent.payload = new DataSignal(rootAct, marker, input, UUID.randomUUID().toString)
+  def inject(input: Serializable): String = {
+    val id = UUID.randomUUID().toString
+    ent.payload = new DataSignal(rootAct, marker, input, id)
 
     try {
-      println(ent)
       space.write(ent, INJECTION_LEASE)
     } catch {
       case e: Exception => throw new InjectException("Internal Inject Error")
     }
+    id
   }
 
   def inject(ocurrences: Int, input: Serializable): Unit = {

@@ -86,7 +86,7 @@ class CliftonNode extends Thread {
             sleepTime = MIN_SLEEP_TIME
             runningSince = System.currentTimeMillis()
             val result = activity.process(dataSig.res, activitySignal.params)
-            println(actId+"- Processed "+dataSig.res+" --> "+result)
+            println(actId + "- Processed " + dataSig.res + " --> " + result)
             insertNewResult(result, activitySignal, actId, dataSig.injectID)
           } else {
             // if nothing was found, it will sleep for a while
@@ -132,7 +132,6 @@ class CliftonNode extends Thread {
           ActivityCache.getActivity(activitySignal.name) match {
             case Some(activity) =>
               templaceUpdateAct.payload = (nodeId, activityId, 0L)
-              println("SET: "+activityId)
               templateData.marker = activityId
               worker = Some(activity, activityId, activitySignal)
               (activity, activitySignal)

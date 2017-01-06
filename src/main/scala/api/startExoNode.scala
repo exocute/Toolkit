@@ -11,11 +11,13 @@ object startExoNode {
     SpaceCache.signalHost = "localhost"
     SpaceCache.dataHost = "192.168.1.126"
     SpaceCache.jarHost = "localhost"
+    val NODES = 100
 
     new AnaliserNode(List("A","B","C"), "X").start()
 
+    println("Started "+NODES+" nodes...")
     for{
-      x <- 1 to 100
+      x <- 1 to NODES
     } new CliftonNode().start()
 
 

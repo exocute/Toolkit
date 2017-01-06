@@ -56,7 +56,6 @@ class AnaliserNode(actNames: List[String], graphID: String) extends Thread {
         updateActDistributionTable()
         signalSpace.take(tmplTable, 0L)
         tmplTable.payload = actDistributionTable
-        println(actDistributionTable)
         signalSpace.write(tmplTable, WRITE_TIME)
         boot = System.currentTimeMillis()
       }
@@ -97,7 +96,7 @@ class AnaliserNode(actNames: List[String], graphID: String) extends Thread {
     val groupedByActivity = trackerTable.groupBy(x => x._2)
     val countOfNodesByActivity: Map[String, Double] = groupedByActivity.mapValues(_.size)
     val totalNodes: Double =
-      if ( trackerTable.size == 0 ) 1
+      if (trackerTable.size == 0) 1
       else trackerTable.size
 
 
