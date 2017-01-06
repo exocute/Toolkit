@@ -2,7 +2,7 @@ package clifton.graph
 
 import java.util.UUID
 
-import clifton.nodes.{SignalOutChannel, SpaceCache}
+import clifton.nodes.{ExoEntry, SignalOutChannel, SpaceCache}
 import clifton.signals.ActivitySignal
 import com.zink.fly.FlyPrime
 import toolkit.{ActivityRep, GraphRep}
@@ -18,16 +18,17 @@ class GraphCreator {
   private var collectMarker: String = _
   private var space: FlyPrime = _
 
-  def putObject(signal: ActivitySignal) = {
-    space.write(signal,5000000)  }
+  def putObject(signal: ExoEntry) = {
+    space.write(signal, 60 * 60 * 1000)
+  }
 
   def injectGraph(graph: GraphRep): Unit = {
     val outChannel = new SignalOutChannel(clifton.inoSignal)
 
     val graphName = graph.name
     val graphInstance: String = graphName + ":" + generateUUID + ":"
-    injectMarker = graphInstance + clifton.inoSignal
-    collectMarker = graphInstance + clifton.exoSignal
+    injectMarker = clifton.inoSignal
+    collectMarker = clifton.exoSignal
     space = SpaceCache.getSignalSpace
 
     var seenActivities = mutable.HashSet[String]()
@@ -43,7 +44,7 @@ class GraphCreator {
         signal.inMarkers = signal.inMarkers :+ injectMarker
       else
         in.foreach(nextAct => {
-          val inMarker = nextAct.name
+          val inMarker = nextAct.id
           signal.inMarkers = signal.inMarkers :+ inMarker
         })
 
@@ -52,12 +53,14 @@ class GraphCreator {
         signal.outMarkers = signal.outMarkers :+ collectMarker
       else
         out.foreach(prevAct => {
-          val outMarker = prevAct.name
+          val outMarker = prevAct.id
           signal.outMarkers = signal.outMarkers :+ outMarker
         })
 
+      println(signal)
+
       //outChannel.putObject(signal)
-      putObject(signal)
+      putObject(new ExoEntry(act.id,signal))
 
       //println(s"Sending signal: $signal")
 

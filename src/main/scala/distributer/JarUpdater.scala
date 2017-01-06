@@ -1,13 +1,15 @@
 package distributer
 
+
+import java.io.File
 /**
   * Created by #ScalaTeam on 21-12-2016.
   */
 trait JarUpdater {
 
-  def update(directory: String, jarFiles: Array[String]): Unit =
-    jarFiles.foreach(jarFile => update(directory, jarFile))
+  def update(jarFiles: Array[File]): Unit =
+    jarFiles.foreach(jarFile => update(jarFile))
 
-  def update(directory: String, jarFile: String): Unit
+  def update(jarFile: File): Unit
 
 }

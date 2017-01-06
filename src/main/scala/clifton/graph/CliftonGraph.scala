@@ -67,8 +67,8 @@ class CliftonGraph {
     setSignals(signalHost, dataHost)
     val graphCreator = new GraphCreator()
     graphCreator.injectGraph(graph)
-    injector = new CliftonInjector(graphCreator.getInjectMarker)
-    collector = new CliftonCollector(graphCreator.getCollectMarker)
+/*    injector = new CliftonInjector(graphCreator.getInjectMarker)
+    collector = new CliftonCollector(graphCreator.getCollectMarker)*/
   }
 
   def getInject = injector

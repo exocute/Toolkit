@@ -19,9 +19,9 @@ class CliftonCollector(marker: String) {
 
   def collect(waitTime: Long): Serializable = {
     val space: FlyPrime = SpaceCache.getDataSpace
-    val ent: ExoEntry = new ExoEntry()
+    var ent: ExoEntry = new ExoEntry()
     try {
-      val ent = space.take(tpl, waitTime)
+      ent = space.take(tpl, waitTime)
     } catch {
       case e: Exception => throw new CollectException("Collector Error")
     }

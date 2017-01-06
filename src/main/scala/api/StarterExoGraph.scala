@@ -7,7 +7,7 @@ import clifton._
 import clifton.graph.{CliftonCollector, CliftonInjector, GraphCreator}
 import clifton.nodes.{CliftonClassLoader, SpaceCache}
 import com.zink.fly.FlyPrime
-import distributer.{FlyClassEntry, FlyJarEntry, JarSpaceUpdater}
+import distributer.{FlyClassEntry, FlyJarEntry, JarFileHandler, JarSpaceUpdater}
 import toolkit.{ActivityParser, GraphRep}
 
 import scala.util.{Success, Try}
@@ -20,23 +20,27 @@ class StarterExoGraph(signalHost: String, dataHost: String, jarHost: String) {
   val TIME: Long = 10 * 60 * 1000
 
   val jarUpdater = new JarSpaceUpdater(jarHost)
+  val fileHan = new JarFileHandler()
 
   setSignals()
 
-  private val space: FlyPrime = SpaceCache.getSignalSpace
+  private val signalSpace: FlyPrime = SpaceCache.getSignalSpace
 
   def loadJars(jars: List[File]): Unit = {
-    jars.foreach(file => jarUpdater.updateJarEntry(file))
+    jars.foreach(file => jarUpdater.update(file))
   }
 
-  def addGraph(grp: File, jars: List[File], time: Int): (CliftonInjector, CliftonCollector) = {
+  def addGraph(grp: File, jars: List[File], time: Long): (CliftonInjector, CliftonCollector) = {
 
     init(readFile(grp.toPath.toString)) match {
       case Some((x: CliftonInjector, y: CliftonCollector, grp: GraphRep, id)) =>
+
         loadJars(jars)
 
+        println(grp)
+
         //gets the space ready for nodes to start interact
-        new GrpChecker(new GrpInfo(id, grp.getVectorActivities), space).start()
+        new GrpChecker(new GrpInfo(id, grp.getVectorActivities), signalSpace).start()
 
         (x, y)
       case _ => throw new Exception
@@ -64,7 +68,7 @@ class StarterExoGraph(signalHost: String, dataHost: String, jarHost: String) {
         val graphCreator = new GraphCreator()
         graphCreator.injectGraph(graphREP)
         val id = UUID.randomUUID().toString
-        Some(new CliftonInjector(id), new CliftonCollector(id), graphREP, id)
+        Some(new CliftonInjector(">",graphREP.getRoot.get.id), new CliftonCollector("<"), graphREP, id)
       case _ => None
     }
   }

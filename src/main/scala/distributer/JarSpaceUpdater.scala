@@ -22,10 +22,9 @@ class JarSpaceUpdater(flyHost: String) extends JarUpdater {
   if (space == null)
     throw new RuntimeException("Cant find space with[" + JarSpaceUpdater.TAG + "]")
 
-  override def update(directory: String, jarFile: String): Unit = {
-    val file: File = new File(directory, jarFile)
-    updateJarEntry(file)
-    updateClassEntries(file)
+  override def update(jarFile: File): Unit = {
+    updateJarEntry(jarFile)
+    updateClassEntries(jarFile)
   }
 
   def updateJarEntry(jarFile: File) = {
@@ -35,10 +34,12 @@ class JarSpaceUpdater(flyHost: String) extends JarUpdater {
     space.take(je, 0L)
     je.bytes = fileHandler.getJarBytes(jarFile)
     space.write(je, JarSpaceUpdater.ENTRY_LEASE)
+    System.out.println("Updated Jar Entry " + je)
   }
 
   private def updateClassEntries(jarFile: File) {
     val classNames = fileHandler.getClassNames(jarFile)
+    println(classNames)
     for (className <- classNames) {
       updateClassEntry(jarFile, className)
     }

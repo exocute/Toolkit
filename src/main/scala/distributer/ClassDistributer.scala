@@ -22,7 +22,7 @@ class ClassDistributer {
           new JarSpaceUpdater(null)
 
       while (!Thread.interrupted) {
-        writer.update(directoryName, directory.list(filter))
+        //writer.update(directory.list(filter))
         Thread.sleep(100)
       }
     }

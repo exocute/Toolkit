@@ -22,11 +22,12 @@ class JarFileHandler {
 
         var entryName = je.getName
 
-        if (entryName.endsWith("CLASS_EXTENSION")) {
-          entryName = entryName.replace("CLASS_EXTENSION", "")
+        if (entryName.endsWith(".class")) {
+          entryName = entryName.replace(".class", "")
           entryName = entryName.replace('/', '.')
+          classNames = entryName :: classNames
         }
-        if (entryName.endsWith("PIPELINE_EXTENSION")) classNames = entryName :: classNames
+
 
         jis.closeEntry()
 
