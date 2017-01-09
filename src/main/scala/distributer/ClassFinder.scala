@@ -2,6 +2,7 @@ package distributer
 
 import clifton.nodes.exceptions.SpaceNotDefined
 import com.zink.fly.kit.FlyFinder
+import exonode.distributer.FlyClassEntry
 
 import scala.collection.JavaConverters._
 

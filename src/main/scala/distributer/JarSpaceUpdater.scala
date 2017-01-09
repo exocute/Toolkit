@@ -2,8 +2,11 @@ package distributer
 
 import java.io.File
 
-import com.zink.fly.Fly
+import com.zink.fly.{Fly, FlyPrime}
 import com.zink.fly.kit.{FlyFactory, FlyFinder}
+import exonode.distributer.{FlyClassEntry, FlyJarEntry}
+import exonode.clifton.Protocol._
+import exonode.clifton.node.SpaceCache
 
 /**
   * Created by #ScalaTeam on 21-12-2016.
@@ -12,15 +15,15 @@ class JarSpaceUpdater(flyHost: String) extends JarUpdater {
 
   private val fileHandler = new JarFileHandler
 
-  private val space: Fly =
+  private val space: FlyPrime =
     if (flyHost == null) {
-      new FlyFinder().find(JarSpaceUpdater.TAG)
+      SpaceCache.getJarSpace
     } else {
       FlyFactory.makeFly(flyHost)
     }
 
   if (space == null)
-    throw new RuntimeException("Cant find space with[" + JarSpaceUpdater.TAG + "]")
+    throw new RuntimeException("Cant find jar space")
 
   override def update(jarFile: File): Unit = {
     updateJarEntry(jarFile)
@@ -30,11 +33,9 @@ class JarSpaceUpdater(flyHost: String) extends JarUpdater {
   def updateJarEntry(jarFile: File) = {
     val je = new FlyJarEntry
     je.fileName = jarFile.getName
-    System.out.println("Updating Jar Entry " + je)
     space.take(je, 0L)
     je.bytes = fileHandler.getJarBytes(jarFile)
-    space.write(je, JarSpaceUpdater.ENTRY_LEASE)
-    System.out.println("Updated Jar Entry " + je)
+    space.write(je, JAR_LEASE_TIME)
   }
 
   private def updateClassEntries(jarFile: File) {
@@ -50,15 +51,7 @@ class JarSpaceUpdater(flyHost: String) extends JarUpdater {
     val ce = new FlyClassEntry
     ce.className = className
     ce.jarName = jarFile.getName
-    System.out.println("Updating class entry " + ce)
     space.take(ce, 0L)
-    space.write(ce, JarSpaceUpdater.ENTRY_LEASE)
+    space.write(ce, JAR_LEASE_TIME)
   }
-}
-
-object JarSpaceUpdater {
-
-  private val TAG = "JarSpace"
-  private val ENTRY_LEASE: Long = 365L * 24 * 60 * 60 * 1000
-
 }

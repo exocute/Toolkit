@@ -1,28 +1,25 @@
 package clifton.graph
 
-import clifton.nodes.{ExoEntry, SpaceCache}
 import java.io.Serializable
 import java.util.UUID
 
-import api.DataSignal
 import clifton.graph.exceptions.InjectException
 import com.zink.fly.FlyPrime
+import exonode.clifton.node.{DataEntry, ExoEntry, SpaceCache}
 
 /**
   * Created by #ScalaTeam on 21/12/2016.
   */
-class CliftonInjector(marker: String, rootAct : String) {
+class CliftonInjector(marker: String, rootAct: String) {
 
-  var ent = new ExoEntry(rootAct, null)
   val INJECTION_LEASE = 2 * 60 * 1000
   val space: FlyPrime = SpaceCache.getDataSpace
 
   def inject(input: Serializable): String = {
     val id = UUID.randomUUID().toString
-    ent.payload = new DataSignal(rootAct, marker, input, id)
-
     try {
-      space.write(ent, INJECTION_LEASE)
+      val dataEntry = new DataEntry(rootAct, marker, id, input)
+      space.write(dataEntry, INJECTION_LEASE)
     } catch {
       case e: Exception => throw new InjectException("Internal Inject Error")
     }

@@ -2,9 +2,11 @@ package clifton.graph
 
 import java.util.UUID
 
-import clifton.nodes.{ExoEntry, SignalOutChannel, SpaceCache}
-import clifton.signals.ActivitySignal
+import clifton.nodes.SignalOutChannel
 import com.zink.fly.FlyPrime
+import exonode.clifton.Protocol
+import exonode.clifton.node.{ExoEntry, SpaceCache}
+import exonode.clifton.signals.ActivitySignal
 import toolkit.{ActivityRep, GraphRep}
 
 import scala.collection.mutable
@@ -14,24 +16,19 @@ import scala.collection.mutable
   */
 class GraphCreator {
 
-  private var injectMarker: String = _
-  private var collectMarker: String = _
-  private var space: FlyPrime = _
-
-  def putObject(signal: ExoEntry) = {
-    space.write(signal, 60 * 60 * 1000)
-  }
+  //  private var injectMarker: String = _
+  //  private var collectMarker: String = _
+  private var space: FlyPrime = SpaceCache.getSignalSpace
 
   def injectGraph(graph: GraphRep): Unit = {
-    val outChannel = new SignalOutChannel(clifton.inoSignal)
+    //    val outChannel = new SignalOutChannel(clifton.INJECT_SIGNAL)
+    //val graphName = graph.name
+    //val graphInstance: String = graphName + ":" + generateUUID + ":"
 
-    val graphName = graph.name
-    val graphInstance: String = graphName + ":" + generateUUID + ":"
-    injectMarker = clifton.inoSignal
-    collectMarker = clifton.exoSignal
-    space = SpaceCache.getSignalSpace
+    val injectMarker = clifton.INJECT_SIGNAL
+    val collectMarker = clifton.COLLECT_SIGNAL
 
-    var seenActivities = mutable.HashSet[String]()
+    val seenActivities = mutable.HashSet[String]()
 
     def addSignal(act: ActivityRep): Unit = {
       val signal = new ActivitySignal()
@@ -57,15 +54,14 @@ class GraphCreator {
           signal.outMarkers = signal.outMarkers :+ outMarker
         })
 
-      println(signal)
-
+      //      println(signal)
       //outChannel.putObject(signal)
-      putObject(new ExoEntry(act.id,signal))
+      space.write(new ExoEntry(act.id, signal), 60 * 60 * 1000) //FIXME: use Protocol.ACT_SIGNAL_LEASE_TIME
 
       //println(s"Sending signal: $signal")
 
       seenActivities += act.id
-      graph.getConnections(act).foreach { nextAct =>
+      for (nextAct <- graph.getConnections(act)) {
         if (!seenActivities.contains(nextAct.id))
           addSignal(nextAct)
       }
@@ -74,10 +70,10 @@ class GraphCreator {
     addSignal(graph.getRoot.get)
   }
 
-  def getInjectMarker: String = injectMarker
-
-  def getCollectMarker: String = collectMarker
-
-  private def generateUUID: String = UUID.randomUUID().toString
+  //  def getInjectMarker: String = injectMarker
+  //
+  //  def getCollectMarker: String = collectMarker
+  //
+  //  private def generateUUID: String = UUID.randomUUID().toString
 
 }

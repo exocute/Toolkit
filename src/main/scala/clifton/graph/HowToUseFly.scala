@@ -1,6 +1,5 @@
 package clifton.graph
 
-import clifton.nodes.SpaceCache
 import com.zink.fly.kit.FlyFactory
 import com.zink.fly.{Fly, FlyPrime}
 

@@ -1,7 +1,5 @@
 package ActivitiesInjectorAndCollector
 
-import clifton.nodes.{ExoEntry, SpaceCache}
-
 /**
   * Created by #EduardoRodrigues on 29/12/2016.
   */

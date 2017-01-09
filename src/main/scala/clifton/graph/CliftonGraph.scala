@@ -2,9 +2,9 @@ package clifton.graph
 
 import java.io.{File, FileReader, Reader, StringReader}
 
-import clifton.nodes.SpaceCache
 import toolkit.{ActivityParser, GraphRep}
 import clifton.{clearCommnents, readFile}
+import exonode.clifton.node.SpaceCache
 
 import scala.util.{Success, Try}
 

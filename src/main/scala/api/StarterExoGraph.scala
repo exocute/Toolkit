@@ -5,9 +5,10 @@ import java.util.UUID
 
 import clifton._
 import clifton.graph.{CliftonCollector, CliftonInjector, GraphCreator}
-import clifton.nodes.{CliftonClassLoader, SpaceCache}
 import com.zink.fly.FlyPrime
-import distributer.{FlyClassEntry, FlyJarEntry, JarFileHandler, JarSpaceUpdater}
+import distributer.{JarFileHandler, JarSpaceUpdater}
+import exonode.clifton.Protocol
+import exonode.clifton.node.SpaceCache
 import toolkit.{ActivityParser, GraphRep}
 
 import scala.util.{Success, Try}
@@ -30,7 +31,7 @@ class StarterExoGraph(signalHost: String, dataHost: String, jarHost: String) {
     jars.foreach(file => jarUpdater.update(file))
   }
 
-  def addGraph(grp: File, jars: List[File], time: Long): (CliftonInjector, CliftonCollector) = {
+  def addGraph(grp: File, jars: List[File]): (CliftonInjector, CliftonCollector) = {
 
     init(readFile(grp.toPath.toString)) match {
       case Some((x: CliftonInjector, y: CliftonCollector, grp: GraphRep, id)) =>
@@ -68,7 +69,9 @@ class StarterExoGraph(signalHost: String, dataHost: String, jarHost: String) {
         val graphCreator = new GraphCreator()
         graphCreator.injectGraph(graphREP)
         val id = UUID.randomUUID().toString
-        Some(new CliftonInjector(">",graphREP.getRoot.get.id), new CliftonCollector("<"), graphREP, id)
+        val injector = new CliftonInjector(Protocol.INJECT_SIGNAL_MARKER, graphREP.getRoot.get.id)
+        val collector = new CliftonCollector(Protocol.COLLECT_SIGNAL_MARKER)
+        Some(injector, collector, graphREP, id)
       case _ => None
     }
   }

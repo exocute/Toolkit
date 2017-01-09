@@ -2,8 +2,9 @@ package clifton.nodes
 
 import clifton.nodes.exceptions.SpaceNotDefined
 import com.zink.fly.FlyPrime
-
 import java.io.Serializable
+
+import exonode.clifton.node.ExoEntry
 
 /**
   * Created by #ScalaTeam on 20/12/2016.

@@ -3,41 +3,42 @@ package clifton.graph
 import java.io.Serializable
 
 import clifton.graph.exceptions.{CollectException, InjectException}
-import clifton.nodes.{ExoEntry, SpaceCache}
 import com.zink.fly.FlyPrime
+import exonode.clifton.node.{DataEntry, ExoEntry, SpaceCache}
 
 /**
   * Created by #ScalaTeam on 21/12/2016.
   */
-class CliftonCollector(marker: String) {
+class CliftonCollector(val marker: String) {
 
-  var tpl = new ExoEntry(marker, null)
+  var tpl = new DataEntry().setTo(marker)
 
-  def collect: Serializable = {
+  def collect(): Option[Serializable] = {
     collect(0L)
   }
 
-  def collect(waitTime: Long): Serializable = {
+  def collect(waitTime: Long): Option[Serializable] = {
     val space: FlyPrime = SpaceCache.getDataSpace
-    var ent: ExoEntry = new ExoEntry()
     try {
-      ent = space.take(tpl, waitTime)
+      val ent = space.take(tpl, waitTime)
+      if (ent != null)
+        Some(ent.data)
+      else
+        None
     } catch {
       case e: Exception => throw new CollectException("Collector Error")
     }
-    if (ent != null) ent.payload
-    else null
   }
 
-  def collect(numObjects: Int, waitTime: Long): Serializable = {
+  def collect(numObjects: Int, waitTime: Long): List[Serializable] = {
     var serializable: List[Serializable] = Nil
     val start = System.currentTimeMillis()
     var remainingTime = waitTime
     var totalObjects = 0
 
     while (totalObjects < numObjects && remainingTime > 1L) {
-      val ser: Serializable = collect
-      if (ser != null) {
+      val ser: Option[Serializable] = collect()
+      if (ser.isDefined) {
         serializable = ser :: serializable
         totalObjects += 1
       } else {
@@ -49,9 +50,7 @@ class CliftonCollector(marker: String) {
       }
       remainingTime = waitTime - (System.currentTimeMillis() - start)
     }
-    serializable
+    serializable.reverse
   }
-
-  def getMarker = marker
 
 }

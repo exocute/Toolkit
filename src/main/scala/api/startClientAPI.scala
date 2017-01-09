@@ -2,27 +2,68 @@ package api
 
 import java.io.File
 
+import com.zink.fly.FlyPrime
+import exonode.clifton.node.{DataEntry, ExoEntry, SpaceCache}
+import exonode.distributer.{FlyClassEntry, FlyJarEntry}
+
 /**
   * Created by #ScalaTeam on 04/01/2017.
   */
 object startClientAPI {
 
-  def main(args: Array[String]): Unit = {
-    val startExo = new StarterExoGraph("localhost", "192.168.1.126", "localhost")
+  def cleanSpaces(): Unit = {
+    def clean(space: FlyPrime, cleanTemplate: Any): Unit = {
+      while (space.take(cleanTemplate, 0) != null) {}
+    }
 
-    val file = new File("examples\\abc.grp")
-    val jar = List(new File("examples\\abc.jar"))
+    clean(SpaceCache.getJarSpace, new FlyJarEntry(null, null))
+    clean(SpaceCache.getJarSpace, new FlyClassEntry(null, null))
+    clean(SpaceCache.getDataSpace, new DataEntry())
+    clean(SpaceCache.getSignalSpace, new ExoEntry(null, null))
+  }
+
+  def main(args: Array[String]): Unit = {
+    val startExo = new StarterExoGraph("localhost", "localhost", "localhost")
+    LogProcessor.start()
+
+    cleanSpaces()
+
+    val exampleName = "ab2c"
+
+    val file = new File(s"examples${File.separator}$exampleName.grp")
+    val jars = List(new File(s"examples${File.separator}$exampleName.jar"))
 
     println("Adding graph...")
-    val (inj, col) = startExo.addGraph(file, jar, 0L)
+    val (inj, col) = startExo.addGraph(file, jars)
     println("Done!")
 
     while (true) {
       print(">")
       val input = scala.io.StdIn.readLine()
-      input.charAt(0) match {
-        case 'i' if input.charAt(1) == ' ' => println("Injected with id: " + inj.inject(input.substring(2)))
-        case 'c' if input.charAt(1) == ' ' => println("Result: " + col.collect)
+
+      val (command, cmdData) = {
+        val index = input.indexOf(" ")
+        if (index == -1)
+          (input, "")
+        else
+          input.splitAt(index + 1)
+      }
+      command.trim match {
+        case "i" | "inject" => println("Injected with id: " + inj.inject(cmdData))
+        case "to" =>
+          val List(a, b) = cmdData.split(" ").toList.map(_.toInt)
+          println(s"Injected inputs from $a to $b.")
+          (a to b).foreach(n => inj.inject(n.toString))
+        case "c" | "collect" | "take" =>
+          if (cmdData.isEmpty)
+            println("Result: " + col.collect)
+          else {
+            val results = col.collect(cmdData.toInt, 2000)
+            if (results.isEmpty)
+              println("No results to collect.")
+            else
+              results.foreach(res => println("Result: " + res))
+          }
         case _ => println("Invalid Input")
       }
     }

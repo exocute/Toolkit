@@ -2,6 +2,8 @@ package toolkit
 
 import java.io.{File, Serializable}
 
+import exonode.exocuteCommon.activity.Activity
+
 /**
   * Created by #ScalaTeam on 14-12-2016.
   */
@@ -9,9 +11,9 @@ class StreamCreator(val rep: GraphRep) {
 
   var strConstruction = ""
 
-  def runActivity[U <: Serializable](act: ActivityRep, input: U): Serializable = {
+  def runActivity[U <: Serializable](input: U, act: ActivityRep): Serializable = {
     val parameters = act.parameters
-    act.asInstanceOf[ActivityTrait].process(input, parameters)
+    act.asInstanceOf[Activity].process(input, parameters)
   }
 
   def run[U <: Serializable](input: Stream[U]): Stream[Serializable] = {
@@ -23,7 +25,7 @@ class StreamCreator(val rep: GraphRep) {
   }
 
   def runAux1[U <: Serializable](input: U, act: ActivityRep): Serializable = {
-    val actOutput = runActivity(act, input)
+    val actOutput = runActivity(input, act)
     val connections = rep.getConnections(act)
     connections match {
       case Nil => actOutput
@@ -33,11 +35,12 @@ class StreamCreator(val rep: GraphRep) {
       }
       case List(act1, act2) => {
         val (o1, o2) = actOutput.asInstanceOf[(Serializable, Serializable)]
-        strConstruction += ".split(" + act1.name + ", " + act2.name + ")"
+        strConstruction += ".split(" + act1.name
         val (v1, join) = runAuxJoin(o1, act1)
+        strConstruction += ", " + act2.name
         val (v2, _) = runAuxJoin(o2, act2)
-        strConstruction += ".join(" + join.name + ")"
-        runActivity(join, (v1, v2))
+        strConstruction += ").join(" + join.name + ")"
+        runActivity((v1, v2), join)
       }
     }
   }
@@ -45,18 +48,24 @@ class StreamCreator(val rep: GraphRep) {
   def isAJoin(act: ActivityRep): Boolean = rep.isJoin(act)
 
   def runAuxJoin[U <: Serializable](input: Serializable, act: ActivityRep): (Serializable, ActivityRep) = {
-    val actOutput = runActivity(act, input)
+    val actOutput = runActivity(input, act)
     val connections = rep.getConnections(act)
     connections match {
       case List(act1) =>
         if (isAJoin(act1))
           (actOutput, act1)
-        else
+        else {
+          strConstruction += ".map(" + act1.name + ")"
           runAuxJoin(actOutput, act1)
+        }
       case List(act1, act2) => {
-        val (v1, join) = runAuxJoin(actOutput, act1)
-        val (v2, _) = runAuxJoin(actOutput, act2)
-        ((v1, v2), join)
+        val (o1, o2) = input.asInstanceOf[(Serializable, Serializable)]
+        strConstruction += ".split(" + act1.name
+        val (v1, join) = runAuxJoin(o1, act1)
+        strConstruction += ", " + act2.name
+        val (v2, _) = runAuxJoin(o2, act2)
+        strConstruction += ").join(" + join.name + ")"
+        runAuxJoin((v1, v2), join)
       }
     }
   }
@@ -66,7 +75,7 @@ class StreamCreator(val rep: GraphRep) {
 object TestStream {
 
   abstract class ActivityRep2(id: String, name: String, parameters: Vector[String], importName: Vector[String],
-                              exportName: String) extends ActivityRep(id, name, parameters, importName, exportName) with ActivityTrait
+                              exportName: String) extends ActivityRep(id, name, parameters, importName, exportName) with Activity
 
   def main(args: Array[String]): Unit = {
 
@@ -178,21 +187,4 @@ object TestStream {
       println(input.take(10).toList.zip(output.take(10).force).map { case (a, b) => a + "->" + b }.mkString(" | "))
     }
   }
-}
-
-trait ActivityTrait {
-
-  /**
-    * This is where you do anything you want to do to transform an object (i.e. change its state and return it)
-    * or to create new object and send it on its way.
-    *
-    * The atk is there just in case you want to do groovey things like supply paramters to your processor,
-    * or send objects out of band on a seperate channel.
-    *
-    * @param  input  The Serializable input object
-    * @param  params The list of imports
-    * @return output The Serializbale output object
-    */
-  def process(input: Serializable, params: Vector[String]): Serializable
-
 }

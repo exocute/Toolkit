@@ -1,5 +1,7 @@
 package clifton.nodes
 
+import exonode.clifton.node.{ExoEntry, SpaceCache}
+
 import scala.collection.immutable.HashMap
 
 /**
