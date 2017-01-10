@@ -5,6 +5,7 @@ import java.text.{DateFormat, SimpleDateFormat}
 import java.util.Date
 
 import com.zink.fly.FlyPrime
+import exonode.clifton.Protocol
 import exonode.clifton.node.{ExoEntry, SpaceCache}
 import exonode.clifton.signals.LoggingSignal
 
@@ -15,7 +16,7 @@ object LogProcessor extends Thread {
 
   private val space: FlyPrime = SpaceCache.getSignalSpace
   private val TAKETIME = 0L
-  private val tmpl = new ExoEntry("LOG", null)
+  private val tmpl = new ExoEntry(Protocol.LOG_MARKER, null)
   private val INTERVALTIME = 1000
   private val dateFormat: DateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
 

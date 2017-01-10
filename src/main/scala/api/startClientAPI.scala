@@ -3,7 +3,7 @@ package api
 import java.io.File
 
 import com.zink.fly.FlyPrime
-import exonode.clifton.node.{DataEntry, ExoEntry, SpaceCache}
+import exonode.clifton.node.{DataEntry, ExoEntry, Log, SpaceCache}
 import exonode.distributer.{FlyClassEntry, FlyJarEntry}
 
 /**
@@ -24,19 +24,22 @@ object startClientAPI {
 
   def main(args: Array[String]): Unit = {
     val startExo = new StarterExoGraph("localhost", "localhost", "localhost")
-    LogProcessor.start()
 
     cleanSpaces()
 
-    val exampleName = "ab2c"
+    LogProcessor.start()
+
+//    val exampleName = "ab3c"
+    val exampleName = "numbers"
 
     val file = new File(s"examples${File.separator}$exampleName.grp")
-    val jars = List(new File(s"examples${File.separator}$exampleName.jar"))
+    val jars = List(new File(s"examples${File.separator}classes.jar"))
 
     println("Adding graph...")
     val (inj, col) = startExo.addGraph(file, jars)
     println("Done!")
 
+    Log.info(s"Started to exocute the graph $exampleName.grp")
     while (true) {
       print(">")
       val input = scala.io.StdIn.readLine()
@@ -50,10 +53,11 @@ object startClientAPI {
       }
       command.trim match {
         case "i" | "inject" => println("Injected with id: " + inj.inject(cmdData))
+        case "n" => println("Injected with id: " + inj.inject(cmdData.toLong))
         case "to" =>
           val List(a, b) = cmdData.split(" ").toList.map(_.toInt)
           println(s"Injected inputs from $a to $b.")
-          (a to b).foreach(n => inj.inject(n.toString))
+          (a to b).foreach(n => inj.inject(n.toLong))
         case "c" | "collect" | "take" =>
           if (cmdData.isEmpty)
             println("Result: " + col.collect)
