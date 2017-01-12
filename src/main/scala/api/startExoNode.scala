@@ -9,6 +9,7 @@ import exonode.clifton.node.{CliftonNode, SpaceCache}
 object startExoNode {
 
   def main(args: Array[String]): Unit = {
+
     println("  ______           _   _           _         _____ _             _            \n |  ____|         | \\ | |         | |       / ____| |           | |           \n | |__  __  _____ |  \\| | ___   __| | ___  | (___ | |_ __ _ _ __| |_ ___ _ __ \n |  __| \\ \\/ / _ \\| . ` |/ _ \\ / _` |/ _ \\  \\___ \\| __/ _` | '__| __/ _ \\ '__|\n | |____ >  < (_) | |\\  | (_) | (_| |  __/  ____) | || (_| | |  | ||  __/ |   \n |______/_/\\_\\___/|_| \\_|\\___/ \\__,_|\\___| |_____/ \\__\\__,_|_|   \\__\\___|_|   \n                                                                              \n                                                                              ")
 
     println("Press ENTER to set default parameters to the spaces")
