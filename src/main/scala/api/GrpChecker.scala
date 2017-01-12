@@ -11,7 +11,7 @@ import scala.collection.immutable.HashMap
   */
 class GrpChecker(grp: GrpInfo, space: FlyPrime) extends Thread {
 
-  private val UPDATETIME = 5 * 60 * 1000
+  private val UPDATETIME = 2 * 60 * 1000
   private val tmplInit = new ExoEntry(TABLE_MARKER, makeUniformTable(grp.actsID))
   private val tmpl = new ExoEntry(TABLE_MARKER, null)
   private val INTERVALTIME = 60 * 1000
