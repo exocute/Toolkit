@@ -31,7 +31,7 @@ class GrpChecker(grp: GrpInfo, space: FlyPrime) extends Thread {
   }
 
   def makeUniformTable(vec: Vector[String]): TableType = {
-    HashMap(vec.map(v => v -> 0) :+ (ANALISER_ID -> 0): _*)
+    HashMap(vec.map(v => v -> 0) :+ (ANALISER_ACT_ID_ID -> 0): _*)
   }
 
 
