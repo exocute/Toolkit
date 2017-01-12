@@ -16,14 +16,12 @@ import scala.util.{Success, Try}
 /**
   * Created by #ScalaTeam on 02/01/2017.
   */
-class StarterExoGraph(signalHost: String, dataHost: String, jarHost: String) {
+class StarterExoGraph {
 
   val TIME: Long = 10 * 60 * 1000
 
-  val jarUpdater = new JarSpaceUpdater(jarHost)
+  val jarUpdater = new JarSpaceUpdater(null)
   val fileHan = new JarFileHandler()
-
-  setSignals()
 
   private val signalSpace: FlyPrime = SpaceCache.getSignalSpace
 
@@ -74,12 +72,6 @@ class StarterExoGraph(signalHost: String, dataHost: String, jarHost: String) {
         Some(injector, collector, graphREP, id)
       case _ => None
     }
-  }
-
-  private def setSignals() = {
-    if (signalHost != null) SpaceCache.signalHost = signalHost
-    if (dataHost != null) SpaceCache.dataHost = dataHost
-    if (jarHost != null) SpaceCache.jarHost = jarHost
   }
 
 }
