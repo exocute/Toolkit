@@ -18,10 +18,10 @@ import scala.util.{Success, Try}
   */
 class StarterExoGraph {
 
-  val TIME: Long = 10 * 60 * 1000
+  //FIXME: there is no error handling in this class! Use Try instead of Option ?
 
   val jarUpdater = new JarSpaceUpdater(null)
-  val fileHan = new JarFileHandler()
+  val fileHandler = new JarFileHandler()
 
   private val signalSpace: FlyPrime = SpaceCache.getSignalSpace
 
@@ -32,14 +32,12 @@ class StarterExoGraph {
   def addGraph(grp: File, jars: List[File]): (CliftonInjector, CliftonCollector) = {
 
     init(readFile(grp.toPath.toString)) match {
-      case Some((x: CliftonInjector, y: CliftonCollector, grp: GraphRep, id)) =>
+      case Some((x: CliftonInjector, y: CliftonCollector, grp: GraphRep, graphId)) =>
 
         loadJars(jars)
 
-        println(grp)
-
         //gets the space ready for nodes to start interact
-        new GrpChecker(new GrpInfo(id, grp.getVectorActivities), signalSpace).start()
+        new GrpChecker(new GrpInfo(graphId, grp.getVectorActivities), signalSpace).start()
 
         (x, y)
       case _ => throw new Exception
@@ -59,17 +57,17 @@ class StarterExoGraph {
     }
   }
 
-  private def init(fileAsText: String) = {
+  private def init(fileAsText: String): Option[(CliftonInjector, CliftonCollector, GraphRep, String)] = {
     val plnClean = clearCommnents(fileAsText)
     val parser = new ActivityParser(plnClean)
     getGraphRep(parser) match {
-      case Some(graphREP) =>
+      case Some(graphRep) =>
         val graphCreator = new GraphCreator()
-        graphCreator.injectGraph(graphREP)
+        graphCreator.injectGraph(graphRep)
         val id = UUID.randomUUID().toString
-        val injector = new CliftonInjector(Protocol.INJECT_SIGNAL_MARKER, graphREP.getRoot.get.id)
+        val injector = new CliftonInjector(Protocol.INJECT_SIGNAL_MARKER, graphRep.getRoot.get.id)
         val collector = new CliftonCollector(Protocol.COLLECT_SIGNAL_MARKER)
-        Some(injector, collector, graphREP, id)
+        Some(injector, collector, graphRep, id)
       case _ => None
     }
   }

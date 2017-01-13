@@ -11,27 +11,25 @@ import scala.collection.immutable.HashMap
   */
 class GrpChecker(grp: GrpInfo, space: FlyPrime) extends Thread {
 
-  private val UPDATETIME = 2 * 60 * 1000
-  private val tmplInit = new ExoEntry(TABLE_MARKER, makeUniformTable(grp.actsID))
+  private val tmplInit = new ExoEntry(TABLE_MARKER, makeUniformTable(grp.actsId))
   private val tmpl = new ExoEntry(TABLE_MARKER, null)
-  private val INTERVALTIME = 60 * 1000
 
   override def run(): Unit = {
 
-    space.write(new ExoEntry(TABLE_MARKER, makeUniformTable(grp.actsID)), UPDATETIME)
+    space.write(new ExoEntry(TABLE_MARKER, makeUniformTable(grp.actsId)), INITIAL_TABLE_LEASE_TIME)
 
     while (true) {
 
-      if (space.read(tmpl, UPDATETIME) == null)
-        space.write(new ExoEntry(TABLE_MARKER, makeUniformTable(grp.actsID)), UPDATETIME)
+      if (space.read(tmpl, GRP_CHECKER_TABLE_TIMEOUT) == null)
+        space.write(new ExoEntry(TABLE_MARKER, makeUniformTable(grp.actsId)), INITIAL_TABLE_LEASE_TIME)
 
-      Thread.sleep(INTERVALTIME)
+      Thread.sleep(GRP_CHECKER_SLEEP_TIME)
     }
 
   }
 
   def makeUniformTable(vec: Vector[String]): TableType = {
-    HashMap(vec.map(v => v -> 0) :+ (ANALISER_ACT_ID_ID -> 0): _*)
+    HashMap(vec.map(v => v -> 0) :+ (ANALISER_ACT_ID -> 0): _*)
   }
 
 

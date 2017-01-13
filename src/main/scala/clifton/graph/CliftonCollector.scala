@@ -11,7 +11,7 @@ import exonode.clifton.node.{DataEntry, ExoEntry, SpaceCache}
   */
 class CliftonCollector(val marker: String) {
 
-  var tpl = new DataEntry().setTo(marker)
+  private val tpl: DataEntry = new DataEntry().setTo(marker)
 
   def collect(): Option[Serializable] = {
     collect(0L)
@@ -39,7 +39,7 @@ class CliftonCollector(val marker: String) {
     while (totalObjects < numObjects && remainingTime > 1L) {
       val ser: Option[Serializable] = collect()
       if (ser.isDefined) {
-        serializable = ser :: serializable
+        serializable = ser.get :: serializable
         totalObjects += 1
       } else {
         try {
