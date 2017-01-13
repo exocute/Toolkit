@@ -11,6 +11,8 @@ import scala.collection.immutable.HashMap
   */
 class GrpChecker(grp: GrpInfo, space: FlyPrime) extends Thread {
 
+  setDaemon(true)
+
   private val tmplInit = new ExoEntry(TABLE_MARKER, makeUniformTable(grp.actsId))
   private val tmpl = new ExoEntry(TABLE_MARKER, null)
 
@@ -29,7 +31,7 @@ class GrpChecker(grp: GrpInfo, space: FlyPrime) extends Thread {
   }
 
   def makeUniformTable(vec: Vector[String]): TableType = {
-    HashMap(vec.map(v => v -> 0) :+ (ANALISER_ACT_ID -> 0): _*)
+    HashMap(vec.map(v => v -> 0) :+ (ANALYSER_ACT_ID -> 0): _*)
   }
 
 

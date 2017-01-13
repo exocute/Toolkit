@@ -7,4 +7,4 @@ package toolkit.exceptions
   *
   * Every Activity should have a unique ID given by the user
   */
-class ActivitiesWithoutUniqueID(id: String) extends Exception("Activities With Wrong ID: " + id)
+class ActivitiesWithoutUniqueID(id: String) extends Exception("Activities with duplicate identifier: " + id)

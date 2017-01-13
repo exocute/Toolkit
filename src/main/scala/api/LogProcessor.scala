@@ -15,9 +15,11 @@ import scala.collection.JavaConverters._
   */
 object LogProcessor extends Thread {
 
+  setDaemon(true)
+
   private val space: Fly = SpaceCache.getSignalSpace
   private val tmpl = new ExoEntry(Protocol.LOG_MARKER, null)
-  private val INTERVALTIME = 1000
+  private val INTERVAL_TIME = 1000
   private val dateFormat: DateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
   private val MAX_LOGS_CALL = 20
 
@@ -33,7 +35,7 @@ object LogProcessor extends Thread {
         }
         file.close()
       } else
-        Thread.sleep(INTERVALTIME)
+        Thread.sleep(INTERVAL_TIME)
     }
 
   }

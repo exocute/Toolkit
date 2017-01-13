@@ -16,17 +16,14 @@ import scala.collection.mutable
   */
 class GraphCreator {
 
-  //  private var injectMarker: String = _
-  //  private var collectMarker: String = _
   private var space: FlyPrime = SpaceCache.getSignalSpace
 
   def injectGraph(graph: GraphRep): Unit = {
-    //    val outChannel = new SignalOutChannel(clifton.INJECT_SIGNAL)
-    //val graphName = graph.name
+    //val graphName = graph.names
     //val graphInstance: String = graphName + ":" + generateUUID + ":"
 
-    val injectMarker = clifton.INJECT_SIGNAL
-    val collectMarker = clifton.COLLECT_SIGNAL
+    val injectMarker = Protocol.INJECT_SIGNAL_MARKER
+    val collectMarker = Protocol.COLLECT_SIGNAL_MARKER
 
     val seenActivities = mutable.HashSet[String]()
 
@@ -69,11 +66,5 @@ class GraphCreator {
 
     addSignal(graph.getRoot.get)
   }
-
-  //  def getInjectMarker: String = injectMarker
-  //
-  //  def getCollectMarker: String = collectMarker
-  //
-  //  private def generateUUID: String = UUID.randomUUID().toString
 
 }

@@ -1,11 +1,10 @@
+package clifton.utilities
+
 /**
   * Created by #ScalaTeam on 20-12-2016.
   */
 
-package object clifton {
-
-  val INJECT_SIGNAL = ">"
-  val COLLECT_SIGNAL = "<"
+object Utilities {
 
   def readFile(path: String): String = scala.io.Source.fromFile(path).mkString
 

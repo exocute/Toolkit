@@ -6,6 +6,8 @@ import com.zink.fly.FlyPrime
 import exonode.clifton.node.{DataEntry, ExoEntry, Log, SpaceCache}
 import exonode.distributer.{FlyClassEntry, FlyJarEntry}
 
+import scala.util.{Failure, Success, Try}
+
 /**
   * Created by #ScalaTeam on 04/01/2017.
   */
@@ -25,7 +27,7 @@ object StartClientAPI {
   val getHelpString: String = {
     """
       |Usage:
-      |  exocute [options] file_name.grp
+      |  toolkit [options] file_name[.grp]
       |
       |options:
       |-j, -jar ip
@@ -34,8 +36,10 @@ object StartClientAPI {
       |  Sets the signalHost.
       |-d, -data ip
       |  Sets the dataHost.
-      |-jarfile file_name.jar
+      |-jarfile file_name[.jar]
       |  Sets the jar file containing all classes that will be used in the grp.
+      |-cleanspaces
+      |  Clean all information from the spaces
       |--help
       |  display this help and exit.
       |--version
@@ -47,8 +51,8 @@ object StartClientAPI {
     """
       |Available commands:
       |i <input>        -> injects <input> as a string into the data space.
-      |n <input>        -> injects <input> as a number (Long) into the data space.
       |im <n> <input>   -> injects <input> as a string <n> times into the data space.
+      |n <input>        -> injects <input> as a number (Long) into the data space.
       |c                -> collects 1 result.
       |c <n>            -> collects at most n results.
     """.stripMargin
@@ -58,6 +62,7 @@ object StartClientAPI {
 
     var jarFile = ""
     var grpFile = ""
+    var shouldClean = false
 
     def setHosts(): Unit = {
       val it = args.iterator
@@ -74,8 +79,11 @@ object StartClientAPI {
             if (it.hasNext) SpaceCache.dataHost = it.next()
             else println(s"Command $cmd needs an argument (ip)")
           case "-jarfile" =>
-            if (it.hasNext) jarFile = it.next()
+            val name = it.next()
+            if (it.hasNext) jarFile = if (name.endsWith(".jar")) name else name + ".jar"
             else println("Command -jarfile needs an argument (file_name)")
+          case "-cleanspaces" =>
+            shouldClean = true
           case "--help" =>
             println(getHelpString)
             System.exit(0)
@@ -89,7 +97,7 @@ object StartClientAPI {
               println(getHelpString)
               System.exit(0)
             } else {
-              grpFile = cmd
+              grpFile = if (cmd.endsWith(".grp")) cmd else cmd + ".grp"
             }
         }
       }
@@ -97,60 +105,68 @@ object StartClientAPI {
 
     setHosts()
 
+    if (shouldClean)
+      cleanSpaces()
+
     val startExo = new StarterExoGraph
-
-    cleanSpaces()
-
-    LogProcessor.start()
 
     val file = new File(grpFile)
     val jars = List(new File(jarFile))
 
     println("  ______                      _       \n |  ____|                    | |      \n | |__  __  _____   ___ _   _| |_ ___ \n |  __| \\ \\/ / _ \\ / __| | | | __/ _ \\\n | |____ >  < (_) | (__| |_| | ||  __/\n |______/_/\\_\\___/ \\___|\\__,_|\\__\\___|\n                                      \n                                      ")
 
-    val (inj, col) = startExo.addGraph(file, jars)
-
-    Log.info(s"Started to 'exocute' the graph $grpFile")
-    while (true) {
-      print("> ")
-      val input = scala.io.StdIn.readLine()
-
-      val (command, cmdData) = {
-        val index = input.indexOf(" ")
-        if (index == -1)
-          (input, "")
+    startExo.addGraph(file, jars) match {
+      case Failure(e) =>
+        val msg = e.getMessage
+        if (msg == null)
+          println(s"Error loading grp file:\n$e")
         else
-          input.splitAt(index + 1)
-      }
-      command.trim match {
-        case "i" | "inject" => println(s"Injected input with id: ${inj.inject(cmdData)}.")
-        case "n" => println(s"Injected integer input with id: ${inj.inject(cmdData.toLong)}.")
-        case "im" if cmdData.contains(" ") =>
-          val (a, b) = cmdData.splitAt(cmdData.indexOf(" "))
-          if (isValidInt(a)) {
-            val n = a.toInt
-            for (_ <- 1 to n)
-              inj.inject(n.toLong)
-            println(s"Injected input $n times.")
-          } else {
-            println("Number not valid: " + a)
+          println(s"Error loading grp file:\n$msg")
+      case Success((inj, col)) =>
+        LogProcessor.start()
+
+        Log.info(s"Started to 'exocute' the graph $grpFile")
+        while (true) {
+          print("> ")
+          val input = scala.io.StdIn.readLine()
+
+          val (command, cmdData) = {
+            val index = input.indexOf(" ")
+            if (index == -1)
+              (input, "")
+            else
+              input.splitAt(index + 1)
           }
-        case "c" | "collect" | "take" =>
-          if (cmdData.isEmpty)
-            println("Result: " + col.collect)
-          else {
-            val results = col.collect(cmdData.toInt, 2000)
-            if (results.isEmpty)
-              println("No results to collect.")
-            else {
-              println(s"Results (${results.size}):")
-              results.foreach(res => println(res))
-            }
+          command.trim match {
+            case "i" | "inject" => println(s"Injected input with id: ${inj.inject(cmdData)}.")
+            case "n" => println(s"Injected integer input with id: ${inj.inject(cmdData.toLong)}.")
+            case "im" if cmdData.contains(" ") =>
+              val (a, input) = cmdData.splitAt(cmdData.indexOf(" "))
+              if (isValidInt(a)) {
+                val n = a.toInt
+                for (_ <- 1 to n)
+                  inj.inject(input)
+                println(s"Injected input $n times.")
+              } else {
+                println("Number not valid: " + a)
+              }
+            case "c" | "collect" | "take" =>
+              if (cmdData.isEmpty)
+                println("Result: " + col.collect)
+              else {
+                val results = col.collect(cmdData.toInt, 2000)
+                if (results.isEmpty)
+                  println("No results to collect.")
+                else {
+                  println(s"Results (${results.size}):")
+                  results.foreach(res => println(res))
+                }
+              }
+            case "-help" | "help" =>
+              println(getReplHelp)
+            case _ => println("Invalid command")
           }
-        case "-help" | "help" =>
-          println(getReplHelp)
-        case _ => println("Invalid command")
-      }
+        }
     }
   }
 

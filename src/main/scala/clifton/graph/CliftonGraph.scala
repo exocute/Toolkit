@@ -3,7 +3,7 @@ package clifton.graph
 import java.io.{File, FileReader, Reader, StringReader}
 
 import toolkit.{ActivityParser, GraphRep}
-import clifton.{clearCommnents, readFile}
+import clifton.utilities.Utilities.{clearCommnents, readFile}
 import exonode.clifton.node.SpaceCache
 
 import scala.util.{Success, Try}

@@ -8,8 +8,6 @@ import exceptions.{ActivitiesWithoutUniqueID, ActivityWithWrongParameters, Inval
 
 class GraphRep(val name: String, importName: String, exportName: String, activitiesGraph: GraphImplementation) {
 
-  var lastACT: ActivityRep = _
-
   /**
     * This construct allows users to create graphs just using the name
     *
@@ -28,34 +26,12 @@ class GraphRep(val name: String, importName: String, exportName: String, activit
   }
 
   /**
-    * Add a single activity to graph
-    * If the activity doesn't follow the correct format toolkit.exceptions will be thrown
-    * Activities are added to the graph in sequential order
-    *
-    * @param activityRep
-    */
-  def addActivity(activityRep: ActivityRep) = {
-    if (activitiesGraph.addNode(activityRep)) {
-      if (lastACT == null) {
-        lastACT = activityRep
-      }
-      else {
-        if (activitiesGraph.addEdge(lastACT, activityRep))
-          lastACT = activityRep
-        else
-          throw new ActivityWithWrongParameters
-      }
-    }
-    else throw new ActivitiesWithoutUniqueID(activityRep.id)
-  }
-
-  /**
     * adds a new activity to graph
     * check if the new activity already exists in the graph
     *
     * @param activityRep
     */
-  def addSingleActivity(activityRep: ActivityRep) = {
+  def addSingleActivity(activityRep: ActivityRep): Unit = {
     if (!activitiesGraph.addNode(activityRep))
       throw new ActivitiesWithoutUniqueID(activityRep.id)
   }
@@ -69,7 +45,7 @@ class GraphRep(val name: String, importName: String, exportName: String, activit
     * @param activityRepTo   - Root
     * @param activityRepFrom - All Directions from Root
     */
-  def addDownStream(activityRepTo: String, activityRepFrom: List[String]) = {
+  def addDownStream(activityRepTo: String, activityRepFrom: List[String]): Unit = {
 
     val actTo = activityById(activityRepTo)
 
@@ -99,7 +75,7 @@ class GraphRep(val name: String, importName: String, exportName: String, activit
     * @param activityRepTo
     * @param activityRepFrom
     */
-  def addUpStream(activityRepTo: List[String], activityRepFrom: String) = {
+  def addUpStream(activityRepTo: List[String], activityRepFrom: String): Unit = {
 
     val actFrom = activityById(activityRepFrom)
 
@@ -126,7 +102,7 @@ class GraphRep(val name: String, importName: String, exportName: String, activit
     * @param activityFrom
     * @param activityTo
     */
-  def addConnection(activityFrom: String, activityTo: String) = {
+  def addConnection(activityFrom: String, activityTo: String): Unit = {
     if (!activitiesGraph.addEdge(activityById(activityFrom), activityById(activityTo)) && !validConnection(activityFrom, activityTo))
       throw new ActivityWithWrongParameters
   }
@@ -140,7 +116,7 @@ class GraphRep(val name: String, importName: String, exportName: String, activit
     * @param activityFrom
     * @param activityTo
     */
-  def addConnection(activityFrom: String, activityTo: List[String]) = {
+  def addConnection(activityFrom: String, activityTo: List[String]): Unit = {
     val from = activityById(activityFrom)
     for {
       to <- activityTo
@@ -153,14 +129,14 @@ class GraphRep(val name: String, importName: String, exportName: String, activit
     *
     * @return
     */
-  def getRoot = activitiesGraph.getRoot
+  def getRoot: Option[ActivityRep] = activitiesGraph.getRoot
 
   /**
     * verifies is the graph has a Root
     *
     * @return
     */
-  def hasRoot = activitiesGraph.hasRoot
+  def hasRoot: Boolean = activitiesGraph.hasRoot
 
 
   /**
@@ -168,14 +144,14 @@ class GraphRep(val name: String, importName: String, exportName: String, activit
     *
     * @return
     */
-  def getSink = activitiesGraph.getSink
+  def getSink: Option[ActivityRep] = activitiesGraph.getSink
 
   /**
     * verifies is the Graph has a Sink
     *
     * @return
     */
-  def hasSink = activitiesGraph.hasSink
+  def hasSink: Boolean = activitiesGraph.hasSink
 
   /**
     * checks the import and export parameters of a connection
@@ -258,7 +234,7 @@ class GraphRep(val name: String, importName: String, exportName: String, activit
     * @param activity
     * @return next activities
     */
-  def getConnections(activity: ActivityRep) = activitiesGraph.getAdj(activity)
+  def getConnections(activity: ActivityRep): List[ActivityRep] = activitiesGraph.getAdj(activity)
 
   /**
     * gets the previous activities from a single activity
@@ -266,7 +242,7 @@ class GraphRep(val name: String, importName: String, exportName: String, activit
     * @param activity
     * @return next activities
     */
-  def getReverseConnections(activity: ActivityRep) = activitiesGraph.getInverseAdj(activity)
+  def getReverseConnections(activity: ActivityRep): List[ActivityRep] = activitiesGraph.getInverseAdj(activity)
 
   /**
     * compares the number of nodes that references a single activity
@@ -276,7 +252,7 @@ class GraphRep(val name: String, importName: String, exportName: String, activit
     */
   def isJoin(activityRep: ActivityRep): Boolean = activitiesGraph.referencedByNodes(activityRep) == 2
 
-  def getVectorActivities = activitiesGraph.activities.toVector.unzip._1
+  def getVectorActivities: Vector[String] = activitiesGraph.activities.toVector.unzip._1
 
   /**
     * returns the string of a value if the value its defined
@@ -285,7 +261,7 @@ class GraphRep(val name: String, importName: String, exportName: String, activit
     * @param value
     * @return
     */
-  def showIfNotEmpty(s: String, value: String) = if (!value.isEmpty) s + ": " + value + "\n" else ""
+  private def showIfNotEmpty(s: String, value: String): String = if (!value.isEmpty) s + ": " + value + "\n" else ""
 
   override def toString: String = s"Name: $name\n" +
     showIfNotEmpty("ImportName", importName) + showIfNotEmpty("ExportName", exportName) + s"$activitiesGraph"

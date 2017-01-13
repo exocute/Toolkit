@@ -7,4 +7,4 @@ package toolkit.exceptions
   *
   * downstream and upstream keys should be placed in the end of the pln file
   */
-class NoSuchIDToActivity(id: String) extends Exception("ID doesn't exist: " + id)
+class NoSuchIDToActivity(id: String) extends Exception("Identifier doesn't exist: " + id)

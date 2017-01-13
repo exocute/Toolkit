@@ -28,7 +28,6 @@ class JarFileHandler {
           classNames = entryName :: classNames
         }
 
-
         jis.closeEntry()
 
         je = jis.getNextJarEntry

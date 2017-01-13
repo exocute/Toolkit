@@ -26,10 +26,10 @@ class CliftonInjector(marker: String, rootAct: String) {
     id
   }
 
-  def inject(ocurrences: Int, input: Serializable): Unit = {
-    if (ocurrences < 1) throw new InjectException("Too few occurrences. Occurrences should be >= 1")
+  def inject(occurrences: Int, input: Serializable): Unit = {
+    if (occurrences < 1) throw new InjectException("Too few occurrences. Occurrences should be >= 1")
     for {
-      x <- 0 to ocurrences
+      x <- 0 to occurrences
     } inject(input)
   }
 

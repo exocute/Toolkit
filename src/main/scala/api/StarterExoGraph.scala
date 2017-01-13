@@ -10,15 +10,14 @@ import distributer.{JarFileHandler, JarSpaceUpdater}
 import exonode.clifton.Protocol
 import exonode.clifton.node.SpaceCache
 import toolkit.{ActivityParser, GraphRep}
+import utilities.Utilities
 
-import scala.util.{Success, Try}
+import scala.util.{Failure, Success, Try}
 
 /**
   * Created by #ScalaTeam on 02/01/2017.
   */
 class StarterExoGraph {
-
-  //FIXME: there is no error handling in this class! Use Try instead of Option ?
 
   val jarUpdater = new JarSpaceUpdater(null)
   val fileHandler = new JarFileHandler()
@@ -29,47 +28,41 @@ class StarterExoGraph {
     jars.foreach(file => jarUpdater.update(file))
   }
 
-  def addGraph(grp: File, jars: List[File]): (CliftonInjector, CliftonCollector) = {
+  def addGraph(grp: File, jars: List[File]): Try[(CliftonInjector, CliftonCollector)] = {
 
-    init(readFile(grp.toPath.toString)) match {
-      case Some((x: CliftonInjector, y: CliftonCollector, grp: GraphRep, graphId)) =>
+    init(Utilities.readFile(grp.toPath.toString)).map {
+      case (inj: CliftonInjector, coll: CliftonCollector, grp: GraphRep, graphId: String) => {
 
         loadJars(jars)
 
-        //gets the space ready for nodes to start interact
+        //gets the space ready for nodes to start to interact
         new GrpChecker(new GrpInfo(graphId, grp.getVectorActivities), signalSpace).start()
 
-        (x, y)
-      case _ => throw new Exception
-    }
-  }
-
-  private def getGraphRep(parser: ActivityParser): Option[GraphRep] = {
-    val res: Try[GraphRep] = parser.InputLine.run()
-    res match {
-      case Success(graph) => {
-        if (graph.checkValidGraph()) Some(graph)
-        else None
+        (inj, coll)
       }
-      case _ =>
-        println("ERROR")
-        None
     }
   }
 
-  private def init(fileAsText: String): Option[(CliftonInjector, CliftonCollector, GraphRep, String)] = {
-    val plnClean = clearCommnents(fileAsText)
+  private def getGraphRep(parser: ActivityParser): Try[GraphRep] = {
+    val res: Try[GraphRep] = parser.InputLine.run()
+
+    res.flatMap(graph => {
+      if (graph.checkValidGraph()) Success(graph)
+      else Failure(new Exception("Graph is not valid"))
+    })
+  }
+
+  private def init(fileAsText: String): Try[(CliftonInjector, CliftonCollector, GraphRep, String)] = {
+    val plnClean = Utilities.clearCommnents(fileAsText)
     val parser = new ActivityParser(plnClean)
-    getGraphRep(parser) match {
-      case Some(graphRep) =>
-        val graphCreator = new GraphCreator()
-        graphCreator.injectGraph(graphRep)
-        val id = UUID.randomUUID().toString
-        val injector = new CliftonInjector(Protocol.INJECT_SIGNAL_MARKER, graphRep.getRoot.get.id)
-        val collector = new CliftonCollector(Protocol.COLLECT_SIGNAL_MARKER)
-        Some(injector, collector, graphRep, id)
-      case _ => None
-    }
+    getGraphRep(parser).map(graphRep => {
+      val graphCreator = new GraphCreator()
+      graphCreator.injectGraph(graphRep)
+      val id = UUID.randomUUID().toString
+      val injector = new CliftonInjector(Protocol.INJECT_SIGNAL_MARKER, graphRep.getRoot.get.id)
+      val collector = new CliftonCollector(Protocol.COLLECT_SIGNAL_MARKER)
+      (injector, collector, graphRep, id)
+    })
   }
 
 }
