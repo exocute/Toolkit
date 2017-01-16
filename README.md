@@ -25,19 +25,33 @@ Usage <br />
 ```
 
 options:<br />
--j, -jar ip<br />
+```
+-j, -jar ip
+```
   Sets the jarHost.<br />
--s, -signal ip<br />
+  ```
+-s, -signal ip
+```
   Sets the signalHost.<br />
--d, -data ip<br />
+  ```
+-d, -data ip
+```
   Sets the dataHost.<br />
--jarfile file_name[.jar]<br />
+  ```
+-jarfile file_name[.jar]
+```
   Sets the jar file containing all classes that will be used in the grp.<br />
--cleanspaces<br />
+  ```
+-cleanspaces
+```
   Clean all information from the spaces<br />
---help<br />
+  ```
+--help
+```
   display this help and exit.<br />
---version<br />
+  ```
+--version
+```
   output version information and exit.<br />
   
 After started:<br />
