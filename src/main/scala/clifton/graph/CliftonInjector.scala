@@ -5,7 +5,7 @@ import java.util.UUID
 
 import clifton.graph.exceptions.InjectException
 import com.zink.fly.FlyPrime
-import exonode.clifton.node.{DataEntry, ExoEntry, SpaceCache}
+import exonode.clifton.node.{DataEntry, SpaceCache}
 
 /**
   * Created by #ScalaTeam on 21/12/2016.

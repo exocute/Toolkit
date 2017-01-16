@@ -1,30 +1,28 @@
 package toolkit
 
-import scala.collection.mutable.HashMap
+import scala.collection.mutable
 
 /**
   * Created by #ScalaTeam on 12/12/2016.
   *
-  * Graph is defined has a HashMap of Activities to LinkedList of AcitivityRep
+  * Graph is defined has a HashMap of Activities to List of AcitivityRep
   */
 class GraphImplementation {
-
 
   /**
     * key: id of the activity
     */
-  val activities = new HashMap[String, ActivityRep]
+  val activities = new mutable.HashMap[String, ActivityRep]
 
+  val adj = new mutable.HashMap[ActivityRep, List[ActivityRep]]
 
-  val adj = new HashMap[ActivityRep, List[ActivityRep]]
-
-  val adjInverse = new HashMap[ActivityRep, List[ActivityRep]]
+  val adjInverse = new mutable.HashMap[ActivityRep, List[ActivityRep]]
 
   /**
-    * Adds a new activity Rep
-    * If the activityRep is already present in the graph false is returned, true otherwise
+    * Adds a new activity
+    * Returns true if the activity was not already present, false otherwise
     *
-    * @param activityRep
+    * @param activityRep the activity to add
     * @return false if activity already present, true otherwise
     */
   def addNode(activityRep: ActivityRep): Boolean = {
@@ -38,64 +36,44 @@ class GraphImplementation {
   }
 
   /**
-    * Adds a new edge to Graph
+    * Adds a new connection to the graph
     *
-    * @param activityRepFrom
-    * @param activityRepTo
+    * @param activityFrom
+    * @param activityTo
     * @return true if all activities are presents in graph and are as excepted, false otherwise
     */
-  def addEdge(activityRepFrom: ActivityRep, activityRepTo: ActivityRep): Boolean = {
-    if (activityRepFrom != activityRepTo && adj.contains(activityRepFrom) &&
-      adj.contains(activityRepTo) && !adj(activityRepFrom).contains(activityRepTo)) {
-      adj.update(activityRepFrom, adj(activityRepFrom) :+ activityRepTo)
-      adjInverse.update(activityRepTo, adjInverse(activityRepTo) :+ activityRepFrom)
+  def addEdge(activityFrom: ActivityRep, activityTo: ActivityRep): Boolean = {
+    if (activityFrom != activityTo && adj.contains(activityFrom) &&
+      adj.contains(activityTo) && !adj(activityFrom).contains(activityTo)) {
+      adj.update(activityFrom, adj(activityFrom) :+ activityTo)
+      adjInverse.update(activityTo, adjInverse(activityTo) :+ activityFrom)
       true
     }
     else false
   }
 
   /**
-    * Removes a single edge
-    *
-    * @param activityRepFrom
-    * @param activityRepTo
-    */
-  def removeEdge(activityRepFrom: ActivityRep, activityRepTo: ActivityRep): Unit = {
-    ???
-  }
-
-  /**
-    * Removes all edges of a single node
-    *
-    * @param activityRepFrom
-    * @return
-    */
-  def removeAllEdge(activityRepFrom: ActivityRep): Boolean = {
-    ???
-  }
-
-  /**
-    * returns an activityRep if exists
+    * Returns an activityRep if it exists
     *
     * @param actId
     * @return activityRep
     */
-  def getActById(actId: String): Option[ActivityRep] = {
+  def getActivityById(actId: String): Option[ActivityRep] = {
     activities.get(actId)
   }
 
   /**
-    * verifies if an activityRep with idName is defined in the Graph
+    * Checks if an activity with actId is defined in the Graph
     *
-    * @param idName
+    * @param actId
     * @return true if defined, false otherwise
     */
-  def hasActivity(idName: String): Boolean = {
-    getActById(idName).isDefined
+  def hasActivity(actId: String): Boolean = {
+    activities.get(actId).isDefined
   }
 
   /**
-    * gets the adj of a single activity
+    * gets the adj of an activity
     *
     * @param activity
     * @return
@@ -105,7 +83,7 @@ class GraphImplementation {
   }
 
   /**
-    * gets the reverse adj of a single activity
+    * gets the reverse adj of an activity
     *
     * @param activityRep
     * @return
@@ -115,13 +93,11 @@ class GraphImplementation {
   }
 
   /**
-    * returns the nodes number of the graph
+    * returns the number of activities in the graph
     *
     * @return
     */
-  def numberNodes: Int = {
-    adj.size
-  }
+  def numberNodes: Int = activities.size
 
   /**
     * verifies if a graph has cycles and subgraphs in a DFS style implementation
@@ -138,44 +114,34 @@ class GraphImplementation {
     def findCycle(init: ActivityRep): Unit = {
       marked = marked + init
       onStack = init :: onStack
-      for (
-        x <- adj(init)
-      ) if (!marked.contains(x)) findCycle(x)
-      else if (onStack.contains(x)) {
-        cycleFound = true
-        return
+      for (act <- adj(init)) {
+        if (!marked.contains(act))
+          findCycle(act)
+        else if (onStack.contains(act)) {
+          cycleFound = true
+          return
+        }
       }
       onStack = onStack.filter(_ != init)
     }
 
     //has subgraphs if not all nodes were visited
-    cycleFound && marked.size != adj.size
+    cycleFound && marked.size != numberNodes
   }
 
   /**
-    * verifies if a graph has subgraphs not connected, connections not used and lost nodes
-    * also verifies if the graph has a absolute Root and Sink
+    * Checks if a graph has subgraphs not connected, connections not used and lost nodes.
+    * Also checks if the graph has a root and a sink
     *
     * @return
     */
-  def nodesWithoutConnections(): Boolean = {
+  def nodesWithoutConnections: Boolean = {
     hasRoot && hasSink && !hasCyclesAndSubGraphs
   }
 
-  /**
-    * if exists returns the root node
-    *
-    * @return rootNode
-    */
-  def getRoot: Option[ActivityRep] = {
-    if (hasRoot)
-      Some(adjInverse.filter { case (act, list) => list.isEmpty }.head._1)
-    else
-      None
-  }
 
   /**
-    * verifies if a graph has a Root node
+    * Checks if the graph has a root node
     *
     * @return true if it has a root, false otherwise
     */
@@ -184,34 +150,36 @@ class GraphImplementation {
   }
 
   /**
-    * verifies if a graph has a Sink node
+    * Returns the root activity if it exists
     *
-    * @return true if it has a sink, false otherwise
+    * @return rootNode
     */
-  def hasSink: Boolean = {
-    adj.count { case (act, list) => list.isEmpty } == 1
-  }
-
-  /**
-    * gets a Sink node
-    *
-    * @return
-    */
-  def getSink: Option[ActivityRep] = {
+  def getRoot: Option[ActivityRep] = {
     if (hasRoot)
-      Some(adj.filter { case (act, list) => list.isEmpty }.head._1)
+      Some(adjInverse.filter { case (_, list) => list.isEmpty }.head._1)
     else
       None
   }
 
   /**
-    * returns the of nodes that has a connection to that node
+    * Checks if the graph has a sink node
     *
-    * @param activityRep
+    * @return true if it has a sink, false otherwise
+    */
+  def hasSink: Boolean = {
+    adj.count { case (_, list) => list.isEmpty } == 1
+  }
+
+  /**
+    * Returns the sink activity if it exists
+    *
     * @return
     */
-  def referencedByNodes(activityRep: ActivityRep): Int = {
-    adjInverse(activityRep).size
+  def getSink: Option[ActivityRep] = {
+    if (hasSink)
+      Some(adj.filter { case (_, list) => list.isEmpty }.head._1)
+    else
+      None
   }
 
   /**
@@ -219,10 +187,13 @@ class GraphImplementation {
     *
     * @return
     */
-  override def toString: String = activities.values.mkString("\n") + "\n" +
-    adj.flatMap { case (act, list) => {
+  override def toString: String = {
+    val adjStr: String = adj.toList.sortBy(_._1.id).flatMap { case (act, list) =>
       if (list.isEmpty) Nil
       else List(act.id + ":" + list.map(_.id).mkString(","))
-    }
     }.mkString("\n")
+
+    activities.values.toList.sortBy(_.id).mkString("\n") +
+      (if (adjStr.isEmpty) "" else "\n" + adjStr)
+  }
 }

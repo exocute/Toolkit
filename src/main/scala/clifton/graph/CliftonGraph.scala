@@ -11,6 +11,7 @@ import scala.util.{Success, Try}
 /**
   * Created by #ScalaTeam on 21/12/2016.
   */
+@deprecated
 class CliftonGraph {
 
   private var graphRep: GraphRep = _
@@ -20,7 +21,7 @@ class CliftonGraph {
   def this(file: File, signalHost: String, dataHost: String, jarHost: String) = {
     this()
     SpaceCache.jarHost = jarHost
-    init(readFile(file.toPath.toString), signalHost, dataHost)
+    init(readFile(file), signalHost, dataHost)
   }
 
   def this(fileAsText: String, signalHost: String, dataHost: String) = {

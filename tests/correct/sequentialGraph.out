@@ -1,10 +1,10 @@
 Name: Sport.Lisboa.e.Benfica
 ImportName: Penalty.por.assinalar
 ExportName: dois.um
-Id: goloSLB1, Name: Eduardo.Salvio, Import: Penalty.por.assinalar, Export: Bola.ao.poste, Parameters: 24,Rafael.Silva
 Id: fim, Name: Bas.Dost, Import: esperanca.no.empate, Export: dois.um, Parameters: 69,Joel.Campbell
-Id: goloSLB2, Name: Raul.Jimenez, Import: Bola.ao.poste, Export: Lindelof.a.dormir, Parameters: 47,Nelson.Semedo
 Id: goloSCP1, Name: Bas.Dost, Import: Lindelof.a.dormir, Export: esperanca.no.empate, Parameters: 69,Joel.Campbell
+Id: goloSLB1, Name: Eduardo.Salvio, Import: Penalty.por.assinalar, Export: Bola.ao.poste, Parameters: 24,Rafael.Silva
+Id: goloSLB2, Name: Raul.Jimenez, Import: Bola.ao.poste, Export: Lindelof.a.dormir, Parameters: 47,Nelson.Semedo
+goloSCP1:fim
 goloSLB1:goloSLB2
 goloSLB2:goloSCP1
-goloSCP1:fim

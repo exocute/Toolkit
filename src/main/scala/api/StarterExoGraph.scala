@@ -19,28 +19,35 @@ import scala.util.{Failure, Success, Try}
   */
 class StarterExoGraph {
 
-  val jarUpdater = new JarSpaceUpdater(null)
-  val fileHandler = new JarFileHandler()
+  private val jarUpdater = new JarSpaceUpdater()
+  private val fileHandler = new JarFileHandler()
 
   private val signalSpace: FlyPrime = SpaceCache.getSignalSpace
 
-  def loadJars(jars: List[File]): Unit = {
-    jars.foreach(file => jarUpdater.update(file))
-  }
+  /**
+    * Loads the jar files into the jar space and the grp file representation into the signal space.
+    *
+    * @param grpFile the file  in grp format
+    * @param jars    the jar files to be loaded
+    * @return A pair with the injector and the collector
+    */
+  def addGraph(grpFile: File, jars: List[File]): Try[(CliftonInjector, CliftonCollector)] = {
 
-  def addGraph(grp: File, jars: List[File]): Try[(CliftonInjector, CliftonCollector)] = {
-
-    init(Utilities.readFile(grp.toPath.toString)).map {
+    init(Utilities.readFile(grpFile)).map {
       case (inj: CliftonInjector, coll: CliftonCollector, grp: GraphRep, graphId: String) => {
 
         loadJars(jars)
 
         //gets the space ready for nodes to start to interact
-        new GrpChecker(new GrpInfo(graphId, grp.getVectorActivities), signalSpace).start()
+        new GrpChecker(graphId, grp.getActivities, signalSpace).start()
 
         (inj, coll)
       }
     }
+  }
+
+  private def loadJars(jars: List[File]): Unit = {
+    jars.foreach(file => jarUpdater.update(file))
   }
 
   private def getGraphRep(parser: ActivityParser): Try[GraphRep] = {

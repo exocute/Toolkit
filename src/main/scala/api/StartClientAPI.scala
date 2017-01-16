@@ -103,6 +103,11 @@ object StartClientAPI {
       }
     }
 
+    if (jarFile.isEmpty || grpFile.isEmpty) {
+      println(getHelpString)
+      System.exit(0)
+    }
+
     setHosts()
 
     if (shouldClean)

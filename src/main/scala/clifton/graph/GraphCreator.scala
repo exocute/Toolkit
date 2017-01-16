@@ -1,8 +1,5 @@
 package clifton.graph
 
-import java.util.UUID
-
-import clifton.nodes.SignalOutChannel
 import com.zink.fly.FlyPrime
 import exonode.clifton.Protocol
 import exonode.clifton.node.{ExoEntry, SpaceCache}
@@ -53,7 +50,7 @@ class GraphCreator {
 
       //      println(signal)
       //outChannel.putObject(signal)
-      space.write(new ExoEntry(act.id, signal), 60 * 60 * 1000) //FIXME: use Protocol.ACT_SIGNAL_LEASE_TIME
+      space.write(new ExoEntry(act.id, signal), Protocol.ACT_SIGNAL_LEASE_TIME)
 
       //println(s"Sending signal: $signal")
 

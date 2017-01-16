@@ -11,7 +11,7 @@ import exonode.clifton.node.SpaceCache
 /**
   * Created by #ScalaTeam on 21-12-2016.
   */
-class JarSpaceUpdater(flyHost: String) extends JarUpdater {
+class JarSpaceUpdater(flyHost: String = null) extends JarUpdater {
 
   private val fileHandler = new JarFileHandler
 
@@ -30,7 +30,7 @@ class JarSpaceUpdater(flyHost: String) extends JarUpdater {
     updateClassEntries(jarFile)
   }
 
-  def updateJarEntry(jarFile: File) = {
+  def updateJarEntry(jarFile: File): Unit = {
     val je = new FlyJarEntry
     je.fileName = jarFile.getName
     space.take(je, 0L)

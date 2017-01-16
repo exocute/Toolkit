@@ -1,6 +1,6 @@
 package toolkit
 
-import exceptions.{ActivitiesWithoutUniqueID, ActivityWithWrongParameters, InvalidConnections, NoSuchIDToActivity}
+import toolkit.exceptions.{ActivitiesWithDuplicateId, InvalidConnection, UnknownActivityId}
 
 /**
   * Created by #ScalaTeam on 12/12/2016.
@@ -33,68 +33,8 @@ class GraphRep(val name: String, importName: String, exportName: String, activit
     */
   def addSingleActivity(activityRep: ActivityRep): Unit = {
     if (!activitiesGraph.addNode(activityRep))
-      throw new ActivitiesWithoutUniqueID(activityRep.id)
+      throw new ActivitiesWithDuplicateId(activityRep.id)
   }
-
-  /**
-    * Changes the current graph to allow forks and joins
-    * Makes a Fork with Activities to be executed in parallel
-    * Removes all edges from activityRep in activityRepFrom
-    * Adds new Edges from activityRepTo to every activityRepFrom
-    *
-    * @param activityRepTo   - Root
-    * @param activityRepFrom - All Directions from Root
-    */
-  def addDownStream(activityRepTo: String, activityRepFrom: List[String]): Unit = {
-
-    val actTo = activityById(activityRepTo)
-
-    //check valid activities
-    for {
-      x <- activityRepTo :: activityRepFrom
-      if !activitiesGraph.hasActivity(x)
-    } throw new NoSuchIDToActivity(x)
-
-    //remove all edges
-    for {
-      x <- activityRepFrom
-    } if (!activitiesGraph.removeAllEdge(activityById(x))) throw new ActivityWithWrongParameters
-
-    //add new edges to make join
-    for {
-      x <- activityRepFrom
-    } if (!activitiesGraph.addEdge(activityById(x), actTo)) throw new ActivityWithWrongParameters
-  }
-
-  /**
-    * Changes the current graph to allow forks and joins    *
-    * Makes a Join with activities to merge the result of more than one activity
-    * Removes all edges of the activityRepFrom
-    * Adds new edges from every activityRepTo to activityRepFrom
-    *
-    * @param activityRepTo
-    * @param activityRepFrom
-    */
-  def addUpStream(activityRepTo: List[String], activityRepFrom: String): Unit = {
-
-    val actFrom = activityById(activityRepFrom)
-
-    //check valid activities
-    for {
-      x <- activityRepFrom :: activityRepTo
-      if !activitiesGraph.hasActivity(x)
-    } throw new NoSuchIDToActivity(x)
-
-    //get an activity by name
-    if (!activitiesGraph.removeAllEdge(actFrom))
-      throw new ActivityWithWrongParameters
-
-    //add new edges to make fork
-    for {
-      x <- activityRepTo
-    } if (!activitiesGraph.addEdge(actFrom, activityById(x))) throw new ActivityWithWrongParameters
-  }
-
 
   /**
     * adds a single connection between activities
@@ -103,10 +43,10 @@ class GraphRep(val name: String, importName: String, exportName: String, activit
     * @param activityTo
     */
   def addConnection(activityFrom: String, activityTo: String): Unit = {
-    if (!activitiesGraph.addEdge(activityById(activityFrom), activityById(activityTo)) && !validConnection(activityFrom, activityTo))
-      throw new ActivityWithWrongParameters
+    if (!activitiesGraph.addEdge(activityById(activityFrom), activityById(activityTo))
+      && !validConnection(activityFrom, activityTo))
+      throw new InvalidConnection(activityFrom, activityTo)
   }
-
 
   /**
     * Forks activities
@@ -118,10 +58,8 @@ class GraphRep(val name: String, importName: String, exportName: String, activit
     */
   def addConnection(activityFrom: String, activityTo: List[String]): Unit = {
     val from = activityById(activityFrom)
-    for {
-      to <- activityTo
-    } if (!activitiesGraph.addEdge(from, activityById(to)) || !validConnection(activityFrom, activityTo))
-      throw new ActivityWithWrongParameters
+    for (to <- activityTo)
+      addConnection(activityFrom, to)
   }
 
   /**
@@ -163,12 +101,10 @@ class GraphRep(val name: String, importName: String, exportName: String, activit
   def validConnection(activityFrom: String, activityTo: String): Boolean = {
     val from = activityById(activityFrom).exportName
     val to = activityById(activityTo).importName
-    if (to.size == 1)
-      from == to.head
-    else if (to.size == 2)
-      from == to.head || from == to.tail.head
+    if (to.isEmpty)
+      false
     else
-      true
+      to.contains(from)
   }
 
   /**
@@ -179,9 +115,10 @@ class GraphRep(val name: String, importName: String, exportName: String, activit
     * @return true if its valid, false otherwise
     */
   def validConnection(activityFrom: String, activityTo: List[String]): Boolean = {
-    if (!validConnection(activityFrom, activityTo.head) && validConnection(activityFrom, activityTo.tail))
-      throw new InvalidConnections
-    else true
+    for (to <- activityTo)
+      if (!validConnection(activityFrom, to))
+        return false
+    true
   }
 
   /**
@@ -191,7 +128,8 @@ class GraphRep(val name: String, importName: String, exportName: String, activit
     * @param exportName
     * @return
     */
-  def validCollector(value: ActivityRep, exportName: String): Boolean = if (exportName.isEmpty || value.exportName.isEmpty) true else value.exportName == exportName
+  def validCollector(value: ActivityRep, exportName: String): Boolean =
+    if (exportName.isEmpty || value.exportName.isEmpty) true else value.exportName == exportName
 
   /**
     * verifies if the parameter's value to import it's the same has the import parameter of the Root
@@ -200,7 +138,8 @@ class GraphRep(val name: String, importName: String, exportName: String, activit
     * @param importName
     * @return
     */
-  def validInjector(value: ActivityRep, importName: String): Boolean = if (importName.isEmpty || value.importName.isEmpty) true else value.importName.head == importName
+  def validInjector(value: ActivityRep, importName: String): Boolean =
+    if (importName.isEmpty || value.importName.isEmpty) true else value.importName.head == importName
 
   /**
     * checks if a graph has a Sink, Root and do not has cycles or subgraphs
@@ -208,9 +147,7 @@ class GraphRep(val name: String, importName: String, exportName: String, activit
     * @return true if it's a valid graph, false otherwise
     */
   def checkValidGraph(): Boolean = {
-    if (activitiesGraph.numberNodes == 1 && (!activitiesGraph.hasSink || !activitiesGraph.hasRoot || !validConnection(activitiesGraph.getRoot.get.id, activitiesGraph.getSink.get.id)))
-      false
-    else if (!activitiesGraph.hasSink || !activitiesGraph.hasRoot || activitiesGraph.hasCyclesAndSubGraphs
+    if (!activitiesGraph.hasSink || !activitiesGraph.hasRoot || activitiesGraph.hasCyclesAndSubGraphs
       || !validInjector(activitiesGraph.getRoot.get, importName) || !validCollector(activitiesGraph.getSink.get, exportName))
       false
     else true
@@ -221,9 +158,9 @@ class GraphRep(val name: String, importName: String, exportName: String, activit
     * @return - ActivityRep with ID
     */
   def activityById(id: String): ActivityRep = {
-    val act = activitiesGraph.getActById(id)
+    val act = activitiesGraph.getActivityById(id)
     act match {
-      case None => throw new NoSuchIDToActivity(id)
+      case None => throw new UnknownActivityId(id)
       case Some(x) => x
     }
   }
@@ -244,15 +181,7 @@ class GraphRep(val name: String, importName: String, exportName: String, activit
     */
   def getReverseConnections(activity: ActivityRep): List[ActivityRep] = activitiesGraph.getInverseAdj(activity)
 
-  /**
-    * compares the number of nodes that references a single activity
-    *
-    * @param activityRep
-    * @return if two activities references that activity it's true because we have a join, false otherwise
-    */
-  def isJoin(activityRep: ActivityRep): Boolean = activitiesGraph.referencedByNodes(activityRep) == 2
-
-  def getVectorActivities: Vector[String] = activitiesGraph.activities.toVector.unzip._1
+  def getActivities: Vector[String] = activitiesGraph.activities.keys.toVector
 
   /**
     * returns the string of a value if the value its defined

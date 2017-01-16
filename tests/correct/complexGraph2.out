@@ -1,8 +1,8 @@
 Name: Sport.Lisboa.e.Benfica
 ImportName: Sporting.Clube.de.Portugal
 ExportName: dois.um
+Id: goloSCP1, Name: Bas.Dost, Import: contra.ataque.mortifero, Export: dois.um, Parameters: 69,Joel.Campbell
 Id: goloSLB1, Name: Eduardo.Salvio, Import: Sporting.Clube.de.Portugal, Export: protestos.jogadores.do.Sporting, Parameters: 24,Rafael.Silva
 Id: goloSLB2, Name: Raul.Jimenez, Import: protestos.jogadores.do.Sporting, Export: contra.ataque.mortifero, Parameters: 47,Nelson.Semedo
-Id: goloSCP1, Name: Bas.Dost, Import: contra.ataque.mortifero, Export: dois.um, Parameters: 69,Joel.Campbell
 goloSLB1:goloSLB2
 goloSLB2:goloSCP1

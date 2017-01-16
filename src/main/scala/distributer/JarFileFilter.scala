@@ -2,14 +2,14 @@ package distributer
 
 import java.io.File
 
-import scala.collection.mutable.HashMap
+import scala.collection.mutable
 
 /**
   * Created by #ScalaTeam on 21-12-2016.
   */
 class JarFileFilter extends java.io.FilenameFilter {
 
-  private val jarMap = HashMap[String, Long]()
+  private val jarMap = mutable.HashMap[String, Long]()
 
   def accept(dir: File, name: String): Boolean = {
     if (name.endsWith(".jar")) {

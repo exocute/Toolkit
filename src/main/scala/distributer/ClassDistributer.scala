@@ -5,6 +5,7 @@ import java.io.File
 /**
   * Created by #ScalaTeam on 21/12/2016.
   */
+@deprecated
 class ClassDistributer {
 
   def main(args: Array[String]): Unit = {
@@ -19,7 +20,7 @@ class ClassDistributer {
         if (args.length > 1)
           new JarSpaceUpdater(args(1))
         else
-          new JarSpaceUpdater(null)
+          new JarSpaceUpdater()
 
       while (!Thread.interrupted) {
         //writer.update(directory.list(filter))

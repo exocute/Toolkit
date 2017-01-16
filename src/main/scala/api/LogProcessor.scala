@@ -12,6 +12,8 @@ import scala.collection.JavaConverters._
 
 /**
   * Created by #ScalaTeam on 04/01/2017.
+  *
+  * Reads all log entries and writes them in a local file
   */
 object LogProcessor extends Thread {
 
@@ -37,7 +39,6 @@ object LogProcessor extends Thread {
       } else
         Thread.sleep(INTERVAL_TIME)
     }
-
   }
 
 }

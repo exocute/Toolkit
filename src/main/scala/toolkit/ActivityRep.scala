@@ -33,9 +33,9 @@ case class ActivityRep(id: String, name: String, parameters: Vector[String], imp
   override def hashCode(): Int = id.hashCode
 
 
-  def getListOfActivityParameters = List(("Id", id), ("Name", name), ("Import", importName.mkString(",")), ("Export", exportName), ("Parameters", parameters.mkString(",")))
+  private def getListOfActivityParameters = List("Id" -> id, "Name" -> name, "Import" -> importName.mkString(","), "Export" -> exportName, "Parameters" -> parameters.mkString(","))
 
-  def showValidParameters(list: List[(String, String)]) = list.filter(_._2.nonEmpty).map { case (name, value) => name + ": " + value }
+  private def showValidParameters(list: List[(String, String)]) = list.filter(_._2.nonEmpty).map { case (name, value) => name + ": " + value }
 
   override def toString: String = showValidParameters(getListOfActivityParameters).mkString(", ")
 

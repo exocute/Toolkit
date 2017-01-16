@@ -78,11 +78,9 @@ class AutomaticTesterOfParser extends FlatSpec {
     * compares the two strings
     *
     * @param result
-    * @param path
     * @return true if the strings are equals, false otherwise
     */
-  def validateFiles(result: String, path: String): Boolean = {
-    val expected: String = readFile(getResultFile(path))
+  def validateFiles(result: String, expected: String): Boolean = {
     result == expected.filterNot(_ == '\r')
   }
 
@@ -100,13 +98,20 @@ class AutomaticTesterOfParser extends FlatSpec {
     val res: Try[GraphRep] = parser.InputLine.run()
     res match {
       case Success(graph) =>
-        println(graph)
-        if (!testContent) graph.checkValidGraph()
-        else validateFiles(graph.toString, path) && graph.checkValidGraph()
-      case exp => {
+        println(path + ":")
+
+        //        println(graph)
+        if (!testContent)
+          graph.checkValidGraph()
+        else {
+          val expected: String = readFile(getResultFile(path))
+          val validOut = validateFiles(graph.toString, expected)
+          println(s"---\n${graph.toString}\n---\n$expected\n---\n")
+          validOut && graph.checkValidGraph()
+        }
+      case exp =>
         println(exp)
         false
-      }
     }
   }
 
