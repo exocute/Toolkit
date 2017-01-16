@@ -43,11 +43,14 @@ options:<br />
 After started:<br />
 
 Available commands:<br />
-i {input}<table>        -> injects {input} as a string into the data space.<br />
-im {n} {input}<table>   -> injects {input} as a string {n} times into the data space.<br />
-n {input}<table>        -> injects {input} as a number (Long) into the data space.<br />
-c<table>                -> collects 1 result.<br />
-c {n}<table>            -> collects at most n results.<br />
+
+| Command       |        | 
+| ---------------|:-------------:|
+| i {input}          |   injects {input} as a string into the data space.      |
+| im {n} {input}           | injects {input} as a string {n} times into the data space.           |
+| n {input} |  injects {input} as a number (Long) into the data space.      |  
+| c  | collects 1 result      |  
+| c {n} | collects at most n results      |  
 
 
   
