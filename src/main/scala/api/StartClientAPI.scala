@@ -107,12 +107,12 @@ object StartClientAPI {
       }
     }
 
+    setHosts()
+
     if (jarFile.isEmpty || grpFile.isEmpty) {
       println(getHelpString)
       System.exit(0)
     }
-
-    setHosts()
 
     if (shouldClean)
       cleanSpaces()
@@ -176,6 +176,9 @@ object StartClientAPI {
               }
             case "-help" | "help" =>
               println(getReplHelp)
+            case "exit" =>
+              // clear data from the spaces?
+              System.exit(0)
             case _ => println("Invalid command")
           }
         }
