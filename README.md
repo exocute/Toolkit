@@ -58,13 +58,14 @@ After started:<br />
 
 Available commands:<br />
 
-| Command       |        | 
-| ---------------|:-------------:|
-| i {input}          |   injects {input} as a string into the data space.      |
-| im {n} {input}           | injects {input} as a string {n} times into the data space.           |
-| n {input} |  injects {input} as a number (Long) into the data space.      |  
-| c  | collects 1 result      |  
-| c {n} | collects at most n results      |  
+| Command          |               | 
+| -----------------|:-------------:|
+| i {input}        | injects {input} as a string into the data space. |
+| im {n} {input}   | injects {input} as a string {n} times into the data space. |
+| n {input}        | injects {input} as a number (Long) into the data space. |
+| file {file_name} | injects the bytes of the file {file_name} into the data space. |
+| c                | collects 1 result |  
+| c {n}            | collects at most n results |  
 
 
   
