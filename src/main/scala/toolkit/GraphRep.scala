@@ -4,6 +4,8 @@ import toolkit.exceptions.{ActivitiesWithDuplicateId, InvalidConnection, Unknown
 
 /**
   * Created by #ScalaTeam on 12/12/2016.
+  *
+  * Representation of the graph
   */
 
 class GraphRep(val name: String, importName: String, exportName: String, activitiesGraph: GraphImplementation) {

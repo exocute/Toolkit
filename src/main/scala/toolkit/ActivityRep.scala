@@ -4,6 +4,8 @@ import java.io.Serializable
 
 /**
   * Created by #ScalaTeam on 12/12/2016.
+  *
+  * Representation of an activity
   */
 case class ActivityRep(id: String, name: String, parameters: Vector[String], importName: Vector[String], exportName: String) {
 

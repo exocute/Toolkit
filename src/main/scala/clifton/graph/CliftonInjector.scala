@@ -9,6 +9,8 @@ import exonode.clifton.node.{DataEntry, SpaceCache}
 
 /**
   * Created by #ScalaTeam on 21/12/2016.
+  *
+  * Injects into the space the input
   */
 class CliftonInjector(marker: String, rootAct: String) {
 

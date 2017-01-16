@@ -8,6 +8,8 @@ import exonode.clifton.node.{DataEntry, SpaceCache}
 
 /**
   * Created by #ScalaTeam on 21/12/2016.
+  *
+  * collects results from the space saved in dataEntries with a < marker
   */
 class CliftonCollector(val marker: String) {
 

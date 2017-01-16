@@ -27,8 +27,6 @@ object Main {
       val plnClean = clearCommnents(pln)
       val parser = new ActivityParser(plnClean)
       println(parser.InputLine.run())
-      //if (showResult)
-      //  println(parser.graph)
       println()
     }
 

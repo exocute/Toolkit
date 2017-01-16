@@ -10,14 +10,14 @@ import scala.collection.mutable
 
 /**
   * Created by #ScalaTeam on 20/12/2016.
+  *
+  * Receives a graph rep and adds to space the representation
   */
 class GraphCreator {
 
   private var space: FlyPrime = SpaceCache.getSignalSpace
 
   def injectGraph(graph: GraphRep): Unit = {
-    //val graphName = graph.names
-    //val graphInstance: String = graphName + ":" + generateUUID + ":"
 
     val injectMarker = Protocol.INJECT_SIGNAL_MARKER
     val collectMarker = Protocol.COLLECT_SIGNAL_MARKER
@@ -48,11 +48,7 @@ class GraphCreator {
           signal.outMarkers = signal.outMarkers :+ outMarker
         })
 
-      //      println(signal)
-      //outChannel.putObject(signal)
       space.write(new ExoEntry(act.id, signal), Protocol.ACT_SIGNAL_LEASE_TIME)
-
-      //println(s"Sending signal: $signal")
 
       seenActivities += act.id
       for (nextAct <- graph.getConnections(act)) {
