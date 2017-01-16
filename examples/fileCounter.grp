@@ -1,0 +1,6 @@
+Graph graph
+Activity A toolkit.Jar.BytesToString
+Activity B toolkit.Jar.CountLetters
+Activity C toolkit.Jar.CountDigits
+Activity D toolkit.Jar.ShowResult
+Connection A->B,C:B->D:C->D
