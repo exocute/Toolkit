@@ -2,7 +2,7 @@ package api
 
 import com.zink.fly.FlyPrime
 import exonode.clifton.Protocol._
-import exonode.clifton.node.ExoEntry
+import exonode.clifton.node.{ExoEntry, FlyOption}
 
 import scala.collection.immutable.HashMap
 
@@ -12,21 +12,22 @@ import scala.collection.immutable.HashMap
   * Check if the representation of the graph is no longer available
   * and replaces it with the default representation.
   */
-class GrpChecker(grpId: String, actsId: Vector[String], space: FlyPrime) extends Thread {
+class GrpChecker(grpId: String, actsId: Vector[String], space: FlyOption) extends Thread {
 
   setDaemon(true)
 
-  private val templateInitial = new ExoEntry(TABLE_MARKER, makeUniformTable(actsId))
-  private val tmpl = new ExoEntry(TABLE_MARKER, null)
+  private val initialTableTemplate = ExoEntry(TABLE_MARKER, makeUniformTable(actsId))
+  private val anyTableTemplate = ExoEntry(TABLE_MARKER, null)
 
   override def run(): Unit = {
 
-    // writes the default representation in the space
-    space.write(templateInitial, INITIAL_TABLE_LEASE_TIME)
+    // writes the default representation in the space if there is none
+    if (space.read(anyTableTemplate, 0).isEmpty)
+      space.write(initialTableTemplate, INITIAL_TABLE_LEASE_TIME)
 
     while (true) {
-      if (space.read(tmpl, GRP_CHECKER_TABLE_TIMEOUT) == null)
-        space.write(templateInitial, INITIAL_TABLE_LEASE_TIME)
+      if (space.read(anyTableTemplate, GRP_CHECKER_TABLE_TIMEOUT).isEmpty)
+        space.write(initialTableTemplate, INITIAL_TABLE_LEASE_TIME)
 
       Thread.sleep(GRP_CHECKER_SLEEP_TIME)
     }

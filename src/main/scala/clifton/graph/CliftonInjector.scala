@@ -6,22 +6,23 @@ import java.util.UUID
 import clifton.graph.exceptions.InjectException
 import com.zink.fly.FlyPrime
 import exonode.clifton.node.{DataEntry, SpaceCache}
+import exonode.clifton.Protocol._
 
 /**
   * Created by #ScalaTeam on 21/12/2016.
   *
   * Injects into the space the input
   */
-class CliftonInjector(marker: String, rootAct: String) {
+class CliftonInjector(marker: String, rootActivity: String) {
 
-  val INJECTION_LEASE = 2 * 60 * 1000
-  val space: FlyPrime = SpaceCache.getDataSpace
+  private val space = SpaceCache.getDataSpace
+  private val templateData: DataEntry = DataEntry(rootActivity, marker, null, null)
 
   def inject(input: Serializable): String = {
     val id = UUID.randomUUID().toString
     try {
-      val dataEntry = new DataEntry(rootAct, marker, id, input)
-      space.write(dataEntry, INJECTION_LEASE)
+      val dataEntry = templateData.setInjectId(id).setData(input)
+      space.write(dataEntry, INJECTOR_LEASE_TIME)
     } catch {
       case e: Exception => throw new InjectException("Internal Inject Error")
     }
@@ -38,6 +39,4 @@ class CliftonInjector(marker: String, rootAct: String) {
   def inject(inputs: Array[Serializable]): Unit = {
     inputs.foreach(x => inject(x))
   }
-
-  def getMarker = marker
 }

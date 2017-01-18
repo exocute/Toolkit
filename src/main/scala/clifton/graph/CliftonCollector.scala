@@ -13,20 +13,17 @@ import exonode.clifton.node.{DataEntry, SpaceCache}
   */
 class CliftonCollector(val marker: String) {
 
-  private val tpl: DataEntry = new DataEntry().setTo(marker)
+  private val template: DataEntry = DataEntry(marker, null, null, null)
 
   def collect(): Option[Serializable] = {
     collect(0L)
   }
 
   def collect(waitTime: Long): Option[Serializable] = {
-    val space: FlyPrime = SpaceCache.getDataSpace
+    val space = SpaceCache.getDataSpace
     try {
-      val ent = space.take(tpl, waitTime)
-      if (ent != null)
-        Some(ent.data)
-      else
-        None
+      val ent = space.take(template, waitTime)
+      ent.map(_.data)
     } catch {
       case e: Exception => throw new CollectException("Collector Error")
     }

@@ -15,7 +15,7 @@ import scala.collection.mutable
   */
 class GraphCreator {
 
-  private var space: FlyPrime = SpaceCache.getSignalSpace
+  private val space = SpaceCache.getSignalSpace
 
   def injectGraph(graph: GraphRep): Unit = {
 
@@ -25,30 +25,34 @@ class GraphCreator {
     val seenActivities = mutable.HashSet[String]()
 
     def addSignal(act: ActivityRep): Unit = {
-      val signal = new ActivitySignal()
+      val name = act.name
+      val params = act.parameters
 
-      signal.name = act.name
-      signal.params = act.parameters
+      val inActivities = graph.getReverseConnections(act)
 
-      val in = graph.getReverseConnections(act)
-      if (in.isEmpty)
-        signal.inMarkers = signal.inMarkers :+ injectMarker
-      else
-        in.foreach(nextAct => {
-          val inMarker = nextAct.id
-          signal.inMarkers = signal.inMarkers :+ inMarker
-        })
+      val inMarkers =
+        if (inActivities.isEmpty) {
+          Vector(injectMarker)
+        } else {
+          inActivities.foldLeft(Vector[String]())((vector, nextAct) => {
+            val inMarker = nextAct.id
+            vector :+ inMarker
+          })
+        }
 
-      val out = graph.getConnections(act)
-      if (out.isEmpty)
-        signal.outMarkers = signal.outMarkers :+ collectMarker
-      else
-        out.foreach(prevAct => {
-          val outMarker = prevAct.id
-          signal.outMarkers = signal.outMarkers :+ outMarker
-        })
+      val outActivities = graph.getConnections(act)
+      val outMarkers =
+        if (outActivities.isEmpty) {
+          Vector(collectMarker)
+        } else {
+          outActivities.foldLeft(Vector[String]())((vector, prevAct) => {
+            val outMarker = prevAct.id
+            vector :+ outMarker
+          })
+        }
 
-      space.write(new ExoEntry(act.id, signal), Protocol.ACT_SIGNAL_LEASE_TIME)
+      val signal = ActivitySignal(name, params, inMarkers, outMarkers)
+      space.write(ExoEntry(act.id, signal), Protocol.ACT_SIGNAL_LEASE_TIME)
 
       seenActivities += act.id
       for (nextAct <- graph.getConnections(act)) {

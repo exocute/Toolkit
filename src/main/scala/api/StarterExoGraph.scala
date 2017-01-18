@@ -23,9 +23,8 @@ import scala.util.{Failure, Success, Try}
 class StarterExoGraph {
 
   private val jarUpdater = new JarSpaceUpdater()
-  private val fileHandler = new JarFileHandler()
 
-  private val signalSpace: FlyPrime = SpaceCache.getSignalSpace
+  private val signalSpace = SpaceCache.getSignalSpace
 
   /**
     * Loads the jar files into the jar space and the grp file representation into the signal space.

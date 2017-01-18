@@ -2,28 +2,16 @@ package distributer
 
 import java.io.File
 
-import com.zink.fly.{Fly, FlyPrime}
-import com.zink.fly.kit.{FlyFactory, FlyFinder}
-import exonode.distributer.{FlyClassEntry, FlyJarEntry}
 import exonode.clifton.Protocol._
-import exonode.clifton.node.SpaceCache
+import exonode.clifton.node.{FlyOption, SpaceCache}
+import exonode.distributer.{FlyClassEntry, FlyJarEntry}
 
 /**
   * Created by #ScalaTeam on 21-12-2016.
   */
-class JarSpaceUpdater(flyHost: String = null) extends JarUpdater {
+class JarSpaceUpdater(space: FlyOption = SpaceCache.getJarSpace) extends JarUpdater {
 
   private val fileHandler = new JarFileHandler
-
-  private val space: FlyPrime =
-    if (flyHost == null) {
-      SpaceCache.getJarSpace
-    } else {
-      FlyFactory.makeFly(flyHost)
-    }
-
-  if (space == null)
-    throw new RuntimeException("Cant find jar space")
 
   override def update(jarFile: File): Unit = {
     updateJarEntry(jarFile)
@@ -31,11 +19,10 @@ class JarSpaceUpdater(flyHost: String = null) extends JarUpdater {
   }
 
   def updateJarEntry(jarFile: File): Unit = {
-    val je = new FlyJarEntry
-    je.fileName = jarFile.getName
+    val je = FlyJarEntry(jarFile.getName, null)
     space.take(je, 0L)
-    je.bytes = fileHandler.getJarBytes(jarFile)
-    space.write(je, JAR_LEASE_TIME)
+    val jeBytes = FlyJarEntry(jarFile.getName, fileHandler.getJarBytes(jarFile))
+    space.write(jeBytes, JAR_LEASE_TIME)
   }
 
   private def updateClassEntries(jarFile: File) {
@@ -48,9 +35,7 @@ class JarSpaceUpdater(flyHost: String = null) extends JarUpdater {
 
   //	 ensure both the class and the source jar are matched
   private def updateClassEntry(jarFile: File, className: String) {
-    val ce = new FlyClassEntry
-    ce.className = className
-    ce.jarName = jarFile.getName
+    val ce = FlyClassEntry(className, jarFile.getName)
     space.take(ce, 0L)
     space.write(ce, JAR_LEASE_TIME)
   }

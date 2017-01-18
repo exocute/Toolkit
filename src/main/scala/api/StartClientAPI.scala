@@ -3,11 +3,11 @@ package api
 import java.io.File
 import java.nio.file.{Files, Paths}
 
-import com.zink.fly.FlyPrime
-import exonode.clifton.node.{DataEntry, ExoEntry, Log, SpaceCache}
+import exonode.clifton.node._
+import exonode.clifton.signals.KillSignal
 import exonode.distributer.{FlyClassEntry, FlyJarEntry}
 
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Success}
 
 /**
   * Created by #ScalaTeam on 04/01/2017.
@@ -17,14 +17,14 @@ import scala.util.{Failure, Success, Try}
 object StartClientAPI {
 
   def cleanSpaces(): Unit = {
-    def clean(space: FlyPrime, cleanTemplate: Any): Unit = {
-      while (space.take(cleanTemplate, 0) != null) {}
+    def clean(space: FlyOption, cleanTemplate: Any): Unit = {
+      while (space.take(cleanTemplate, 0).isDefined) {}
     }
 
-    clean(SpaceCache.getJarSpace, new FlyJarEntry(null, null))
-    clean(SpaceCache.getJarSpace, new FlyClassEntry(null, null))
-    clean(SpaceCache.getDataSpace, new DataEntry())
-    clean(SpaceCache.getSignalSpace, new ExoEntry(null, null))
+    clean(SpaceCache.getJarSpace, FlyJarEntry(null, null))
+    clean(SpaceCache.getJarSpace, FlyClassEntry(null, null))
+    clean(SpaceCache.getDataSpace, DataEntry(null, null, null, null))
+    clean(SpaceCache.getSignalSpace, ExoEntry(null, null))
   }
 
   val getHelpString: String = {
@@ -42,7 +42,7 @@ object StartClientAPI {
       |-jarfile file_name[.jar]
       |  Sets the jar file containing all classes that will be used in the grp.
       |-cleanspaces
-      |  Clean all information from the spaces
+      |  Clean all information from the spaces.
       |--help
       |  display this help and exit.
       |--version
@@ -62,6 +62,11 @@ object StartClientAPI {
     """.stripMargin
   }
 
+  def printlnExit(msg: String): Unit = {
+    println(msg)
+    System.exit(1)
+  }
+
   def main(args: Array[String]): Unit = {
 
     var jarFile = ""
@@ -75,31 +80,28 @@ object StartClientAPI {
         cmd match {
           case "-j" | "-jar" =>
             if (it.hasNext) SpaceCache.jarHost = it.next()
-            else println(s"Command $cmd needs an argument (ip)")
+            else printlnExit(s"Command $cmd needs an argument (ip)")
           case "-s" | "-signal" =>
             if (it.hasNext) SpaceCache.signalHost = it.next()
-            else println(s"Command $cmd needs an argument (ip)")
+            else printlnExit(s"Command $cmd needs an argument (ip)")
           case "-d" | "-data" =>
             if (it.hasNext) SpaceCache.dataHost = it.next()
-            else println(s"Command $cmd needs an argument (ip)")
+            else printlnExit(s"Command $cmd needs an argument (ip)")
           case "-jarfile" =>
             val name = it.next()
             if (it.hasNext) jarFile = if (name.endsWith(".jar")) name else name + ".jar"
-            else println("Command -jarfile needs an argument (file_name)")
+            else printlnExit("Command -jarfile needs an argument (file_name)")
           case "-cleanspaces" =>
             shouldClean = true
           case "--help" =>
-            println(getHelpString)
-            System.exit(0)
+            printlnExit(getHelpString)
           case "--version" =>
-            //FIXME get version dinamically ?
-            println("Exocute version: 0.1")
-            System.exit(0)
+            //FIXME get version dynamically ?
+            printlnExit("Exocute version: 0.1")
           case _ =>
             if (cmd.startsWith("-")) {
               println("Unknown command: " + cmd)
-              println(getHelpString)
-              System.exit(0)
+              printlnExit(getHelpString)
             } else {
               grpFile = if (cmd.endsWith(".grp")) cmd else cmd + ".grp"
             }
@@ -110,8 +112,7 @@ object StartClientAPI {
     setHosts()
 
     if (jarFile.isEmpty || grpFile.isEmpty) {
-      println(getHelpString)
-      System.exit(0)
+      printlnExit(getHelpString)
     }
 
     if (shouldClean)
@@ -127,14 +128,13 @@ object StartClientAPI {
     startExo.addGraph(file, jars) match {
       case Failure(e) =>
         val msg = e.getMessage
-        if (msg == null)
-          println(s"Error loading grp file:\n$e")
-        else
-          println(s"Error loading grp file:\n$msg")
+        printlnExit(s"Error loading grp file:\n${if (msg == null) e else msg}")
       case Success((inj, col)) =>
         LogProcessor.start()
 
-        Log.info(s"Started to 'exocute' the graph $grpFile")
+        val startStr = s"Started to 'exocute' the graph $grpFile"
+        println(startStr)
+        Log.info(startStr)
         while (true) {
           print("> ")
           val input = scala.io.StdIn.readLine()
@@ -147,14 +147,14 @@ object StartClientAPI {
               input.splitAt(index + 1)
           }
           command.trim match {
-            case "i" | "inject" => println(s"Injected input with id: ${inj.inject(cmdData)}.")
+            case "i" | "inject" => println(s"Injected input with id: ${inj.inject(cmdData.trim)}.")
             case "n" => println(s"Injected integer input with id: ${inj.inject(cmdData.toLong)}.")
             case "im" if cmdData.contains(" ") =>
               val (a, input) = cmdData.splitAt(cmdData.indexOf(" "))
               if (isValidInt(a)) {
                 val n = a.toInt
                 for (_ <- 1 to n)
-                  inj.inject(input)
+                  inj.inject(input.trim)
                 println(s"Injected input $n times.")
               } else {
                 println("Number not valid: " + a)
@@ -166,7 +166,14 @@ object StartClientAPI {
               if (cmdData.isEmpty)
                 println("Result: " + col.collect)
               else {
-                val results = col.collect(cmdData.toInt, 2000)
+                val (maxElems, waitTime) =
+                  if (cmdData.contains(" ")) {
+                    val List(s1, s2) = cmdData.split(" ").toList
+                    (s1.toInt, s2.toLong)
+                  } else
+                    (cmdData.toInt, 2000L)
+
+                val results = col.collect(maxElems, waitTime)
                 if (results.isEmpty)
                   println("No results to collect.")
                 else {
@@ -174,11 +181,15 @@ object StartClientAPI {
                   results.foreach(res => println(res))
                 }
               }
+            case "kill" if cmdData.nonEmpty => // DEBUG ONLY
+              val entry = ExoEntry(cmdData.trim, KillSignal)
+              SpaceCache.getSignalSpace.write(entry, 60 * 60 * 1000)
             case "-help" | "help" =>
               println(getReplHelp)
             case "exit" =>
               // clear data from the spaces?
               System.exit(0)
+            case "" => //just ignore
             case _ => println("Invalid command")
           }
         }
