@@ -151,7 +151,7 @@ object StartClientAPI {
             case "n" => println(s"Injected integer input with id: ${inj.inject(cmdData.toLong)}.")
             case "im" if cmdData.contains(" ") =>
               val (a, input) = cmdData.splitAt(cmdData.indexOf(" "))
-              if (isValidInt(a)) {
+              if (isValidNatNumber(a)) {
                 val n = a.toInt
                 for (_ <- 1 to n)
                   inj.inject(input.trim)
@@ -188,6 +188,9 @@ object StartClientAPI {
               println(getReplHelp)
             case "exit" =>
               // clear data from the spaces?
+              val endStr = s"Finished the graph $grpFile"
+              println(endStr)
+              Log.info(endStr)
               System.exit(0)
             case "" => //just ignore
             case _ => println("Invalid command")
@@ -196,10 +199,10 @@ object StartClientAPI {
     }
   }
 
-  def isValidInt(x: String): Boolean = {
-    x.forall(Character.isDigit) && {
-      val long: Long = x.toLong
-      long <= Int.MaxValue
+  def isValidNatNumber(str: String): Boolean = {
+    str.forall(Character.isDigit) && {
+      val long: Long = str.toLong
+      long >= 0 && long <= Int.MaxValue
     }
   }
 

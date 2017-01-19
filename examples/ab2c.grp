@@ -1,5 +1,5 @@
 Graph graph
-Activity A toolkit.Jar.A:test
-Activity B toolkit.Jar.B2
-Activity C toolkit.Jar.C
+Activity A toolkit.Jar.DoubleString
+Activity B toolkit.Jar.Reverse60
+Activity C toolkit.Jar.UpperCase
 Connection A->B: B->C

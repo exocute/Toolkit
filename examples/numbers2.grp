@@ -1,0 +1,6 @@
+Graph graph
+Activity A toolkit.Jar.Double2
+Activity B toolkit.Jar.Double2
+Activity C toolkit.Jar.Double2
+Activity D toolkit.Jar.Multiply
+Connection A->B,C:B->D:C->D
