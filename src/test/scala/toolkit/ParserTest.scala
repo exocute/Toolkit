@@ -13,6 +13,7 @@ import scala.util.{Try, Success}
   * correct directory should have: file.in with the pln file and file.out with the expected representation of the file
   * incorrect directory just needs the incorrect input files
   */
+
 class AutomaticTesterOfParser extends FlatSpec {
 
   /**
