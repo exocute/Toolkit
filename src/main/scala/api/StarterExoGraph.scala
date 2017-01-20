@@ -5,12 +5,11 @@ import java.util.UUID
 
 import clifton._
 import clifton.graph.{CliftonCollector, CliftonInjector, GraphCreator}
-import com.zink.fly.FlyPrime
-import distributer.{JarFileHandler, JarSpaceUpdater}
-import exonode.clifton.Protocol
-import exonode.clifton.node.SpaceCache
+import clifton.utilities.Utilities
+import distributer.JarSpaceUpdater
+import exonode.clifton.Protocol._
+import exonode.clifton.node.{ExoEntry, SpaceCache}
 import toolkit.{ActivityParser, GraphRep}
-import utilities.Utilities
 
 import scala.util.{Failure, Success, Try}
 
@@ -26,6 +25,7 @@ class StarterExoGraph {
 
   private val signalSpace = SpaceCache.getSignalSpace
 
+
   /**
     * Loads the jar files into the jar space and the grp file representation into the signal space.
     *
@@ -40,12 +40,19 @@ class StarterExoGraph {
 
         loadJars(jars)
 
-        //gets the space ready for nodes to start to interact
-        new GrpChecker(graphId, grp.getActivities, signalSpace).start()
+        addGraphToSpace(grp, graphId)
 
         (inj, coll)
       }
     }
+  }
+
+  def startGrpChecker(): Unit = new GrpChecker().start()
+
+  private def addGraphToSpace(grp: GraphRep, graphId: String) = {
+    val activities = grp.getActivities
+    val exoEntry = ExoEntry(GRAPH_MARKER, (graphId, activities))
+    signalSpace.write(exoEntry, ACT_SIGNAL_LEASE_TIME)
   }
 
   private def loadJars(jars: List[File]): Unit = {
@@ -66,11 +73,11 @@ class StarterExoGraph {
     val parser = new ActivityParser(plnClean)
     getGraphRep(parser).map(graphRep => {
       val graphCreator = new GraphCreator()
-      graphCreator.injectGraph(graphRep)
-      val id = UUID.randomUUID().toString
-      val injector = new CliftonInjector(Protocol.INJECT_SIGNAL_MARKER, graphRep.getRoot.get.id)
-      val collector = new CliftonCollector(Protocol.COLLECT_SIGNAL_MARKER)
-      (injector, collector, graphRep, id)
+      val graphId = UUID.randomUUID().toString
+      graphCreator.injectGraph(graphRep, graphId)
+      val injector = new CliftonInjector(graphId + ":" + INJECT_SIGNAL_MARKER, graphId + ":" + graphRep.getRoot.get.id)
+      val collector = new CliftonCollector(graphId + ":" + COLLECT_SIGNAL_MARKER)
+      (injector, collector, graphRep, graphId)
     })
   }
 

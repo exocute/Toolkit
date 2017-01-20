@@ -2,14 +2,15 @@ package distributer
 
 import java.io.File
 
+import com.zink.scala.fly.ScalaFly
 import exonode.clifton.Protocol._
-import exonode.clifton.node.{FlyOption, SpaceCache}
+import exonode.clifton.node.SpaceCache
 import exonode.distributer.{FlyClassEntry, FlyJarEntry}
 
 /**
   * Created by #ScalaTeam on 21-12-2016.
   */
-class JarSpaceUpdater(space: FlyOption = SpaceCache.getJarSpace) extends JarUpdater {
+class JarSpaceUpdater(space: ScalaFly = SpaceCache.getJarSpace) extends JarUpdater {
 
   private val fileHandler = new JarFileHandler
 

@@ -1,8 +1,8 @@
 package api
 
-import com.zink.fly.FlyPrime
+import com.zink.scala.fly.ScalaFly
 import exonode.clifton.Protocol._
-import exonode.clifton.node.{ExoEntry, FlyOption}
+import exonode.clifton.node.{ExoEntry, SpaceCache}
 
 import scala.collection.immutable.HashMap
 
@@ -12,11 +12,13 @@ import scala.collection.immutable.HashMap
   * Check if the representation of the graph is no longer available
   * and replaces it with the default representation.
   */
-class GrpChecker(grpId: String, actsId: Vector[String], space: FlyOption) extends Thread {
+class GrpChecker() extends Thread {
 
   setDaemon(true)
 
-  private val initialTableTemplate = ExoEntry(TABLE_MARKER, makeUniformTable(actsId))
+  private val space: ScalaFly = SpaceCache.getSignalSpace
+
+  private val initialTableTemplate = ExoEntry(TABLE_MARKER, HashMap[String, Int]())
   private val anyTableTemplate = ExoEntry(TABLE_MARKER, null)
 
   override def run(): Unit = {
@@ -33,10 +35,4 @@ class GrpChecker(grpId: String, actsId: Vector[String], space: FlyOption) extend
     }
 
   }
-
-  def makeUniformTable(vec: Vector[String]): TableType = {
-    HashMap(vec.map(v => v -> 0) :+ (ANALYSER_ACT_ID -> 0): _*)
-  }
-
-
 }

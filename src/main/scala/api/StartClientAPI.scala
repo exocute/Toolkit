@@ -3,6 +3,7 @@ package api
 import java.io.File
 import java.nio.file.{Files, Paths}
 
+import com.zink.scala.fly.ScalaFly
 import exonode.clifton.node._
 import exonode.clifton.signals.KillSignal
 import exonode.distributer.{FlyClassEntry, FlyJarEntry}
@@ -17,7 +18,7 @@ import scala.util.{Failure, Success}
 object StartClientAPI {
 
   def cleanSpaces(): Unit = {
-    def clean(space: FlyOption, cleanTemplate: Any): Unit = {
+    def clean(space: ScalaFly, cleanTemplate: AnyRef): Unit = {
       while (space.take(cleanTemplate, 0).isDefined) {}
     }
 
@@ -72,12 +73,13 @@ object StartClientAPI {
     var jarFile = ""
     var grpFile = ""
     var shouldClean = false
+    var startGrpChecker = true
 
     def setHosts(): Unit = {
       val it = args.iterator
       while (it.hasNext) {
         val cmd = it.next
-        cmd match {
+        cmd.toLowerCase match {
           case "-j" | "-jar" =>
             if (it.hasNext) SpaceCache.jarHost = it.next()
             else printlnExit(s"Command $cmd needs an argument (ip)")
@@ -93,6 +95,8 @@ object StartClientAPI {
             else printlnExit("Command -jarfile needs an argument (file_name)")
           case "-cleanspaces" =>
             shouldClean = true
+          case "-nogrpchecker" =>
+            startGrpChecker = false
           case "--help" =>
             printlnExit(getHelpString)
           case "--version" =>
@@ -101,6 +105,8 @@ object StartClientAPI {
           case _ =>
             if (cmd.startsWith("-")) {
               println("Unknown command: " + cmd)
+              printlnExit(getHelpString)
+            } else if (it.hasNext) {
               printlnExit(getHelpString)
             } else {
               grpFile = if (cmd.endsWith(".grp")) cmd else cmd + ".grp"
@@ -132,12 +138,17 @@ object StartClientAPI {
       case Success((inj, col)) =>
         LogProcessor.start()
 
+        if (startGrpChecker) {
+          //checks if there is always a table in the signal space
+          startExo.startGrpChecker()
+        }
+
         val startStr = s"Started to 'exocute' the graph $grpFile"
         println(startStr)
         Log.info(startStr)
         while (true) {
           print("> ")
-          val input = scala.io.StdIn.readLine()
+          val input = scala.io.StdIn.readLine().trim
 
           val (command, cmdData) = {
             val index = input.indexOf(" ")
@@ -146,15 +157,14 @@ object StartClientAPI {
             else
               input.splitAt(index + 1)
           }
-          command.trim match {
+          command.trim.toLowerCase match {
             case "i" | "inject" => println(s"Injected input with id: ${inj.inject(cmdData.trim)}.")
             case "n" => println(s"Injected integer input with id: ${inj.inject(cmdData.toLong)}.")
             case "im" if cmdData.contains(" ") =>
               val (a, input) = cmdData.splitAt(cmdData.indexOf(" "))
               if (isValidNatNumber(a)) {
                 val n = a.toInt
-                for (_ <- 1 to n)
-                  inj.inject(input.trim)
+                inj.inject(n, input.trim)
                 println(s"Injected input $n times.")
               } else {
                 println("Number not valid: " + a)
@@ -184,7 +194,7 @@ object StartClientAPI {
             case "kill" if cmdData.nonEmpty => // DEBUG ONLY
               val entry = ExoEntry(cmdData.trim, KillSignal)
               SpaceCache.getSignalSpace.write(entry, 60 * 60 * 1000)
-            case "-help" | "help" =>
+            case "help" =>
               println(getReplHelp)
             case "exit" =>
               // clear data from the spaces?
@@ -193,7 +203,7 @@ object StartClientAPI {
               Log.info(endStr)
               System.exit(0)
             case "" => //just ignore
-            case _ => println("Invalid command")
+            case _ => println("Invalid command: " + command.trim)
           }
         }
     }

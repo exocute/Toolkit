@@ -5,6 +5,7 @@ import org.scalatest.FlatSpec
 import java.io.File
 
 import clifton.graph.{CliftonCollector, CliftonInjector}
+import com.zink.scala.fly.ScalaFly
 import exonode.clifton.Protocol.TableType
 import exonode.clifton.node._
 import exonode.clifton.signals.KillSignal
@@ -50,7 +51,7 @@ class IntegrationTest extends FlatSpec {
   val dataEntry = DataEntry(null, null, null, null)
 
   def cleanSpace(): Unit = {
-    def clean(space: FlyOption, cleanTemplate: Any): Unit = {
+    def clean(space: ScalaFly, cleanTemplate: AnyRef): Unit = {
       while (space.take(cleanTemplate, 0).isDefined) {}
     }
 
