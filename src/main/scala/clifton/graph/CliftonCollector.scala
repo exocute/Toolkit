@@ -2,6 +2,7 @@ package clifton.graph
 
 import java.io.Serializable
 
+import api.Collector
 import clifton.graph.exceptions.CollectException
 import com.zink.fly.FlyPrime
 import exonode.clifton.node.{DataEntry, SpaceCache}
@@ -11,7 +12,7 @@ import exonode.clifton.node.{DataEntry, SpaceCache}
   *
   * collects results from the space saved in dataEntries with a < marker
   */
-class CliftonCollector(val marker: String) {
+class CliftonCollector(val marker: String) extends Collector {
 
   private val template: DataEntry = DataEntry(marker, null, null, null)
 

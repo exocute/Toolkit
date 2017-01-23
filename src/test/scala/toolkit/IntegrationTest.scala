@@ -1,11 +1,11 @@
 package toolkit
 
-import api.StarterExoGraph
 import org.scalatest.FlatSpec
 import java.io.File
 
 import clifton.graph.{CliftonCollector, CliftonInjector}
 import com.zink.scala.fly.ScalaFly
+import executable.StarterExoGraph
 import exonode.clifton.Protocol.TableType
 import exonode.clifton.node._
 import exonode.clifton.signals.KillSignal

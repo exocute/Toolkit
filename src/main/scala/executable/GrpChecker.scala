@@ -1,4 +1,4 @@
-package api
+package executable
 
 import com.zink.scala.fly.ScalaFly
 import exonode.clifton.Protocol._
