@@ -1,4 +1,4 @@
-package api
+package executable
 
 import java.io.File
 import java.nio.file.{Files, Paths}

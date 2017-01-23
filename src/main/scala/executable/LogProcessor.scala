@@ -1,14 +1,12 @@
-package api
+package executable
 
 import java.io.FileWriter
 import java.text.{DateFormat, SimpleDateFormat}
 import java.util.Date
 
-import com.zink.fly.Fly
 import exonode.clifton.Protocol
 import exonode.clifton.node.{ExoEntry, SpaceCache}
 import exonode.clifton.signals.LoggingSignal
-import scala.collection.JavaConverters._
 
 /**
   * Created by #ScalaTeam on 04/01/2017.

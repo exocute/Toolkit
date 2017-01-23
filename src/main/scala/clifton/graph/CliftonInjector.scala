@@ -3,6 +3,7 @@ package clifton.graph
 import java.io.Serializable
 import java.util.UUID
 
+import api.Injector
 import clifton.graph.exceptions.InjectException
 import com.zink.fly.FlyPrime
 import exonode.clifton.node.{DataEntry, SpaceCache}
@@ -13,7 +14,7 @@ import exonode.clifton.Protocol._
   *
   * Injects into the space the input
   */
-class CliftonInjector(marker: String, rootActivity: String) {
+class CliftonInjector(marker: String, rootActivity: String) extends Injector {
 
   private val space = SpaceCache.getDataSpace
   private val templateData: DataEntry = DataEntry(rootActivity, marker, null, null)

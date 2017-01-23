@@ -1,9 +1,9 @@
-package api
+package executable
 
 import java.io.File
 import java.util.UUID
 
-import clifton._
+import api.Exocute
 import clifton.graph.{CliftonCollector, CliftonInjector, GraphCreator}
 import clifton.utilities.Utilities
 import distributer.JarSpaceUpdater
@@ -17,9 +17,9 @@ import scala.util.{Failure, Success, Try}
   * Created by #ScalaTeam on 02/01/2017.
   *
   * Receives a graph and loads the jar, inserts the representation of every activity of the graph in space and returns
-  * an Injector and Collector to interact with the graph and API
+  * an Injector and Collector to interact with the graph and the API
   */
-class StarterExoGraph {
+class StarterExoGraph extends Exocute {
 
   private val jarUpdater = new JarSpaceUpdater()
 
@@ -79,6 +79,18 @@ class StarterExoGraph {
       val collector = new CliftonCollector(graphId + ":" + COLLECT_SIGNAL_MARKER)
       (injector, collector, graphRep, graphId)
     })
+  }
+
+  def setSignalSpace(signal: String) = {
+    SpaceCache.signalHost = signal
+  }
+
+  def setJarSpace(signal: String) = {
+    SpaceCache.jarHost = signal
+  }
+
+  def setDataSpace(signal: String) = {
+    SpaceCache.dataHost = signal
   }
 
 }

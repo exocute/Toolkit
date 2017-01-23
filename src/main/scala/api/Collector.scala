@@ -2,8 +2,6 @@ package api
 
 import java.io.Serializable
 
-import clifton.graph.exceptions.CollectException
-import exonode.clifton.node.SpaceCache
 
 /**
   *
@@ -34,7 +32,6 @@ trait Collector {
     * @return
     */
   def collect(waitTime: Long): Option[Serializable]
-
 
 
   /**
