@@ -4,7 +4,6 @@ import java.io.Serializable
 
 import api.Collector
 import clifton.graph.exceptions.CollectException
-import com.zink.fly.FlyPrime
 import exonode.clifton.node.SpaceCache
 import exonode.clifton.node.entries.DataEntry
 
@@ -16,15 +15,15 @@ import exonode.clifton.node.entries.DataEntry
 class CliftonCollector(val marker: String) extends Collector {
 
   private val template: DataEntry = DataEntry(marker, null, null, null)
+  private val dataSpace = SpaceCache.getDataSpace
 
   def collect(): Option[Serializable] = {
     collect(0L)
   }
 
   def collect(waitTime: Long): Option[Serializable] = {
-    val space = SpaceCache.getDataSpace
     try {
-      val ent = space.take(template, waitTime)
+      val ent = dataSpace.take(template, waitTime)
       ent.map(_.data)
     } catch {
       case e: Exception => throw new CollectException("Collector Error")

@@ -12,29 +12,29 @@ import java.io.Serializable
 trait Injector {
 
   /**
-    * The inject method will insert something to be processed by the exocute
+    * Inserts into the space the input to be processed by the exocute platform
     *
-    * @param input
-    * @return
+    * @param input the input can be of any type that is serializable
+    * @return The inject identifier for this input
     */
   def inject(input: Serializable): String
 
-
   /**
-    * The inject method will insert into the space occurrences times of the
-    * some input to be processed
+    * Inserts into the space the same input occurrences times
+    * to be processed by the exocute platform
     *
-    * @param occurrences
-    * @param input
+    * @param occurrences the number of times
+    * @param input the input can be of any type that is serializable
+    * @return A list of inject identifiers for each input added
     */
-  def inject(occurrences: Int, input: Serializable): Unit
-
+  def inject(occurrences: Int, input: Serializable): Iterable[String]
 
   /**
     * The inject method will insert into the space a set of inputs to be processed
     *
-    * @param inputs
+    * @param inputs the collection of inputs. The input can be of any type that is serializable
+    * @return inject identifier for each input
     */
-  def inject(inputs: Array[Serializable]): Unit
+  def inject(inputs: Iterable[Serializable]): Iterable[String]
 
 }

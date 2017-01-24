@@ -7,7 +7,7 @@ import clifton.graph.{CliftonCollector, CliftonInjector}
 import scala.util.Try
 
 /**
-  * Exocute is designed to make the job of distributing, coordinatating and executing computer
+  * Exocute is designed to make the job of distributing, coordinating and executing computer
   * software over an arbitrary number of computing nodes simple. We call these processing elements
   * Activities. These can be written in either Java or a ‘host’ programming language such as C or
   * Fortran.
@@ -31,32 +31,32 @@ trait Exocute {
 
   /**
     * SignalSpace is responsible for saving the graph representation, log info
-    * and other information changed between nodes.
-    *
+    * and other information exchanged between nodes.
+    * <p>
     * SignalSpace uses a FlySpace @License by ZinkDigital
     *
-    * @param signal ip where the FlySpace is running
+    * @param host ip where the FlySpace is running
     */
-  def setSignalSpace(signal: String)
-
+  def setSignalSpace(host: String): Unit
 
   /**
     * JarSpace is responsible for saving the information of jars and classes used
     * by the graph.
-    *
+    * <p>
     * JarSpace uses a FlySpace @License by ZinkDigital
     *
-    * @param signal ip where the FlySpace is running
+    * @param host ip where the FlySpace is running
     */
-  def setJarSpace(signal: String)
-
+  def setJarSpace(host: String): Unit
 
   /**
-    * DataSpace is responsible for saving the information of the inputs, intermidiate results
+    * DataSpace is responsible for saving the information of the inputs, intermediate results
     * and final results
+    * <p>
+    * DataSpace uses a FlySpace @License by ZinkDigital
     *
-    * @param signal ip where the FlySpace is running
+    * @param host ip where the FlySpace is running
     */
-  def setDataSpace(signal: String)
+  def setDataSpace(host: String): Unit
 
 }

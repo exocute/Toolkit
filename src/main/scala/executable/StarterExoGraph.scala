@@ -26,7 +26,6 @@ class StarterExoGraph extends Exocute {
 
   private val signalSpace = SpaceCache.getSignalSpace
 
-
   /**
     * Loads the jar files into the jar space and the grp file representation into the signal space.
     *
@@ -82,15 +81,15 @@ class StarterExoGraph extends Exocute {
     })
   }
 
-  def setSignalSpace(signal: String) = {
+  def setSignalSpace(signal: String): Unit = {
     SpaceCache.signalHost = signal
   }
 
-  def setJarSpace(signal: String) = {
+  def setJarSpace(signal: String): Unit = {
     SpaceCache.jarHost = signal
   }
 
-  def setDataSpace(signal: String) = {
+  def setDataSpace(signal: String): Unit = {
     SpaceCache.dataHost = signal
   }
 

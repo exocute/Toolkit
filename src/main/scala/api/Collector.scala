@@ -4,8 +4,7 @@ import java.io.Serializable
 
 
 /**
-  *
-  * Collector is a simple trait to a simple use of the CliftonCollector
+  * Collector is a simple trait to use of the CliftonCollector
   * Collector allows you to collect results from the space
   *
   * Created by #ScalaTeam on 20/01/2017.
@@ -14,37 +13,35 @@ trait Collector {
 
   /**
     * The collect method will immediately take from the space one input that already finished
-    * the all process.
-    * If there is nothing to collect it will return a None, otherwise it will
-    * return a Some(res)
+    * all the processing.
     *
-    * @return
+    * @return if there is nothing to collect it will return None, otherwise it will
+    *         return Some(result)
     */
   def collect(): Option[Serializable]
 
   /**
-    * The collect method will take the first the result from the space that is available
-    * in the first waitTime.
-    * If there is nothing to collect it will return a None, otherwise it will
-    * return a Some(res)
+    * The collect method will take the first result from the space that is available
+    * in the first waitTime ms.
     *
-    * @param waitTime
-    * @return
+    * @param waitTime wait time in milliseconds
+    * @return if there is nothing to collect it will return None, otherwise it will
+    *         return Some(result)
     */
   def collect(waitTime: Long): Option[Serializable]
 
-
   /**
-    * The collect method will take numObjects from the space that are available
-    * in waitTime.
-    * The collect method will return a list of Objects
+    * Returns at most numObjects from the space that are available
+    * in waitTime ms.
+    * <p>
+    * The collect method will return a list of objects
     * If numObjects is bigger than number of available objects, collect method
     * will return a List with all the available objects that were possible to get
-    * in waitTime
+    * in waitTime ms
     *
-    * @param numObjects
-    * @param waitTime
-    * @return
+    * @param numObjects the maximum amount of objects to be returned
+    * @param waitTime wait time in milliseconds
+    * @return the objects returned
     */
   def collect(numObjects: Int, waitTime: Long): List[Serializable]
 

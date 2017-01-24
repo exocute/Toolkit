@@ -18,7 +18,7 @@ import scala.util.{Failure, Success}
   */
 object StartClientAPI {
 
-  def cleanSpaces(): Unit = {
+  private def cleanSpaces(): Unit = {
     def clean(space: ScalaFly, cleanTemplate: AnyRef): Unit = {
       while (space.take(cleanTemplate, 0).isDefined) {}
     }
@@ -29,7 +29,7 @@ object StartClientAPI {
     clean(SpaceCache.getSignalSpace, ExoEntry(null, null))
   }
 
-  val getHelpString: String = {
+  private val getHelpString: String = {
     """
       |Usage:
       |  toolkit [options] file_name[.grp]
@@ -52,7 +52,7 @@ object StartClientAPI {
     """.stripMargin
   }
 
-  val getReplHelp: String = {
+  private val getReplHelp: String = {
     """
       |Available commands:
       |i <input>        -> injects <input> as a string into the data space.
@@ -64,7 +64,7 @@ object StartClientAPI {
     """.stripMargin
   }
 
-  def printlnExit(msg: String): Unit = {
+  private def printlnExit(msg: String): Unit = {
     println(msg)
     System.exit(1)
   }
@@ -210,7 +210,7 @@ object StartClientAPI {
     }
   }
 
-  def isValidNatNumber(str: String): Boolean = {
+  private def isValidNatNumber(str: String): Boolean = {
     str.forall(Character.isDigit) && {
       val long: Long = str.toLong
       long >= 0 && long <= Int.MaxValue

@@ -1,6 +1,5 @@
 package clifton.graph
 
-import com.zink.fly.FlyPrime
 import exonode.clifton.Protocol._
 import exonode.clifton.node.SpaceCache
 import exonode.clifton.node.entries.ExoEntry
