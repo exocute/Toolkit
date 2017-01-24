@@ -5,6 +5,7 @@ import java.nio.file.{Files, Paths}
 
 import com.zink.scala.fly.ScalaFly
 import exonode.clifton.node._
+import exonode.clifton.node.entries.{DataEntry, ExoEntry}
 import exonode.clifton.signals.KillSignal
 import exonode.distributer.{FlyClassEntry, FlyJarEntry}
 

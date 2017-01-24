@@ -5,7 +5,8 @@ import java.text.{DateFormat, SimpleDateFormat}
 import java.util.Date
 
 import exonode.clifton.Protocol
-import exonode.clifton.node.{ExoEntry, SpaceCache}
+import exonode.clifton.node.entries.ExoEntry
+import exonode.clifton.node.SpaceCache
 import exonode.clifton.signals.LoggingSignal
 
 /**

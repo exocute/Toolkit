@@ -5,7 +5,8 @@ import java.io.Serializable
 import api.Collector
 import clifton.graph.exceptions.CollectException
 import com.zink.fly.FlyPrime
-import exonode.clifton.node.{DataEntry, SpaceCache}
+import exonode.clifton.node.SpaceCache
+import exonode.clifton.node.entries.DataEntry
 
 /**
   * Created by #ScalaTeam on 21/12/2016.

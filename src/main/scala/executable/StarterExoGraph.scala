@@ -8,7 +8,8 @@ import clifton.graph.{CliftonCollector, CliftonInjector, GraphCreator}
 import clifton.utilities.Utilities
 import distributer.JarSpaceUpdater
 import exonode.clifton.Protocol._
-import exonode.clifton.node.{ExoEntry, SpaceCache}
+import exonode.clifton.node.entries.ExoEntry
+import exonode.clifton.node.SpaceCache
 import toolkit.{ActivityParser, GraphRep}
 
 import scala.util.{Failure, Success, Try}

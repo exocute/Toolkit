@@ -8,6 +8,7 @@ import com.zink.scala.fly.ScalaFly
 import executable.StarterExoGraph
 import exonode.clifton.Protocol.TableType
 import exonode.clifton.node._
+import exonode.clifton.node.entries.{DataEntry, ExoEntry}
 import exonode.clifton.signals.KillSignal
 import exonode.distributer.{FlyClassEntry, FlyJarEntry}
 

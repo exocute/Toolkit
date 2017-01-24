@@ -2,7 +2,8 @@ package executable
 
 import com.zink.scala.fly.ScalaFly
 import exonode.clifton.Protocol._
-import exonode.clifton.node.{ExoEntry, SpaceCache}
+import exonode.clifton.node.SpaceCache
+import exonode.clifton.node.entries.ExoEntry
 
 import scala.collection.immutable.HashMap
 

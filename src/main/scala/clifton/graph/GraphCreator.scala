@@ -2,7 +2,8 @@ package clifton.graph
 
 import com.zink.fly.FlyPrime
 import exonode.clifton.Protocol._
-import exonode.clifton.node.{ExoEntry, SpaceCache}
+import exonode.clifton.node.SpaceCache
+import exonode.clifton.node.entries.ExoEntry
 import exonode.clifton.signals.ActivitySignal
 import toolkit.{ActivityRep, GraphRep}
 

@@ -7,7 +7,8 @@ import org.scalatest.FlatSpec
 import java.io.{File, Serializable}
 
 import clifton.graph.{CliftonCollector, CliftonInjector}
-import exonode.clifton.node.{DataEntry, SpaceCache}
+import exonode.clifton.node.SpaceCache
+import exonode.clifton.node.entries.DataEntry
 import exonode.distributer.{FlyClassEntry, FlyJarEntry}
 
 /**
