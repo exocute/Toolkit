@@ -17,6 +17,15 @@ class CliftonCollector(val marker: String) extends Collector {
   private val template: DataEntry = DataEntry(marker, null, null, null)
   private val dataSpace = SpaceCache.getDataSpace
 
+  def collect(injectId: String, waitTime: Long = 0): Option[Serializable] = {
+    try {
+      val ent = dataSpace.take(template.setInjectId(injectId), waitTime)
+      ent.map(_.data)
+    } catch {
+      case e: Exception => throw new CollectException("Collector Error")
+    }
+  }
+
   def collect(): Option[Serializable] = {
     collect(0L)
   }

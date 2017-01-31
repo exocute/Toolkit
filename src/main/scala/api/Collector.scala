@@ -2,7 +2,6 @@ package api
 
 import java.io.Serializable
 
-
 /**
   * Collector is a simple trait to use of the CliftonCollector
   * Collector allows you to collect results from the space
@@ -29,6 +28,16 @@ trait Collector {
     *         return Some(result)
     */
   def collect(waitTime: Long): Option[Serializable]
+
+  /**
+    * Returns the result with a inject id if it is available in the first waitTime ms.
+    *
+    * @param injectId the inject id of the result
+    * @param waitTime wait time in milliseconds
+    * @return if there is nothing to collect it will return None, otherwise it will
+    *         return Some(result)
+    */
+  def collect(injectId: String, waitTime: Long = 0): Option[Serializable]
 
   /**
     * Returns at most numObjects from the space that are available

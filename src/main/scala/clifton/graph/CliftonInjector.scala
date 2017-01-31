@@ -37,7 +37,7 @@ class CliftonInjector(marker: String, rootActivity: String) extends Injector {
       (0 to occurrences).map(_ => inject(input))
   }
 
-  def inject(inputs: Iterable[Serializable]): Iterable[String] = {
+  def injectMany(inputs: Iterable[Serializable]): Iterable[String] = {
     inputs.map(x => inject(x))
   }
 }

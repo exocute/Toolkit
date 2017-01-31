@@ -5,7 +5,7 @@ import java.nio.file.{Files, Paths}
 
 import com.zink.scala.fly.ScalaFly
 import exonode.clifton.node._
-import exonode.clifton.node.entries.{DataEntry, ExoEntry}
+import exonode.clifton.node.entries.{BackupEntry, BackupInfoEntry, DataEntry, ExoEntry}
 import exonode.clifton.signals.KillSignal
 import exonode.distributer.{FlyClassEntry, FlyJarEntry}
 
@@ -17,17 +17,6 @@ import scala.util.{Failure, Success}
   * Allows users to insert a graph in the space, inject and collect inputs and results respectively
   */
 object StartClientAPI {
-
-  private def cleanSpaces(): Unit = {
-    def clean(space: ScalaFly, cleanTemplate: AnyRef): Unit = {
-      while (space.take(cleanTemplate, 0).isDefined) {}
-    }
-
-    clean(SpaceCache.getJarSpace, FlyJarEntry(null, null))
-    clean(SpaceCache.getJarSpace, FlyClassEntry(null, null))
-    clean(SpaceCache.getDataSpace, DataEntry(null, null, null, null))
-    clean(SpaceCache.getSignalSpace, ExoEntry(null, null))
-  }
 
   private val getHelpString: String = {
     """
@@ -74,7 +63,6 @@ object StartClientAPI {
     var jarFile = ""
     var grpFile = ""
     var shouldClean = false
-    var startGrpChecker = true
 
     def setHosts(): Unit = {
       val it = args.iterator
@@ -96,8 +84,6 @@ object StartClientAPI {
             else printlnExit("Command -jarfile needs an argument (file_name)")
           case "-cleanspaces" =>
             shouldClean = true
-          case "-nogrpchecker" =>
-            startGrpChecker = false
           case "--help" =>
             printlnExit(getHelpString)
           case "--version" =>
@@ -123,7 +109,7 @@ object StartClientAPI {
     }
 
     if (shouldClean)
-      cleanSpaces()
+      SpaceCache.cleanAllSpaces()
 
     val startExo = new StarterExoGraph
 
@@ -139,14 +125,6 @@ object StartClientAPI {
       case Success((inj, col)) =>
         LogProcessor.start()
 
-        if (startGrpChecker) {
-          //checks if there is always a table in the signal space
-          startExo.startGrpChecker()
-        }
-
-        val startStr = s"Started to 'exocute' the graph $grpFile"
-        println(startStr)
-        Log.info(startStr)
         while (true) {
           print("> ")
           val input = scala.io.StdIn.readLine().trim
@@ -201,7 +179,7 @@ object StartClientAPI {
               // clear data from the spaces?
               val endStr = s"Finished the graph $grpFile"
               println(endStr)
-              Log.info(endStr)
+              Log.info("GRAPH", endStr)
               System.exit(0)
             case "" => //just ignore
             case _ => println("Invalid command: " + command.trim)

@@ -9,7 +9,7 @@ import clifton.utilities.Utilities
 import distributer.JarSpaceUpdater
 import exonode.clifton.Protocol._
 import exonode.clifton.node.entries.ExoEntry
-import exonode.clifton.node.SpaceCache
+import exonode.clifton.node.{Log, SpaceCache}
 import toolkit.{ActivityParser, GraphRep}
 
 import scala.util.{Failure, Success, Try}
@@ -42,12 +42,14 @@ class StarterExoGraph extends Exocute {
 
         addGraphToSpace(grp, graphId)
 
+        val startStr = "Started to 'exocute' a graph"
+        println(graphId + ";" + startStr)
+        Log.info(graphId, startStr)
+
         (inj, coll)
       }
     }
   }
-
-  def startGrpChecker(): Unit = new GrpChecker().start()
 
   private def addGraphToSpace(grp: GraphRep, graphId: String) = {
     val activities = grp.getActivities
