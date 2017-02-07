@@ -1,6 +1,0 @@
-Graph graph
-Activity A toolkit.Jar.Double
-Activity B toolkit.Jar.AddParam:7
-Activity C toolkit.Jar.Double
-Activity D toolkit.Jar.Multiply
-Connection A->B,C:B->D:C->D

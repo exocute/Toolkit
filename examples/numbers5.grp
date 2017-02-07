@@ -1,9 +1,10 @@
 Graph graph
 Activity I toolkit.Jar.Double:2
+Activity S toolkit.Jar.SplitCopy:5
 Activity A toolkit.Jar.Double:2
 Activity B toolkit.Jar.Double:2
 Activity C toolkit.Jar.Double:2
 Activity D toolkit.Jar.Double:2
 Activity E toolkit.Jar.Double:2
 Activity Z toolkit.Jar.Multiply
-Connection I->A,B,C,D,E:A->Z:B->Z:C->Z:D->Z:E->Z
+Connection I->S:S->A,B,C,D,E:A->Z:B->Z:C->Z:D->Z:E->Z

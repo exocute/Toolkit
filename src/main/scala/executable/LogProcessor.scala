@@ -5,8 +5,8 @@ import java.text.{DateFormat, SimpleDateFormat}
 import java.util.Date
 
 import exonode.clifton.Protocol._
-import exonode.clifton.node.entries.ExoEntry
 import exonode.clifton.node.SpaceCache
+import exonode.clifton.node.entries.ExoEntry
 import exonode.clifton.signals.LoggingSignal
 
 /**
@@ -18,13 +18,14 @@ object LogProcessor extends Thread {
 
   setDaemon(true)
 
-  private val space = SpaceCache.getSignalSpace
   private val logTemplate = ExoEntry(LOG_MARKER, null)
   private val INTERVAL_TIME = 1000
   private val dateFormat: DateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
   private val MAX_LOGS_CALL = 20
 
   override def run(): Unit = {
+    val space = SpaceCache.getSignalSpace
+    println("LogProcessor Started...")
     while (true) {
       val res: Iterable[ExoEntry] = space.takeMany(logTemplate, MAX_LOGS_CALL)
       if (res.nonEmpty) {
@@ -40,5 +41,11 @@ object LogProcessor extends Thread {
     }
   }
 
+  def main(args: Array[String]): Unit = {
+    if (args.length > 0)
+      SpaceCache.signalHost = args(0)
+    LogProcessor.start()
+    LogProcessor.join()
+  }
 }
 

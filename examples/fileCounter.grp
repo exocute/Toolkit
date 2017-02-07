@@ -1,5 +1,5 @@
 Graph graph
-Activity A toolkit.Jar.BytesToString
+Activity A toolkit.Jar.BytesToString:2
 Activity B toolkit.Jar.CountLetters
 Activity C toolkit.Jar.CountDigits
 Activity D toolkit.Jar.ShowResult
