@@ -1,16 +1,15 @@
 package distributer
 
-import java.util.jar.JarInputStream
 import java.io.{File, FileInputStream, RandomAccessFile}
+import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
-import java.util.jar.JarEntry
-import java.nio.ByteBuffer;
+import java.util.jar.{JarEntry, JarInputStream};
 
 
 /**
   * Created by #ScalaTeam on 21/12/2016.
   */
-class JarFileHandler {
+object JarFileHandler {
 
   def getClassNames(file: File): List[String] = {
     var classNames: List[String] = Nil

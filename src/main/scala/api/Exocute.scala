@@ -2,8 +2,6 @@ package api
 
 import java.io.File
 
-import clifton.graph.{CliftonCollector, CliftonInjector}
-
 import scala.util.Try
 
 /**
@@ -17,9 +15,10 @@ import scala.util.Try
 trait Exocute {
 
   /**
-    * The addGraphMethod allows you to starts a graph in the space
+    * Allows you to starts a graph in the space
     * grpFile should follow the rules and all the documentation available HERE
-    * Make sure you set all the spaces before used this method
+    * <p>
+    * Make sure you set all the spaces before used this method.
     * Use Injector and Collector to inject and collect, respectively, inputs and
     * results from the space
     *
@@ -27,7 +26,7 @@ trait Exocute {
     * @param jars
     * @return
     */
-  def addGraph(grpFile: File, jars: List[File]): Try[(CliftonInjector, CliftonCollector)]
+  def addGraph(grpFile: File, jars: List[File]): Try[(Injector, Collector)]
 
   /**
     * SignalSpace is responsible for saving the graph representation, log info
@@ -51,7 +50,7 @@ trait Exocute {
 
   /**
     * DataSpace is responsible for saving the information of the inputs, intermediate results
-    * and final results
+    * and final results.
     * <p>
     * DataSpace uses a FlySpace @License by ZinkDigital
     *

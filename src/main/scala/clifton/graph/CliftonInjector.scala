@@ -30,6 +30,28 @@ class CliftonInjector(marker: String, rootActivity: String) extends Injector {
     id
   }
 
+  def injectAny(input: scala.Serializable): String = {
+    val id = UUID.randomUUID().toString
+    try {
+      val dataEntry = templateData.setInjectId(id).setData(input)
+      dataSpace.write(dataEntry, INJECTOR_LEASE_TIME)
+    } catch {
+      case e: Exception => throw new InjectException("Internal Inject Error")
+    }
+    id
+  }
+
+//  def injectAny[T](input: T): String = {
+//    val id = UUID.randomUUID().toString
+//    try {
+//      val dataEntry = templateData.setInjectId(id).setData(input.asInstanceOf[scala.Serializable])
+//      dataSpace.write(dataEntry, INJECTOR_LEASE_TIME)
+//    } catch {
+//      case e: Exception => throw new InjectException("Internal Inject Error")
+//    }
+//    id
+//  }
+
   def inject(occurrences: Int, input: Serializable): Iterable[String] = {
     if (occurrences < 1)
       throw new InjectException("Too few occurrences. Occurrences should be >= 1")

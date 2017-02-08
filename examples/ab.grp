@@ -1,4 +1,4 @@
 Graph graph
-	Activity A toolkit.Jar.DoubleString
-	Activity B toolkit.Jar.Reverse
-	Connection A->B
+Activity A toolkit.Jar.DoubleString
+Activity B toolkit.Jar.Reverse
+Connection A->B

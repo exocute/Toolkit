@@ -12,7 +12,7 @@ import exonode.clifton.node.entries.DataEntry
   *
   * collects results from the space saved in dataEntries with a < marker
   */
-class CliftonCollector(val marker: String) extends Collector {
+class CliftonCollector(marker: String) extends Collector {
 
   private val template: DataEntry = DataEntry(marker, null, null, null)
   private val dataSpace = SpaceCache.getDataSpace

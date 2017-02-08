@@ -11,14 +11,13 @@ import scala.collection.mutable
 /**
   * Created by #ScalaTeam on 20/12/2016.
   *
-  * Receives a graph rep and adds to space the representation
+  * Receives a graph representation and writes the ActivitySignals into the space
   */
-class GraphCreator {
+object GraphCreator {
 
-  private val space = SpaceCache.getSignalSpace
-
-  def injectGraph(graph: GraphRep, graphId: String): Unit = {
+  def injectGraph(graph: GraphRep, graphId: String, leaseTime: Long): Unit = {
     val seenActivities = mutable.HashSet[String]()
+    val signalSpace = SpaceCache.getSignalSpace
 
     def addSignal(act: ActivityRep): Unit = {
       val name = act.name
@@ -48,7 +47,9 @@ class GraphCreator {
         }
 
       val signal = ActivitySignal(name, params, inMarkers, outMarkers)
-      space.write(ExoEntry(graphId + ":" + act.id, signal), ACT_SIGNAL_LEASE_TIME)
+      val fullId = graphId + ":" + act.id
+      signalSpace.take(ExoEntry(fullId, signal), 0)
+      signalSpace.write(ExoEntry(fullId, signal), leaseTime)
 
       seenActivities += act.id
       for (nextAct <- graph.getConnections(act)) {
@@ -58,6 +59,13 @@ class GraphCreator {
     }
 
     addSignal(graph.getRoot.get)
+  }
+
+  def removeGraph(graph: GraphRep, graphId: String): Unit = {
+    val signalSpace = SpaceCache.getSignalSpace
+    for (actId <- graph.getActivities) {
+      signalSpace.take(ExoEntry(graphId + ":" + actId, null), 0)
+    }
   }
 
 }

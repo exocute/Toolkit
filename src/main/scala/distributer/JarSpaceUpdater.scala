@@ -3,41 +3,62 @@ package distributer
 import java.io.File
 
 import com.zink.scala.fly.ScalaFly
-import exonode.clifton.Protocol._
 import exonode.clifton.node.SpaceCache
 import exonode.distributer.{FlyClassEntry, FlyJarEntry}
 
 /**
   * Created by #ScalaTeam on 21-12-2016.
   */
-class JarSpaceUpdater(space: ScalaFly = SpaceCache.getJarSpace) extends JarUpdater {
+class JarSpaceUpdater() extends JarUpdater {
 
-  private val fileHandler = new JarFileHandler
+  private val signalSpace: ScalaFly = SpaceCache.getJarSpace
 
-  override def update(jarFile: File): Unit = {
-    updateJarEntry(jarFile)
-    updateClassEntries(jarFile)
+  override def update(jarFile: File, leaseTime: Long): Unit = {
+    updateJarEntry(jarFile, leaseTime)
+    updateClassEntries(jarFile, leaseTime)
   }
 
-  def updateJarEntry(jarFile: File): Unit = {
+  override def remove(jarFile: File): Unit = {
+    removeJarEntry(jarFile)
+    removeClassEntries(jarFile)
+  }
+
+  private def updateJarEntry(jarFile: File, leaseTime: Long): Unit = {
     val je = FlyJarEntry(jarFile.getName, null)
-    space.take(je, 0L)
-    val jeBytes = FlyJarEntry(jarFile.getName, fileHandler.getJarBytes(jarFile))
-    space.write(jeBytes, JAR_LEASE_TIME)
+    signalSpace.take(je, 0L)
+    val jeBytes = FlyJarEntry(jarFile.getName, JarFileHandler.getJarBytes(jarFile))
+    signalSpace.write(jeBytes, leaseTime)
   }
 
-  private def updateClassEntries(jarFile: File) {
-    val classNames = fileHandler.getClassNames(jarFile)
-    println(classNames)
-    for (className <- classNames) {
-      updateClassEntry(jarFile, className)
+  private def updateClassEntries(jarFile: File, leaseTime: Long): Unit = {
+    val classList = JarFileHandler.getClassNames(jarFile)
+    //    println(classList) // show this line in debug mode ?
+    for (className <- classList) {
+      updateClassEntry(jarFile, className, leaseTime)
     }
   }
 
   //	 ensure both the class and the source jar are matched
-  private def updateClassEntry(jarFile: File, className: String) {
+  private def updateClassEntry(jarFile: File, className: String, leaseTime: Long): Unit = {
     val ce = FlyClassEntry(className, jarFile.getName)
-    space.take(ce, 0L)
-    space.write(ce, JAR_LEASE_TIME)
+    signalSpace.take(ce, 0L)
+    signalSpace.write(ce, leaseTime)
+  }
+
+  private def removeJarEntry(jarFile: File): Unit = {
+    val je = FlyJarEntry(jarFile.getName, null)
+    signalSpace.take(je, 0L)
+  }
+
+  private def removeClassEntries(jarFile: File): Unit = {
+    val classList = JarFileHandler.getClassNames(jarFile)
+    for (className <- classList) {
+      removeClassEntry(jarFile, className)
+    }
+  }
+
+  private def removeClassEntry(jarFile: File, className: String): Unit = {
+    val ce = FlyClassEntry(className, jarFile.getName)
+    signalSpace.take(ce, 0L)
   }
 }

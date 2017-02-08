@@ -11,7 +11,7 @@ import java.io.Serializable
 trait Collector {
 
   /**
-    * The collect method will immediately take from the space one input that already finished
+    * Will take from the space the first result that has already finished
     * all the processing.
     *
     * @return if there is nothing to collect it will return None, otherwise it will
@@ -20,7 +20,7 @@ trait Collector {
   def collect(): Option[Serializable]
 
   /**
-    * The collect method will take the first result from the space that is available
+    * Will take from the space the first result that is available
     * in the first waitTime ms.
     *
     * @param waitTime wait time in milliseconds
@@ -30,7 +30,7 @@ trait Collector {
   def collect(waitTime: Long): Option[Serializable]
 
   /**
-    * Returns the result with a inject id if it is available in the first waitTime ms.
+    * Returns the result with an inject id if it is available in the first waitTime ms.
     *
     * @param injectId the inject id of the result
     * @param waitTime wait time in milliseconds
@@ -50,7 +50,7 @@ trait Collector {
     *
     * @param numObjects the maximum amount of objects to be returned
     * @param waitTime wait time in milliseconds
-    * @return the objects returned
+    * @return the list of objects returned
     */
   def collect(numObjects: Int, waitTime: Long): List[Serializable]
 

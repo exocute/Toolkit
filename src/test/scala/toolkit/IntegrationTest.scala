@@ -1,186 +1,166 @@
 package toolkit
 
-import org.scalatest.FlatSpec
 import java.io.File
 
-import clifton.graph.{CliftonCollector, CliftonInjector}
-import com.zink.scala.fly.ScalaFly
-import executable.StarterExoGraph
-import exonode.clifton.Protocol.TableType
+import clifton.graph.{ExoGraph, ExocuteConfig}
+import exonode.clifton.Protocol._
 import exonode.clifton.node._
 import exonode.clifton.node.entries.{DataEntry, ExoEntry}
 import exonode.clifton.signals.KillSignal
-import exonode.distributer.{FlyClassEntry, FlyJarEntry}
+import org.scalatest.{BeforeAndAfter, FlatSpec}
 
 import scala.util.{Failure, Success}
 
 /**
   * Created by #ScalaTeam on 20/01/2017.
   */
-class IntegrationTest extends FlatSpec {
+class IntegrationTest extends FlatSpec with BeforeAndAfter {
 
-  val grpFile = new File("examples\\ab2c.grp")
-  val jarFile = new File("examples\\classes.jar")
-  val KILL_TIME = 60 * 1000
-  val signalSpace = SpaceCache.getSignalSpace
-  val jarSpace = SpaceCache.getJarSpace
-  val dataSpace = SpaceCache.getDataSpace
+  private val DEFAULT_GRP_FILE = "examples\\abc.grp"
+  private val jarFile = new File("examples\\classes.jar")
 
-  def startGraph(): (CliftonInjector, CliftonCollector) = {
-    val startExoGraph = new StarterExoGraph
-    startExoGraph.addGraph(grpFile, List(jarFile)) match {
-      case Success((i, c)) => (i, c)
+  private val KILL_TIME = 60 * 1000
+  private val MAX_TIME_FOR_EACH_TEST = 60 * 60 * 1000
+  private val EXPECTED_TIME_TO_CONSENSUS = 10 * 1000 + CONSENSUS_MAX_SLEEP_TIME * (1 + CONSENSUS_LOOPS_TO_FINISH)
+
+  private val signalSpace = SpaceCache.getSignalSpace
+
+  private def startGraph(grpFile: String = DEFAULT_GRP_FILE): ExoGraph = {
+    ExocuteConfig.setHosts().addGraph(new File(grpFile), List(jarFile), MAX_TIME_FOR_EACH_TEST) match {
+      case Success(exoGraph) => exoGraph
       case Failure(e) => throw new Exception
     }
   }
 
-  def startNodes(num: Int): List[CliftonNode] = {
-    val listNodes = for (x <- 1 to num)
-      yield new CliftonNode
+  private var allNodes = List[CliftonNode]()
 
-    listNodes.foreach(node => node.start())
-
-    listNodes.toList
-  }
-
-  def killNodes(nodesList: List[CliftonNode]) = {
-    nodesList.foreach(node => signalSpace.write(ExoEntry(node.nodeId, KillSignal), KILL_TIME))
-    nodesList.foreach(node => node.join())
-  }
-
-  val genericEntry = ExoEntry(null, null)
-  val dataEntry = DataEntry(null, null, null, null)
-
-  def cleanSpace(): Unit = {
-    def clean(space: ScalaFly, cleanTemplate: AnyRef): Unit = {
-      while (space.take(cleanTemplate, 0).isDefined) {}
+  private def launchNNodes(nodes: Int): List[CliftonNode] = {
+    val nodesList = for {
+      _ <- 1 to nodes
+    } yield {
+      val node = new CliftonNode()
+      allNodes = node :: allNodes
+      node
     }
-
-    clean(SpaceCache.getJarSpace, FlyJarEntry(null, null))
-    clean(SpaceCache.getJarSpace, FlyClassEntry(null, null))
-    clean(SpaceCache.getDataSpace, DataEntry(null, null, null, null))
-    clean(SpaceCache.getSignalSpace, ExoEntry(null, null))
+    nodesList.foreach(node => node.start())
+    nodesList.toList
   }
 
-  "shouldStabilizeAtBegin" should "Nodes should follow a normal distribuition after a few seconds" in {
-    cleanSpace()
-    startGraph()
-    //Launch the first node to be the analyser
-    val analyser = startNodes(1)
-    Thread.sleep(3000)
+  private def killNodes(nodes: List[CliftonNode]) = {
+    nodes.foreach(node => signalSpace.write(ExoEntry(node.nodeId, KillSignal), KILL_TIME))
+    nodes.foreach(node => node.join())
+  }
 
-    //Launch 9 nodes to process activities
-    val nodes = startNodes(9)
+  private val genericEntry = ExoEntry(null, null)
+  private val dataEntry = DataEntry(null, null, null, null)
 
-    //Wait 30 seconds for the nodes to stabilize
+  private def getTable: Option[ExoEntry] = {
+    signalSpace.read(ExoEntry(TABLE_MARKER, null), 0L)
+  }
+
+  before {
+    SpaceCache.cleanAllSpaces()
+    println("Space Cleaned")
+    Thread.sleep(500)
+  }
+
+  after {
+    allNodes.foreach(node => signalSpace.write(ExoEntry(node.nodeId, KillSignal), KILL_TIME))
+    allNodes.foreach(node => node.join())
+    allNodes = Nil
+  }
+
+  "shouldStabilizeAtBegin" should "follow a normal distribution after a few seconds" in {
+    startGraph("examples\\abc.grp")
+
+    val expectedDistribution = 5
+    val nNodes = expectedDistribution * 3 + 1
+
+    //Launch nodes to process activities
+    launchNNodes(nNodes)
+
+    Thread.sleep(EXPECTED_TIME_TO_CONSENSUS)
+
+    //Wait a few seconds for the nodes to stabilize between the activities
+    Thread.sleep(NODE_CHECK_TABLE_TIME * 3)
+
+    val tableEntry = getTable
+    assert(tableEntry.isDefined)
+
+    //check if table is distributed evenly
+    val table: TableType = tableEntry.get.payload.asInstanceOf[TableType]
+    assert(table.forall { case (_, i) => math.abs(i - expectedDistribution) <= 1 })
+  }
+
+  "shouldStabilizeAfterWork" should "follow a normal distribution after a few seconds" in {
+    val exoGraph = startGraph("examples\\ab2c.grp")
+
+    val expectedDistribution = 5
+    val nNodes = expectedDistribution * 3 + 1
+
+    //Launch nodes to process activities
+    launchNNodes(nNodes)
+
+    Thread.sleep(EXPECTED_TIME_TO_CONSENSUS)
+
+    exoGraph.injector.inject(5, "")
+
+    // Wait for processing to be completed
     Thread.sleep(60 * 1000)
 
-    //
-    val table = signalSpace.read(ExoEntry("TABLE", null), 0L)
+    //Wait a few seconds for the nodes to stabilize between the activities
+    Thread.sleep(NODE_CHECK_TABLE_TIME * 3)
 
-    //delete the running threads
-    killGenericNodes(nodes,analyser)
+    val tableEntry = getTable
+    assert(tableEntry.isDefined)
 
-    //test
-    if (table.isDefined) {
-      val tab = table.get.payload.asInstanceOf[TableType]
-      assert(!tab.exists { case (_, i) => i > 4 || i < 1 })
-    } else assert(false)
-  }
-
-  "shouldStabilizeAfterWork" should "Nodes should follow a normal distribuition after a few seconds" in {
-    cleanSpace()
-    val (inj, _) = startGraph()
-    //Launch the first node to be the analyser
-    val analyser = startNodes(1)
-    Thread.sleep(3000)
-
-    //Launch 9 nodes to process activities
-    val nodes = startNodes(9)
-
-    //Wait 30 seconds for the nodes to stabilize
-    Thread.sleep(30 * 1000)
-
-    //inject 10 times one input
-    inj.inject(10, 3)
-
-    Thread.sleep(2 * 60 * 1000)
-
-
-    //get an updated table
-    val table = signalSpace.read(ExoEntry("TABLE", null), 0L)
-
-    //test
-    if (table.isDefined) {
-      val tab = table.get.payload.asInstanceOf[TableType]
-      val stats = !tab.exists { case (_, i) => i > 4 || i < 1 }
-      //delete the running threads
-      killGenericNodes(nodes,analyser)
-      assert(stats)
-    } else assert(false)
-  }
-
-  "AnalyserReborn" should "Analyser node should be assumed by another node" in {
-    cleanSpace()
-    startGraph()
-    //Launch the first node to be the analyser
-    val analyser = startNodes(1)
-    Thread.sleep(3000)
-
-    //Launch 9 nodes to process activities
-    val nodes = startNodes(9)
-
-    //10 seconds to stabilize
-    Thread.sleep(10*1000)
-
-    //kill analyser
-    killNodes(analyser)
-
-    //Wait for the table in the space
-    Thread.sleep(3 * 70 * 1000)
-
-    //get updated table
-    val table = signalSpace.read(ExoEntry("TABLE", null), 0L)
-
-    //kill the rest of the threads
-    killNodes(nodes)
-
-    //test
-    if (table.isDefined) {
-      val tab = table.get.payload.asInstanceOf[TableType]
-      assert(tab("@")==1)
-    } else assert(false)
-  }
-
-  def killGenericNodes(nodes: List[CliftonNode], analyser: List[CliftonNode]) ={
-    killNodes(nodes)
-    killNodes(analyser)
+    //check if table is distributed evenly
+    val table: TableType = tableEntry.get.payload.asInstanceOf[TableType]
+    assert(table.forall { case (_, i) => math.abs(i - expectedDistribution) <= 1 })
   }
 
   "InjectAndCollect" should "The output be ready after a time" in {
-    cleanSpace()
-    val (inj, col) = startGraph()
-    //Launch the first node to be the analyser
-    val analyser = startNodes(1)
-    Thread.sleep(3000)
+    val exoGraph = startGraph("examples\\abc.grp")
 
-    //Launch 9 nodes to process activities
-    val nodes = startNodes(9)
+    val amountOfInputs = 10
+    launchNNodes(9)
 
-    //10 seconds to stabilize
-    Thread.sleep(10*1000)
+    val someStrings = Stream.continually(randomAlphaNumericString(10)).take(amountOfInputs)
 
     //inject input
-    inj.inject("test")
+    exoGraph.injector.injectMany(someStrings)
 
-    //x + 1min + x
-    Thread.sleep(70 * 1000)
+    //wait a few seconds
+    Thread.sleep(NODE_CHECK_TABLE_TIME * 2)
 
-    col.collect() match{
-      case Some(x) =>
-        killGenericNodes(nodes,analyser)
-        assert(x.equals("TSETTSET"))
-      case None => assert(false)
+    exoGraph.collector.collect(amountOfInputs, 0) match {
+      case vec if vec.length == amountOfInputs =>
+        val expected = someStrings.map(s => (s + s).reverse.map(_.toUpper)).toList
+        assert(vec == expected)
+      case _ => assert(false)
     }
   }
+
+  // 6 - random alphanumeric
+  def randomAlphaNumericString(length: Int): String = {
+    val chars = ('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9')
+    randomStringFromCharList(length, chars)
+  }
+
+  // 7 - random alpha
+  def randomAlpha(length: Int): String = {
+    val chars = ('a' to 'z') ++ ('A' to 'Z')
+    randomStringFromCharList(length, chars)
+  }
+
+  // used by #6 and #7
+  def randomStringFromCharList(length: Int, chars: Seq[Char]): String = {
+    val sb = new StringBuilder
+    for (i <- 1 to length) {
+      val randomNum = util.Random.nextInt(chars.length)
+      sb.append(chars(randomNum))
+    }
+    sb.toString
+  }
+
 }

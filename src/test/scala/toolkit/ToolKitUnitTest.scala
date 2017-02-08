@@ -1,15 +1,14 @@
 package toolkit
 
+import java.io.File
 import java.nio.file.{Files, Paths}
 
-import distributer.JarSpaceUpdater
-import org.scalatest.FlatSpec
-import java.io.{File, Serializable}
-
 import clifton.graph.{CliftonCollector, CliftonInjector}
+import distributer.JarSpaceUpdater
 import exonode.clifton.node.SpaceCache
 import exonode.clifton.node.entries.DataEntry
 import exonode.distributer.{FlyClassEntry, FlyJarEntry}
+import org.scalatest.FlatSpec
 
 /**
   * Created by #ScalaTeam on 19/01/2017.
@@ -27,7 +26,7 @@ class ToolKitUnitTest extends FlatSpec {
     val file = "examples" + File.separatorChar + "testJar.jar"
     val bytes: Array[Byte] = Files.readAllBytes(Paths.get("examples" + File.separatorChar + "testJar.jar"))
     val jarUpd = new JarSpaceUpdater
-    jarUpd.update(new File(file))
+    jarUpd.update(new File(file), ???)
     val tmplJar = FlyJarEntry("testJar.jar", null)
     val tmplClass = FlyClassEntry("toolkit.Jar.DoubleString", "testJar.jar")
     val jarEntry = jarSpace.take(tmplJar, 0L)
