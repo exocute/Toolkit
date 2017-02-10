@@ -25,7 +25,11 @@ class StarterExoGraph {
     * @return A pair with the injector and the collector
     */
   def addGraph(grpFile: File, jars: List[File], graphTimeOut: Long): Try[ExoGraph] = {
-    init(Utilities.readFile(grpFile)).map {
+    addGraph(Utilities.readFile(grpFile), jars, graphTimeOut)
+  }
+
+  def addGraph(grpFileText: String, jars: List[File], graphTimeOut: Long): Try[ExoGraph] = {
+    init(grpFileText).map {
       case (graph: GraphRep, graphId: String) =>
         new ExoGraph(jars, graph, graphId, graphTimeOut)
     }

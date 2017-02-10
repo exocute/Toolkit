@@ -5,7 +5,7 @@ import java.io.{File, Serializable}
 import api.{Collector, Injector}
 import clifton.graph.exceptions.InjectorTimeOutException
 import distributer.JarSpaceUpdater
-import exonode.clifton.Protocol._
+import exonode.clifton.config.Protocol._
 import exonode.clifton.node.entries.{BackupEntry, BackupInfoEntry, DataEntry, ExoEntry}
 import exonode.clifton.node.{Log, SpaceCache}
 import toolkit.GraphRep
@@ -117,7 +117,7 @@ class ExoGraph(jars: List[File], graph: GraphRep, graphId: String, graphTimeOut:
         throw new InjectorTimeOutException()
     }
 
-    override def injectMany(inputs: Iterable[Serializable]): Iterable[String] = {
+    override def injectMany(inputs: Iterable[Serializable]): Vector[String] = {
       if (tryResetTimeOut())
         injector.injectMany(inputs)
       else

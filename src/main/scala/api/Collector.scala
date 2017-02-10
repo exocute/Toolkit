@@ -41,7 +41,7 @@ trait Collector {
 
   /**
     * Returns at most numObjects from the space that are available
-    * in waitTime ms.
+    * in waitTime ms (must be > 0).
     * <p>
     * The collect method will return a list of objects
     * If numObjects is bigger than number of available objects, collect method
@@ -52,6 +52,6 @@ trait Collector {
     * @param waitTime wait time in milliseconds
     * @return the list of objects returned
     */
-  def collect(numObjects: Int, waitTime: Long): List[Serializable]
+  def collectMany(numObjects: Int, waitTime: Long): List[Serializable]
 
 }

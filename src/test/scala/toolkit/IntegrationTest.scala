@@ -3,7 +3,8 @@ package toolkit
 import java.io.File
 
 import clifton.graph.{ExoGraph, ExocuteConfig}
-import exonode.clifton.Protocol._
+import exonode.clifton.config.Protocol._
+import exonode.clifton.config.{BackupConfig, BackupConfigDefault}
 import exonode.clifton.node._
 import exonode.clifton.node.entries.{DataEntry, ExoEntry}
 import exonode.clifton.signals.KillSignal
@@ -24,6 +25,7 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
   private val EXPECTED_TIME_TO_CONSENSUS = 10 * 1000 + CONSENSUS_MAX_SLEEP_TIME * (1 + CONSENSUS_LOOPS_TO_FINISH)
 
   private val signalSpace = SpaceCache.getSignalSpace
+  implicit private val conf = BackupConfigDefault
 
   private def startGraph(grpFile: String = DEFAULT_GRP_FILE): ExoGraph = {
     ExocuteConfig.setHosts().addGraph(new File(grpFile), List(jarFile), MAX_TIME_FOR_EACH_TEST) match {
@@ -32,9 +34,16 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
     }
   }
 
+  private def startGraphManual(grpText: String): ExoGraph = {
+    ExocuteConfig.setHosts().addGraph(grpText, List(jarFile), MAX_TIME_FOR_EACH_TEST) match {
+      case Success(exoGraph) => exoGraph
+      case Failure(e) => throw new Exception
+    }
+  }
+
   private var allNodes = List[CliftonNode]()
 
-  private def launchNNodes(nodes: Int): List[CliftonNode] = {
+  private def launchNNodes(nodes: Int)(implicit conf: BackupConfig): List[CliftonNode] = {
     val nodesList = for {
       _ <- 1 to nodes
     } yield {
@@ -54,8 +63,10 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
   private val genericEntry = ExoEntry(null, null)
   private val dataEntry = DataEntry(null, null, null, null)
 
-  private def getTable: Option[ExoEntry] = {
-    signalSpace.read(ExoEntry(TABLE_MARKER, null), 0L)
+  private def getTable: Option[TableType] = {
+    signalSpace.read(ExoEntry(TABLE_MARKER, null), 0L).map(
+      _.payload.asInstanceOf[TableType]
+    )
   }
 
   before {
@@ -70,7 +81,7 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
     allNodes = Nil
   }
 
-  "shouldStabilizeAtBegin" should "follow a normal distribution after a few seconds" in {
+  "Stabilize distribution at boot" should "follow an equal distribution in few cycles after boot" in {
     startGraph("examples\\abc.grp")
 
     val expectedDistribution = 5
@@ -84,16 +95,15 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
     //Wait a few seconds for the nodes to stabilize between the activities
     Thread.sleep(NODE_CHECK_TABLE_TIME * 3)
 
-    val tableEntry = getTable
-    assert(tableEntry.isDefined)
+    val table = getTable
+    assert(table.isDefined)
 
     //check if table is distributed evenly
-    val table: TableType = tableEntry.get.payload.asInstanceOf[TableType]
-    assert(table.forall { case (_, i) => math.abs(i - expectedDistribution) <= 1 })
+    assert(table.get.forall { case (_, i) => math.abs(i - expectedDistribution) <= 1 })
   }
 
-  "shouldStabilizeAfterWork" should "follow a normal distribution after a few seconds" in {
-    val exoGraph = startGraph("examples\\ab2c.grp")
+  "Stabilize distribution after long work" should "follow a normal distribution after a few seconds" in {
+    val exoGraph = startGraph("examples\\ab3c.grp")
 
     val expectedDistribution = 5
     val nNodes = expectedDistribution * 3 + 1
@@ -106,45 +116,48 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
     exoGraph.injector.inject(5, "")
 
     // Wait for processing to be completed
-    Thread.sleep(60 * 1000)
+    val (a, b, c) = (1000, 120 * 1000, 1000)
+    Thread.sleep(a + b + c)
 
     //Wait a few seconds for the nodes to stabilize between the activities
     Thread.sleep(NODE_CHECK_TABLE_TIME * 3)
 
-    val tableEntry = getTable
-    assert(tableEntry.isDefined)
+    val table = getTable
+    assert(table.isDefined)
 
     //check if table is distributed evenly
-    val table: TableType = tableEntry.get.payload.asInstanceOf[TableType]
-    assert(table.forall { case (_, i) => math.abs(i - expectedDistribution) <= 1 })
+    assert(table.get.forall { case (_, i) => math.abs(i - expectedDistribution) <= 1 })
   }
 
-  "InjectAndCollect" should "The output be ready after a time" in {
+  "Inject and collect results" should "collect the results of several inputs after a few seconds" in {
     val exoGraph = startGraph("examples\\abc.grp")
+    val inj = exoGraph.injector
+    val coll = exoGraph.collector
 
     val amountOfInputs = 10
     launchNNodes(9)
 
-    val someStrings = Stream.continually(randomAlphaNumericString(10)).take(amountOfInputs)
+    val someStrings = randomAlphaNumericString(10).take(amountOfInputs)
 
     //inject input
-    exoGraph.injector.injectMany(someStrings)
+    val injects = inj.injectMany(someStrings)
 
     //wait a few seconds
     Thread.sleep(NODE_CHECK_TABLE_TIME * 2)
 
-    exoGraph.collector.collect(amountOfInputs, 0) match {
+    injects.foldRight(List[String]())((s, list) => coll.collect(s).get.toString :: list) match {
       case vec if vec.length == amountOfInputs =>
         val expected = someStrings.map(s => (s + s).reverse.map(_.toUpper)).toList
         assert(vec == expected)
-      case _ => assert(false)
+      case _ =>
+        assert(false)
     }
   }
 
   // 6 - random alphanumeric
-  def randomAlphaNumericString(length: Int): String = {
+  def randomAlphaNumericString(length: Int): Stream[String] = {
     val chars = ('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9')
-    randomStringFromCharList(length, chars)
+    Stream.continually(randomStringFromCharList(length, chars))
   }
 
   // 7 - random alpha
@@ -161,6 +174,45 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
       sb.append(chars(randomNum))
     }
     sb.toString
+  }
+
+  "Inject, stop nodes, collect" should "collect results even if some nodes fail while processing" in {
+    val exoGraph = startGraphManual("GRAPH test\nActivity a toolkit.Jar.DoubleString:60")
+    val inj = exoGraph.injector
+    val coll = exoGraph.collector
+
+    val nNodes = 5
+    val nNodesToKill = 2
+    val nInputs = nNodes
+
+    val factConf = new BackupConfig {
+      override def BACKUP_TIMEOUT_TIME: Long = 30 * 1000
+    }
+
+    // analyser
+    launchNNodes(1)(factConf)
+    Thread.sleep(EXPECTED_TIME_TO_CONSENSUS)
+    val nodes = launchNNodes(nNodes)(factConf)
+
+    // wait for all nodes to get the activity
+    Thread.sleep(20 * 1000)
+    val table = getTable
+    assert(table.isDefined)
+    assert(table.get.values.sum == nNodes)
+
+    val inputs = randomAlphaNumericString(10).take(nInputs).toList
+    inj.injectMany(inputs)
+
+    Thread.sleep(20 * 1000)
+
+    // make some of the nodes crash
+    val nodesToKill = scala.util.Random.shuffle(nodes).take(nNodesToKill)
+    killNodes(nodesToKill)
+
+    val results = coll.collectMany(nInputs, 7 * 60 * 1000)
+    assert(results.size == nInputs)
+    assert(results.map(_.toString).sorted == inputs.map(i => i + i).sorted)
+
   }
 
 }

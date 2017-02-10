@@ -34,6 +34,6 @@ trait Injector {
     * @param inputs the collection of inputs. The input can be of any type that is serializable
     * @return inject identifier for each input
     */
-  def injectMany(inputs: Iterable[Serializable]): Iterable[String]
+  def injectMany(inputs: Iterable[Serializable]): Vector[String]
 
 }

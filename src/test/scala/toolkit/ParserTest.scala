@@ -46,7 +46,7 @@ class AutomaticTesterOfParser extends FlatSpec {
     * @param file
     * @return a new String filtered
     */
-  def clearCommnents(file: String): String = {
+  def clearComments(file: String): String = {
     file.split("\n").map(str => {
       val index = str.indexOf("//")
       if (index == -1) str
@@ -94,7 +94,7 @@ class AutomaticTesterOfParser extends FlatSpec {
     */
   def testFile(path: String, testContent: Boolean): Boolean = {
     val pln = readFile(path)
-    val plnClean = clearCommnents(pln)
+    val plnClean = clearComments(pln)
     val parser = new ActivityParser(plnClean)
     val res: Try[GraphRep] = parser.InputLine.run()
     res match {

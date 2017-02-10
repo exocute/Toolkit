@@ -5,7 +5,7 @@ import java.util.UUID
 
 import api.Injector
 import clifton.graph.exceptions.InjectException
-import exonode.clifton.Protocol._
+import exonode.clifton.config.Protocol._
 import exonode.clifton.node.SpaceCache
 import exonode.clifton.node.entries.DataEntry
 
@@ -30,7 +30,7 @@ class CliftonInjector(marker: String, rootActivity: String) extends Injector {
     id
   }
 
-  def injectAny(input: scala.Serializable): String = {
+  def injectAny(input: Serializable): String = {
     val id = UUID.randomUUID().toString
     try {
       val dataEntry = templateData.setInjectId(id).setData(input)
@@ -41,17 +41,6 @@ class CliftonInjector(marker: String, rootActivity: String) extends Injector {
     id
   }
 
-//  def injectAny[T](input: T): String = {
-//    val id = UUID.randomUUID().toString
-//    try {
-//      val dataEntry = templateData.setInjectId(id).setData(input.asInstanceOf[scala.Serializable])
-//      dataSpace.write(dataEntry, INJECTOR_LEASE_TIME)
-//    } catch {
-//      case e: Exception => throw new InjectException("Internal Inject Error")
-//    }
-//    id
-//  }
-
   def inject(occurrences: Int, input: Serializable): Iterable[String] = {
     if (occurrences < 1)
       throw new InjectException("Too few occurrences. Occurrences should be >= 1")
@@ -59,7 +48,8 @@ class CliftonInjector(marker: String, rootActivity: String) extends Injector {
       (0 to occurrences).map(_ => inject(input))
   }
 
-  def injectMany(inputs: Iterable[Serializable]): Iterable[String] = {
-    inputs.map(x => inject(x))
+  def injectMany(inputs: Iterable[Serializable]): Vector[String] = {
+    inputs.map(x => inject(x)).toVector
   }
+
 }

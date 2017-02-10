@@ -26,7 +26,7 @@ class ToolKitUnitTest extends FlatSpec {
     val file = "examples" + File.separatorChar + "testJar.jar"
     val bytes: Array[Byte] = Files.readAllBytes(Paths.get("examples" + File.separatorChar + "testJar.jar"))
     val jarUpd = new JarSpaceUpdater
-    jarUpd.update(new File(file), ???)
+    jarUpd.update(new File(file), 60 * 60 * 1000)
     val tmplJar = FlyJarEntry("testJar.jar", null)
     val tmplClass = FlyClassEntry("toolkit.Jar.DoubleString", "testJar.jar")
     val jarEntry = jarSpace.take(tmplJar, 0L)

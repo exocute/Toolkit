@@ -164,7 +164,7 @@ object StartClientAPI {
                     } else
                       (cmdData.toInt, 2000L)
 
-                  val results = col.collect(maxElems, waitTime)
+                  val results = col.collectMany(maxElems, waitTime)
                   if (results.isEmpty)
                     println("No results to collect.")
                   else {

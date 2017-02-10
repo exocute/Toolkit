@@ -4,7 +4,7 @@ import java.io.FileWriter
 import java.text.{DateFormat, SimpleDateFormat}
 import java.util.Date
 
-import exonode.clifton.Protocol._
+import exonode.clifton.config.Protocol._
 import exonode.clifton.node.SpaceCache
 import exonode.clifton.node.entries.ExoEntry
 import exonode.clifton.signals.LoggingSignal

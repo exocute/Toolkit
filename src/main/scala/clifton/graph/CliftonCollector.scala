@@ -7,6 +7,8 @@ import clifton.graph.exceptions.CollectException
 import exonode.clifton.node.SpaceCache
 import exonode.clifton.node.entries.DataEntry
 
+import scala.collection.mutable.ListBuffer
+
 /**
   * Created by #ScalaTeam on 21/12/2016.
   *
@@ -39,17 +41,19 @@ class CliftonCollector(marker: String) extends Collector {
     }
   }
 
-  def collect(numObjects: Int, waitTime: Long): List[Serializable] = {
-    var serializable: List[Serializable] = Nil
+  def collectMany(numObjects: Int, waitTime: Long): List[Serializable] = {
+    var buffer: ListBuffer[Serializable] = ListBuffer()
     val start = System.currentTimeMillis()
     var remainingTime = waitTime
     var totalObjects = 0
+    val MAX_COLLECT_EACH_CALL = 50
 
-    while (totalObjects < numObjects && remainingTime > 1L) {
-      val ser: Option[Serializable] = collect()
-      if (ser.isDefined) {
-        serializable = ser.get :: serializable
-        totalObjects += 1
+    while (totalObjects < numObjects && remainingTime > 0L) {
+      val amount = math.min(MAX_COLLECT_EACH_CALL, numObjects - totalObjects)
+      val results: Iterable[DataEntry] = dataSpace.takeMany(template, amount)
+      if (results.nonEmpty) {
+        buffer ++= results.map(_.data)
+        totalObjects += results.size
       } else {
         try {
           Thread.sleep(1)
@@ -59,7 +63,7 @@ class CliftonCollector(marker: String) extends Collector {
       }
       remainingTime = waitTime - (System.currentTimeMillis() - start)
     }
-    serializable.reverse
+    buffer.toList
   }
 
 }
