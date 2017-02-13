@@ -3,8 +3,9 @@ package toolkit
 import java.io.File
 
 import clifton.graph.{ExoGraph, ExocuteConfig}
+import exonode.clifton.config.BackupConfig
+import exonode.clifton.config.BackupConfig._
 import exonode.clifton.config.Protocol._
-import exonode.clifton.config.{BackupConfig, BackupConfigDefault}
 import exonode.clifton.node._
 import exonode.clifton.node.entries.{DataEntry, ExoEntry}
 import exonode.clifton.signals.KillSignal
@@ -25,7 +26,6 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
   private val EXPECTED_TIME_TO_CONSENSUS = 10 * 1000 + CONSENSUS_MAX_SLEEP_TIME * (1 + CONSENSUS_LOOPS_TO_FINISH)
 
   private val signalSpace = SpaceCache.getSignalSpace
-  implicit private val conf = BackupConfigDefault
 
   private def startGraph(grpFile: String = DEFAULT_GRP_FILE): ExoGraph = {
     ExocuteConfig.setHosts().addGraph(new File(grpFile), List(jarFile), MAX_TIME_FOR_EACH_TEST) match {
