@@ -30,14 +30,14 @@ trait Collector {
   def collect(waitTime: Long): Option[Serializable]
 
   /**
-    * Returns the result with an inject id if it is available in the first waitTime ms.
+    * Returns the result with a specific inject index if it is available in the first waitTime ms.
     *
-    * @param injectId the inject id of the result
-    * @param waitTime wait time in milliseconds
+    * @param injectIndex the inject index of the result
+    * @param waitTime    wait time in milliseconds
     * @return if there is nothing to collect it will return None, otherwise it will
     *         return Some(result)
     */
-  def collect(injectId: String, waitTime: Long = 0): Option[Serializable]
+  def collectIndex(injectIndex: Int, waitTime: Long = 0): Option[Serializable]
 
   /**
     * Returns at most numObjects from the space that are available
@@ -49,7 +49,7 @@ trait Collector {
     * in waitTime ms
     *
     * @param numObjects the maximum amount of objects to be returned
-    * @param waitTime wait time in milliseconds
+    * @param waitTime   wait time in milliseconds
     * @return the list of objects returned
     */
   def collectMany(numObjects: Int, waitTime: Long): List[Serializable]

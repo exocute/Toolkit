@@ -16,7 +16,7 @@ trait Injector {
     * @param input the input can be of any type that is serializable
     * @return The inject identifier for this input
     */
-  def inject(input: Serializable): String
+  def inject(input: Serializable): Int
 
   /**
     * Inserts into the space the same input occurrences times
@@ -26,7 +26,7 @@ trait Injector {
     * @param input       the input can be of any type that is serializable
     * @return A list of inject identifiers for each input added
     */
-  def inject(occurrences: Int, input: Serializable): Iterable[String]
+  def inject(occurrences: Int, input: Serializable): Iterable[Int]
 
   /**
     * The injectMany will insert into the space a set of inputs to be processed
@@ -34,6 +34,6 @@ trait Injector {
     * @param inputs the collection of inputs. The input can be of any type that is serializable
     * @return inject identifier for each input
     */
-  def injectMany(inputs: Iterable[Serializable]): Vector[String]
+  def injectMany(inputs: Iterable[Serializable]): Vector[Int]
 
 }

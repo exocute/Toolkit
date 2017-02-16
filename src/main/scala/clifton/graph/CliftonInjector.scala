@@ -2,6 +2,7 @@ package clifton.graph
 
 import java.io.Serializable
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicInteger
 
 import api.Injector
 import clifton.graph.exceptions.InjectException
@@ -14,41 +15,32 @@ import exonode.clifton.node.entries.DataEntry
   *
   * Injects input into the data space
   */
-class CliftonInjector(marker: String, rootActivity: String) extends Injector {
+class CliftonInjector(uuid: String, marker: String, rootActivity: String) extends Injector {
 
   private val dataSpace = SpaceCache.getDataSpace
   private val templateData: DataEntry = DataEntry(rootActivity, marker, null, null)
+  private val nextIndex = new AtomicInteger(0)
 
-  def inject(input: Serializable): String = {
-    val id = UUID.randomUUID().toString
+  def inject(input: Serializable): Int = {
+    val currentIndex = nextIndex.getAndIncrement()
+    val injectId = s"$uuid:$currentIndex"
     try {
-      val dataEntry = templateData.setInjectId(id).setData(input)
+      val dataEntry = templateData.setInjectId(injectId).setData(input)
       dataSpace.write(dataEntry, INJECTOR_LEASE_TIME)
     } catch {
       case e: Exception => throw new InjectException("Internal Inject Error")
     }
-    id
+    currentIndex
   }
 
-  def injectAny(input: Serializable): String = {
-    val id = UUID.randomUUID().toString
-    try {
-      val dataEntry = templateData.setInjectId(id).setData(input)
-      dataSpace.write(dataEntry, INJECTOR_LEASE_TIME)
-    } catch {
-      case e: Exception => throw new InjectException("Internal Inject Error")
-    }
-    id
-  }
-
-  def inject(occurrences: Int, input: Serializable): Iterable[String] = {
+  def inject(occurrences: Int, input: Serializable): Iterable[Int] = {
     if (occurrences < 1)
       throw new InjectException("Too few occurrences. Occurrences should be >= 1")
     else
       (0 to occurrences).map(_ => inject(input))
   }
 
-  def injectMany(inputs: Iterable[Serializable]): Vector[String] = {
+  def injectMany(inputs: Iterable[Serializable]): Vector[Int] = {
     inputs.map(x => inject(x)).toVector
   }
 

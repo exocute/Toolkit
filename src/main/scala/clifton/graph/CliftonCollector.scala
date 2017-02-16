@@ -14,12 +14,13 @@ import scala.collection.mutable.ListBuffer
   *
   * collects results from the space saved in dataEntries with a < marker
   */
-class CliftonCollector(marker: String) extends Collector {
+class CliftonCollector(uuid: String, marker: String) extends Collector {
 
   private val template: DataEntry = DataEntry(marker, null, null, null)
   private val dataSpace = SpaceCache.getDataSpace
 
-  def collect(injectId: String, waitTime: Long = 0): Option[Serializable] = {
+  def collectIndex(injectIndex: Int, waitTime: Long = 0): Option[Serializable] = {
+    val injectId = s"$uuid:$injectIndex"
     try {
       val ent = dataSpace.take(template.setInjectId(injectId), waitTime)
       ent.map(_.data)

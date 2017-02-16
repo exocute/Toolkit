@@ -93,7 +93,7 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
     Thread.sleep(EXPECTED_TIME_TO_CONSENSUS)
 
     //Wait a few seconds for the nodes to stabilize between the activities
-    Thread.sleep(NODE_CHECK_TABLE_TIME * 3)
+    Thread.sleep(NODE_CHECK_TABLE_TIME * 4)
 
     val table = getTable
     assert(table.isDefined)

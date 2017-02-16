@@ -1,6 +1,7 @@
 package clifton.graph
 
 import java.io.{File, Serializable}
+import java.util.UUID
 
 import api.{Collector, Injector}
 import clifton.graph.exceptions.InjectorTimeOutException
@@ -17,20 +18,22 @@ class ExoGraph(jars: List[File], graph: GraphRep, graphId: String, graphTimeOut:
 
   private val REMOVE_DATA_LIMIT = 50
 
-  val injector: Injector = {
-    val cliftonInjector = new CliftonInjector(graphId + ":" + INJECT_SIGNAL_MARKER, graphId + ":" + graph.getRoot.get.id)
-    new TimeOutInjector(cliftonInjector)
-  }
-
-  val collector: Collector = new CliftonCollector(graphId + ":" + COLLECT_SIGNAL_MARKER)
-
   private val jarUpdater = new JarSpaceUpdater()
   private val MIN_TIME_TO_RESET_TIMEOUT = math.min(60 * 1000, graphTimeOut)
   private val TIMEOUT = MIN_TIME_TO_RESET_TIMEOUT + graphTimeOut
 
-  {
-    updateAllEntries()
+  updateAllEntries()
 
+  val (injector: Injector, collector: Collector) = {
+    val injCollUUID = UUID.randomUUID().toString
+    val cliftonInjector = new TimeOutInjector(new CliftonInjector(
+      injCollUUID, graphId + ":" + INJECT_SIGNAL_MARKER, graphId + ":" + graph.getRoot.get.id))
+    val cliftonCollector = new CliftonCollector(injCollUUID, graphId + ":" + COLLECT_SIGNAL_MARKER)
+
+    (cliftonInjector, cliftonCollector)
+  }
+
+  {
     val startMsg = "Graph is ready to receive injects"
     println(graphId + ";" + startMsg)
     Log.info(graphId, startMsg)
@@ -38,13 +41,13 @@ class ExoGraph(jars: List[File], graph: GraphRep, graphId: String, graphTimeOut:
 
   private var lastTime = System.currentTimeMillis()
 
-  def updateAllEntries(): Unit = {
+  private def updateAllEntries(): Unit = {
     updateJars(jars)
     GraphCreator.injectGraph(graph, graphId, TIMEOUT)
     updateGraphInSpace(graph, graphId)
   }
 
-  def close(): Unit = {
+  def closeGraph(): Unit = {
     removeJars(jars)
     GraphCreator.removeGraph(graph, graphId)
     removeGraphFromSpace(graph, graphId)
@@ -103,21 +106,21 @@ class ExoGraph(jars: List[File], graph: GraphRep, graphId: String, graphTimeOut:
   }
 
   private class TimeOutInjector(injector: Injector) extends Injector {
-    override def inject(input: Serializable): String = {
+    override def inject(input: Serializable): Int = {
       if (tryResetTimeOut())
         injector.inject(input)
       else
         throw new InjectorTimeOutException()
     }
 
-    override def inject(occurrences: Int, input: Serializable): Iterable[String] = {
+    override def inject(occurrences: Int, input: Serializable): Iterable[Int] = {
       if (tryResetTimeOut())
         injector.inject(occurrences, input)
       else
         throw new InjectorTimeOutException()
     }
 
-    override def injectMany(inputs: Iterable[Serializable]): Vector[String] = {
+    override def injectMany(inputs: Iterable[Serializable]): Vector[Int] = {
       if (tryResetTimeOut())
         injector.injectMany(inputs)
       else
