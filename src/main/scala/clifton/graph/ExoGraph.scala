@@ -7,8 +7,10 @@ import api.{Collector, Injector}
 import clifton.graph.exceptions.InjectorTimeOutException
 import distributer.JarSpaceUpdater
 import exonode.clifton.config.Protocol._
+import exonode.clifton.node.Log.{INFO,ND}
 import exonode.clifton.node.entries.{BackupEntry, BackupInfoEntry, DataEntry, ExoEntry}
 import exonode.clifton.node.{Log, SpaceCache}
+import exonode.clifton.signals.LoggingSignal
 import toolkit.GraphRep
 
 /**
@@ -36,7 +38,7 @@ class ExoGraph(jars: List[File], graph: GraphRep, graphId: String, graphTimeOut:
   {
     val startMsg = "Graph is ready to receive injects"
     println(graphId + ";" + startMsg)
-    Log.info(graphId, startMsg)
+    Log.receiveLog(LoggingSignal(STARTED_GRAPH,INFO,ND,graphId,ND,ND,ND,"Graph Started",0))
   }
 
   private var lastTime = System.currentTimeMillis()
@@ -55,7 +57,7 @@ class ExoGraph(jars: List[File], graph: GraphRep, graphId: String, graphTimeOut:
 
     val endMsg = "Graph is finished"
     println(graphId + ";" + endMsg)
-    Log.info(graphId, endMsg)
+    //Log.info(graphId, endMsg)
   }
 
   private def tryResetTimeOut(): Boolean = {

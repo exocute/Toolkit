@@ -9,6 +9,9 @@ import clifton.graph.exceptions.InjectException
 import exonode.clifton.config.Protocol._
 import exonode.clifton.node.SpaceCache
 import exonode.clifton.node.entries.DataEntry
+import exonode.clifton.node.Log
+import exonode.clifton.node.Log.{INFO, ERROR, WARN, ND}
+import exonode.clifton.signals.LoggingSignal
 
 /**
   * Created by #ScalaTeam on 21/12/2016.
@@ -26,6 +29,7 @@ class CliftonInjector(uuid: String, marker: String, rootActivity: String) extend
     val injectId = s"$uuid:$currentIndex"
     try {
       val dataEntry = templateData.setInjectId(injectId).setData(input)
+      Log.receiveLog(LoggingSignal(INJECTED,INFO,ND,ND,ND,ND,ND,"Injected Input "+injectId,0))
       dataSpace.write(dataEntry, INJECTOR_LEASE_TIME)
     } catch {
       case e: Exception => throw new InjectException("Internal Inject Error")

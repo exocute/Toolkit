@@ -115,8 +115,8 @@ object StartClientAPI {
 
     println("  ______                      _       \n |  ____|                    | |      \n | |__  __  _____   ___ _   _| |_ ___ \n |  __| \\ \\/ / _ \\ / __| | | | __/ _ \\\n | |____ >  < (_) | (__| |_| | ||  __/\n |______/_/\\_\\___/ \\___|\\__,_|\\__\\___|\n                                      \n                                      ")
 
-    val starterExoGraph = ExocuteConfig.setHosts()
-    starterExoGraph.addGraph(file, jars, 20 * 1000) match {
+    val starterExoGraph = ExocuteConfig.setHosts(SpaceCache.signalHost, SpaceCache.dataHost,SpaceCache.jarHost)
+    starterExoGraph.addGraph(file, jars, 60*60 * 1000) match {
       case Failure(e) =>
         val msg = e.getMessage
         printlnExit(s"Error loading grp file:\n${if (msg == null) e else msg}")

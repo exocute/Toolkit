@@ -4,8 +4,11 @@ import java.io.Serializable
 
 import api.Collector
 import clifton.graph.exceptions.CollectException
-import exonode.clifton.node.SpaceCache
+import exonode.clifton.config.Protocol.COLLETED
+import exonode.clifton.node.Log.{INFO, ND}
+import exonode.clifton.node.{Log, SpaceCache}
 import exonode.clifton.node.entries.DataEntry
+import exonode.clifton.signals.LoggingSignal
 
 import scala.collection.mutable.ListBuffer
 
@@ -23,10 +26,15 @@ class CliftonCollector(uuid: String, marker: String) extends Collector {
     val injectId = s"$uuid:$injectIndex"
     try {
       val ent = dataSpace.take(template.setInjectId(injectId), waitTime)
+      sendLog
       ent.map(_.data)
     } catch {
       case e: Exception => throw new CollectException("Collector Error")
     }
+  }
+
+  def sendLog = {
+    Log.receiveLog(LoggingSignal(COLLETED, INFO, ND, ND, ND, ND, ND, "Result Collected",0))
   }
 
   def collect(): Option[Serializable] = {
@@ -36,7 +44,12 @@ class CliftonCollector(uuid: String, marker: String) extends Collector {
   def collect(waitTime: Long): Option[Serializable] = {
     try {
       val ent = dataSpace.take(template, waitTime)
-      ent.map(_.data)
+      ent match{
+        case Some(entryValue) =>
+          sendLog
+          Some(entryValue.data)
+        case None => None
+      }
     } catch {
       case e: Exception => throw new CollectException("Collector Error")
     }
@@ -64,6 +77,7 @@ class CliftonCollector(uuid: String, marker: String) extends Collector {
       }
       remainingTime = waitTime - (System.currentTimeMillis() - start)
     }
+    buffer.toList.foreach(x => sendLog)
     buffer.toList
   }
 
