@@ -143,9 +143,9 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
     val injects = inj.injectMany(someStrings)
 
     //wait a few seconds
-    Thread.sleep(NODE_CHECK_TABLE_TIME * 2)
+    Thread.sleep(NODE_CHECK_TABLE_TIME * 3)
 
-    injects.foldRight(List[String]())((s, list) => coll.collect(s).get.toString :: list) match {
+    injects.foldRight(List[String]())((s, list) => coll.collectIndex(s).get.toString :: list) match {
       case vec if vec.length == amountOfInputs =>
         val expected = someStrings.map(s => (s + s).reverse.map(_.toUpper)).toList
         assert(vec == expected)
@@ -186,7 +186,7 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
     val nInputs = nNodes
 
     val factConf = new BackupConfig {
-      override def BACKUP_TIMEOUT_TIME: Long = 30 * 1000
+      override def BACKUP_TIMEOUT_TIME: Long = 60 * 1000
     }
 
     // analyser
@@ -195,7 +195,7 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
     val nodes = launchNNodes(nNodes)(factConf)
 
     // wait for all nodes to get the activity
-    Thread.sleep(20 * 1000)
+    Thread.sleep(30 * 1000)
     val table = getTable
     assert(table.isDefined)
     assert(table.get.values.sum == nNodes)
@@ -203,13 +203,13 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
     val inputs = randomAlphaNumericString(10).take(nInputs).toList
     inj.injectMany(inputs)
 
-    Thread.sleep(20 * 1000)
+    Thread.sleep(30 * 1000)
 
     // make some of the nodes crash
     val nodesToKill = scala.util.Random.shuffle(nodes).take(nNodesToKill)
     killNodes(nodesToKill)
 
-    val results = coll.collectMany(nInputs, 7 * 60 * 1000)
+    val results = coll.collectMany(nInputs, 6 * 60 * 1000)
     assert(results.size == nInputs)
     assert(results.map(_.toString).sorted == inputs.map(i => i + i).sorted)
 

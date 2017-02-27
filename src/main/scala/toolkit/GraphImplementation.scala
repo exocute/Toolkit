@@ -5,7 +5,7 @@ import scala.collection.mutable
 /**
   * Created by #ScalaTeam on 12/12/2016.
   *
-  * Graph is defined has a HashMap of Activities to List of AcitivityRep
+  * Graph is defined has a HashMap of Activities to List of ActivityRep
   */
 class GraphImplementation {
 
@@ -146,7 +146,7 @@ class GraphImplementation {
     * @return true if it has a root, false otherwise
     */
   def hasRoot: Boolean = {
-    adjInverse.count { case (act, list) => list.isEmpty } == 1
+    adjInverse.count { case (_, list) => list.isEmpty } == 1
   }
 
   /**

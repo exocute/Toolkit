@@ -7,7 +7,7 @@ import api.{Collector, Injector}
 import clifton.graph.exceptions.InjectorTimeOutException
 import distributer.JarSpaceUpdater
 import exonode.clifton.config.Protocol._
-import exonode.clifton.node.Log.{INFO,ND}
+import exonode.clifton.node.Log.{INFO, ND}
 import exonode.clifton.node.entries.{BackupEntry, BackupInfoEntry, DataEntry, ExoEntry}
 import exonode.clifton.node.{Log, SpaceCache}
 import exonode.clifton.signals.LoggingSignal
@@ -16,7 +16,7 @@ import toolkit.GraphRep
 /**
   * Created by #ScalaTeam on 07-02-2017.
   */
-class ExoGraph(jars: List[File], graph: GraphRep, graphId: String, graphTimeOut: Long) {
+class ExoGraph(jars: List[File], val graph: GraphRep, graphId: String, graphTimeOut: Long) {
 
   private val REMOVE_DATA_LIMIT = 50
 
@@ -38,7 +38,7 @@ class ExoGraph(jars: List[File], graph: GraphRep, graphId: String, graphTimeOut:
   {
     val startMsg = "Graph is ready to receive injects"
     println(graphId + ";" + startMsg)
-    Log.receiveLog(LoggingSignal(STARTED_GRAPH,INFO,ND,graphId,ND,ND,ND,"Graph Started",0))
+    Log.receiveLog(LoggingSignal(STARTED_GRAPH, INFO, ND, graphId, ND, ND, ND, "Graph Started", 0))
   }
 
   private var lastTime = System.currentTimeMillis()

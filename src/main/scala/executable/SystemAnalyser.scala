@@ -179,7 +179,7 @@ class SystemAnalyser(updateTime: Int = 2, logs: LinkedBlockingDeque[LoggingSigna
       case INJECTED =>
         val otherCount = data.otherCounters.incInjected
         data.setOtherCounters(otherCount)
-      case COLLETED =>
+      case COLLECTED =>
         val otherCount = data.otherCounters.incCollected
         data.setOtherCounters(otherCount)
       case ERROR_PROCESSING =>

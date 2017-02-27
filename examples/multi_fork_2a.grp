@@ -1,0 +1,9 @@
+Graph graph
+Activity A toolkit.Jar.SplitCopy:2
+Activity B toolkit.Jar.AddParam:1
+Activity C toolkit.Jar.SplitCopy:2
+Activity D toolkit.Jar.AddParam:1
+Activity E toolkit.Jar.AddParam:1
+Activity F toolkit.Jar.Sum
+Activity G toolkit.Jar.Sum
+Connection A->C,B : C->D,E : D->F : E->F : B->G : F->G
