@@ -234,13 +234,13 @@ object ExoGraphToSwave {
     convertedSpout
   }
 
+  def show(spout: Spout[_]): Unit =
+    println(Graph.from(spout.stage).withGlyphSet(GlyphSet.`2x2 ASCII`).render)
+
   def main(args: Array[String]): Unit = {
-    val file = new File("examples\\multi_fork_3a.grp")
-    //        val file = new File("examples\\multi_fork_2b.grp")
-    //    val file = new File("examples\\multi_fork_2a.grp")
-    //        val file = new File("examples\\numbers5.grp")
-    //    val file = new File("examples\\fileCounter.grp")
-    //            val file = new File("examples\\abc.grp")
+//    val file = new File("examples\\multi_fork_1a.grp")
+        val file = new File("examples\\multi_fork_2a.grp")
+    //    val file = new File("examples\\multi_fork_3a.grp")
     val jars = List(new File("examples\\classes.jar"))
 
     val starterExoGraph = ExocuteConfig.setHosts()
@@ -305,6 +305,4 @@ object ExoGraphToSwave {
     override def toString: String = "Finish"
   }
 
-  def show(spout: Spout[_]): Unit =
-    println(Graph.from(spout.stage).withGlyphSet(GlyphSet.`2x2 ASCII`).render)
 }
