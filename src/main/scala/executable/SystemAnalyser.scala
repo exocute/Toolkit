@@ -122,7 +122,7 @@ class SystemAnalyser(updateTime: Int = 2, logs: LinkedBlockingDeque[LoggingSigna
   }
 
   def processLog(data: DataBase, log: LoggingSignal, graphics: Graphics): DataBase = {
-    GraphicInterfaceScala.addLogLine(log.message)
+    GraphicInterfaceScala.addLogLine(dateFormat.format(new Date) +" - " +log.message)
     log.code match {
       case STARTED_NODE =>
         val nDB = data.nodesDB + (log.nodeID -> InfoNode(log.graphID, log.actIDfrom, log.actIDto, log.injID, false))

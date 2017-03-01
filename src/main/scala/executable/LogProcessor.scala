@@ -30,6 +30,7 @@ object LogProcessor extends Thread {
   private val logs = new LinkedBlockingDeque[LoggingSignal]()
   private val analyseFile = new SystemAnalyser(2,logs)
 
+
   override def run(): Unit = {
     val space = SpaceCache.getSignalSpace
     println("LogProcessor Started...")
