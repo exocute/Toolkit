@@ -4,7 +4,7 @@ import java.io.{File, Serializable}
 import java.util.UUID
 
 import api.{Collector, Injector}
-import clifton.graph.exceptions.InjectorTimeOutException
+import clifton.graph.exceptions.{InjectorTimeOutException, MissingActivitiesException}
 import distributer.JarSpaceUpdater
 import exonode.clifton.config.Protocol._
 import exonode.clifton.node.Log.{INFO, ND}
@@ -43,7 +43,16 @@ class ExoGraph(jars: List[File], val graph: GraphRep, graphId: String, graphTime
 
   private var lastTime = System.currentTimeMillis()
 
+  def verifyJarsAndGraphActivities(): Unit = {
+    val jarActivities = for (jar <- jars; act <- jarUpdater.getAllClassEntries(jar)) yield act
+    val graphActivities = graph.getAllActivitiesNames
+    val diffActivities = graphActivities.diff(jarActivities)
+    if (diffActivities.nonEmpty)
+      throw new MissingActivitiesException(diffActivities)
+  }
+
   private def updateAllEntries(): Unit = {
+    verifyJarsAndGraphActivities()
     updateJars(jars)
     GraphCreator.injectGraph(graph, graphId, TIMEOUT)
     updateGraphInSpace(graph, graphId)

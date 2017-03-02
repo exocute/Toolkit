@@ -183,6 +183,15 @@ class GraphImplementation {
   }
 
   /**
+    * Gets a list of all activities loaded in the graph
+    *
+    * @return
+    */
+  def getAllActivities() : List[ActivityRep] = {
+    adj.keySet.toList
+  }
+
+  /**
     * new toString method to GraphImplemetation
     *
     * @return

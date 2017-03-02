@@ -185,6 +185,8 @@ class GraphRep(val name: String, importName: String, exportName: String, activit
 
   def getActivities: Vector[String] = activitiesGraph.activities.keys.toVector
 
+  def getAllActivitiesNames: List[String] = activitiesGraph.getAllActivities().map(act => act.name)
+
   /**
     * returns the string of a value if the value its defined
     *

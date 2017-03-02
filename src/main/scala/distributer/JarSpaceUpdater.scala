@@ -38,6 +38,10 @@ class JarSpaceUpdater() extends JarUpdater {
     }
   }
 
+  def getAllClassEntries(jarFile : File) : List[String] = {
+    JarFileHandler.getClassNames(jarFile)
+  }
+
   //	 ensure both the class and the source jar are matched
   private def updateClassEntry(jarFile: File, className: String, leaseTime: Long): Unit = {
     val ce = FlyClassEntry(className, jarFile.getName)
