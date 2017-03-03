@@ -194,7 +194,7 @@ class SystemAnalyser(updateTime: Int = 2, logs: LinkedBlockingDeque[LoggingSigna
           data.actDB.updated(actProcessing, act)
         }
         GraphicInterfaceScala.removeNode(log.nodeID)
-        GraphicInterfaceScala.addErrorEvents(dateFormat.format(new Date), log.message+" : "+log.nodeID)
+        GraphicInterfaceScala.addErrorEvents(dateFormat.format(new Date), log.message + " : " + log.nodeID)
         data.setNodesAndAct(newNDB, newACTDB)
       case VALUES_LOST =>
         //TODO should be updated on the next version
