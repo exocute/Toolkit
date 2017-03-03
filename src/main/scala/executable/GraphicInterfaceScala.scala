@@ -14,10 +14,11 @@ import javax.swing._
 import javax.swing.table.DefaultTableModel
 import javax.swing.text.DefaultCaret
 import java.awt._
-
 import java.awt.event.ActionEvent
 import java.awt.event.ActionListener
 import javax.swing.JFrame
+
+import scala.collection.mutable
 
 /**
   * Created by #ScalaTeam on 21/02/2017.
@@ -29,6 +30,7 @@ object GraphicInterfaceScala {
   private val priorityEvents = new DefaultCategoryDataset
   private val processedEvents = new DefaultCategoryDataset
   private val topActivities = new DefaultPieDataset
+  private val nodeIDs = mutable.Set[String]()
   private val logInfo = new JTextArea(10, 50)
   private val text = new JScrollPane(logInfo)
   private val activityRank = new DefaultTableModel
@@ -36,14 +38,15 @@ object GraphicInterfaceScala {
   private val actRank = new JTable()
   private val errorData = new JTable()
 
+
   //Main Panel of the application
-  val jp = new JPanel
-  val jf = new JFrame
-  jp.setLayout(new BorderLayout)
-  jp.setVisible(true)
-  val b = new JButton("Full Screen")
-  val n = new JButton("Launch Nodes")
-  val k = new JButton("Kill Node")
+  val mainPanel = new JPanel
+  val mainFrame = new JFrame
+  mainPanel.setLayout(new BorderLayout)
+  mainPanel.setVisible(true)
+  val fullScreenButton = new JButton("Full Screen")
+  val launchNodesButton = new JButton("Launch Nodes")
+  val killNodesButton = new JButton("Kill Node")
   val p1 = new JPanel
   val p2 = new JPanel
   val p3 = new JPanel
@@ -66,47 +69,57 @@ object GraphicInterfaceScala {
   p4.add(p1, BorderLayout.NORTH)
   p4.add(p2, BorderLayout.NORTH)
   p4.add(p3, BorderLayout.NORTH)
-  jp.add(p4)
+
+  mainPanel.add(p4)
+
   p5.setLayout(new BorderLayout)
   p5.add(text, BorderLayout.CENTER)
-  jp.setLayout(new BoxLayout(jp, BoxLayout.Y_AXIS))
+  mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS))
 
   logInfo.setEditable(false)
-  p6.add(b)
-  p6.add(n)
-  p6.add(k)
+  p6.add(fullScreenButton)
+  p6.add(launchNodesButton)
+  p6.add(killNodesButton)
   p6.setLayout(new BoxLayout(p6, BoxLayout.X_AXIS))
 
-  b.addActionListener(new ActionListener() {
+  fullScreenButton.addActionListener(new ActionListener() {
     def actionPerformed(e: ActionEvent) {
-      jf.setExtendedState(Frame.MAXIMIZED_BOTH)
-      jf.setUndecorated(true)
-      jf.setVisible(true)
+      mainFrame.setExtendedState(Frame.MAXIMIZED_BOTH)
+      mainFrame.setUndecorated(true)
+      mainFrame.setVisible(true)
     }
   })
 
-  n.addActionListener(new ActionListener() {
+  launchNodesButton.addActionListener(new ActionListener() {
     def actionPerformed(e: ActionEvent) {
       val input = JOptionPane.showInputDialog("Number of nodes you want to launch")
-      val nNodes = input.toInt
-      LaunchNodes.startNodes(nNodes)
+      if (Option(input).isDefined) {
+        val nNodes = input.toInt
+        LaunchNodes.startNodes(nNodes)
+      }
     }
   })
 
-  k.addActionListener(new ActionListener() {
+  killNodesButton.addActionListener(new ActionListener() {
     def actionPerformed(e: ActionEvent) {
-      val node = JOptionPane.showInputDialog("ID of the node you want to kill")
-      LaunchNodes.killNode(node)
+      val nodeIDS = nodeIDs.toArray
+      if (nodeIDS.nonEmpty) {
+        val node = ListDialog.showDialog(mainFrame, killNodesButton, "Choose the node ID you want to kill:", "Kill Nodes", nodeIDS, null, null)
+        LaunchNodes.killNode(node)
+      }
     }
   })
-  jp.add(p5)
-  jp.add(p6)
+  mainPanel.add(p5)
+  mainPanel.add(p6)
+
+  //leave the caret always in the bottom of the text box
   val caret: DefaultCaret = logInfo.getCaret.asInstanceOf[DefaultCaret]
   caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE)
-  jf.add(jp, BorderLayout.CENTER)
-  jf.setSize(new Dimension(1600, 800))
-  jf.setVisible(true)
-  jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE)
+
+  mainFrame.add(mainPanel, BorderLayout.CENTER)
+  mainFrame.setSize(new Dimension(1600, 800))
+  mainFrame.setVisible(true)
+  mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE)
 
 
   private def createProcessingChart = {
@@ -136,11 +149,20 @@ object GraphicInterfaceScala {
     chartPanel
   }
 
+
   def createBarChart(title: String, x: String, y: String, data: DefaultCategoryDataset): ChartPanel = {
     val barChart = ChartFactory.createBarChart(title, x, y, data, PlotOrientation.VERTICAL, true, true, false)
     val chartPanel = new ChartPanel(barChart)
     //chartPanel.setPreferredSize(new java.awt.Dimension(550, 400));
     chartPanel
+  }
+
+  def addNode(nodeID: String) = {
+    nodeIDs.add(nodeID)
+  }
+
+  def removeNode(nodeID: String) = {
+    nodeIDs.remove(nodeID)
   }
 
   private def createTable(dt: DefaultTableModel, t: JTable) = {

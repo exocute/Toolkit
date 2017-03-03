@@ -38,7 +38,7 @@ class ExoGraph(jars: List[File], val graph: GraphRep, graphId: String, graphTime
   {
     val startMsg = "Graph is ready to receive injects"
     println(graphId + ";" + startMsg)
-    Log.receiveLog(LoggingSignal(STARTED_GRAPH, INFO, ND, graphId, ND, ND, ND, "Graph Started", 0))
+    Log.receiveLog(LoggingSignal(STARTED_GRAPH, INFO, ND, graphId, ND, ND, ND, graph.name + " - Graph Started", 0))
   }
 
   private var lastTime = System.currentTimeMillis()
