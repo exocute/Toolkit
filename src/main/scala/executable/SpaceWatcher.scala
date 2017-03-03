@@ -36,9 +36,9 @@ object SpaceWatcher {
 
     val entriesMap = Map("FlyJarEntry" -> Watcher(jarSpace, "FlyJarEntry", FlyJarEntry(null, null)),
       "FlyClassEntry" -> Watcher(jarSpace, "FlyClassEntry", FlyClassEntry(null, null)),
-      "DataEntry" -> Watcher(dataSpace, "DataEntry", DataEntry(null, null, null, null)),
-      "BackupEntry" -> Watcher(dataSpace, "BackupEntry", BackupEntry(null, null, null, null)),
-      "BackupInfoEntry" -> Watcher(dataSpace, "BackupInfoEntry", BackupInfoEntry(null, null, null)),
+      "DataEntry" -> Watcher(dataSpace, "DataEntry", DataEntry(null, null, null, null, null)),
+      "BackupEntry" -> Watcher(dataSpace, "BackupEntry", BackupEntry(null, null, null, null, null)),
+      "BackupInfoEntry" -> Watcher(dataSpace, "BackupInfoEntry", BackupInfoEntry(null, null, null, null)),
       "ExoEntry" -> Watcher(signalSpace, "ExoEntry", ExoEntry(null, null)))
 
     while (true) {

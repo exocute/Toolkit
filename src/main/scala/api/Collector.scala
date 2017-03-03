@@ -54,4 +54,22 @@ trait Collector {
     */
   def collectMany(numObjects: Int, waitTime: Long): List[Serializable]
 
+  /**
+    * Returns at most numObjects from the space that are available
+    * in waitTime ms (must be > 0).
+    * <p>
+    * The results will maintain the order of the injector.
+    * If you use other methods to collect this method will have an undefined behavior.
+    * <p>
+    * The collect method will return a list of objects
+    * If numObjects is bigger than number of available objects, collect method
+    * will return a List with all the available objects that were possible to get
+    * in waitTime ms
+    *
+    * @param numObjects the maximum amount of objects to be returned
+    * @param waitTime   wait time in milliseconds
+    * @return the list of objects returned
+    */
+  def collectManyOrdered(numObjects: Int, waitTime: Long): List[Serializable]
+
 }

@@ -46,7 +46,7 @@ object GraphCreator {
           })
         }
 
-      val signal = ActivitySignal(name, params, inMarkers, outMarkers)
+      val signal = ActivitySignal(name, act.actType, params, inMarkers, outMarkers)
       val fullId = graphId + ":" + act.id
       signalSpace.take(ExoEntry(fullId, signal), 0)
       signalSpace.write(ExoEntry(fullId, signal), leaseTime)

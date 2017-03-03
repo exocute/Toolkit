@@ -19,13 +19,13 @@ import exonode.clifton.signals.LoggingSignal
 class CliftonInjector(uuid: String, marker: String, rootActivity: String) extends Injector {
 
   private val dataSpace = SpaceCache.getDataSpace
-  private val templateData: DataEntry = DataEntry(rootActivity, marker, null, null)
+  private val templateData: DataEntry = DataEntry(rootActivity, marker, null,null, null)
   private val nextIndex = new AtomicInteger(0)
 
   def inject(input: Serializable): Int = {
     val currentIndex = nextIndex.getAndIncrement()
     val injectId = s"$uuid:$currentIndex"
-    val dataEntry = templateData.setInjectId(injectId).setData(input)
+    val dataEntry = templateData.setInjectId(injectId).setData(Some(input))
     try {
       Log.receiveLog(LoggingSignal(INJECTED, INFO, ND, ND, ND, ND, ND, "Injected Input " + injectId, 0))
       dataSpace.write(dataEntry, INJECTOR_LEASE_TIME)

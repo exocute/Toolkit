@@ -1,0 +1,6 @@
+Graph FilterGraph
+Activity 	   A exocute.classes.SplitCopy:2
+ActivityFilter B exocute.classes.IsEven
+Activity 	   C exocute.classes.AddParam:1
+Activity 	   D exocute.classes.ToTuple
+Connection A->B,C : B->D : C->D
