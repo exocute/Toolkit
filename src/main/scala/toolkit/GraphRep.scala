@@ -7,7 +7,6 @@ import toolkit.exceptions.{ActivitiesWithDuplicateId, InvalidConnection, Unknown
   *
   * Representation of the graph
   */
-
 class GraphRep(val name: String, importName: String, exportName: String, activitiesGraph: GraphImplementation) {
 
   /**
@@ -33,7 +32,7 @@ class GraphRep(val name: String, importName: String, exportName: String, activit
     *
     * @param activityRep
     */
-  def addSingleActivity(activityRep: ActivityRep): Unit = {
+  def addActivity(activityRep: ActivityRep): Unit = {
     if (!activitiesGraph.addNode(activityRep))
       throw new ActivitiesWithDuplicateId(activityRep.id)
   }

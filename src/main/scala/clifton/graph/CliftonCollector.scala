@@ -19,10 +19,11 @@ import scala.collection.mutable.ListBuffer
   */
 class CliftonCollector(uuid: String, marker: String) extends Collector {
 
-  private val template: DataEntry = DataEntry(marker, null, null, null)
+  private val template: DataEntry = DataEntry(marker, null, null, null, null)
   private val dataSpace = SpaceCache.getDataSpace
+  private var indexOrdered = 0
 
-  def collectIndex(injectIndex: Int, waitTime: Long = 0): Option[Serializable] = {
+  def collectIndex(injectIndex: Int, waitTime: Long = 0): Option[Option[Serializable]] = {
     val injectId = s"$uuid:$injectIndex"
     try {
       val ent = dataSpace.take(template.setInjectId(injectId), waitTime)
@@ -33,7 +34,7 @@ class CliftonCollector(uuid: String, marker: String) extends Collector {
         case None => None
       }
     } catch {
-      case e: Exception => throw new CollectException("Collector Error")
+      case _: Exception => throw new CollectException("Collector Error")
     }
   }
 
@@ -41,11 +42,11 @@ class CliftonCollector(uuid: String, marker: String) extends Collector {
     Log.receiveLog(LoggingSignal(COLLECTED, INFO, ND, ND, ND, ND, ND, "Result Collected", 0))
   }
 
-  def collect(): Option[Serializable] = {
+  def collect(): Option[Option[Serializable]] = {
     collect(0L)
   }
 
-  def collect(waitTime: Long): Option[Serializable] = {
+  def collect(waitTime: Long): Option[Option[Serializable]] = {
     try {
       val ent = dataSpace.take(template, waitTime)
       ent match {
@@ -55,7 +56,7 @@ class CliftonCollector(uuid: String, marker: String) extends Collector {
         case None => None
       }
     } catch {
-      case e: Exception => throw new CollectException("Collector Error")
+      case _: Exception => throw new CollectException("Collector Error")
     }
   }
 
@@ -70,8 +71,9 @@ class CliftonCollector(uuid: String, marker: String) extends Collector {
       val amount = math.min(MAX_COLLECT_EACH_CALL, numObjects - totalObjects)
       val results: Iterable[DataEntry] = dataSpace.takeMany(template, amount)
       if (results.nonEmpty) {
-        buffer ++= results.map(_.data)
-        totalObjects += results.size
+        val newResults = results.map(_.data).filter(_.isDefined)
+        buffer ++= newResults
+        totalObjects += newResults.size
       } else {
         try {
           Thread.sleep(1)
@@ -81,7 +83,49 @@ class CliftonCollector(uuid: String, marker: String) extends Collector {
       }
       remainingTime = waitTime - (System.currentTimeMillis() - start)
     }
-    buffer.foreach(x => sendLog())
+    buffer.foreach(_ => sendLog())
+    buffer.toList
+  }
+
+  private def collectNextOrdered(): Option[Option[Serializable]] = {
+    val injectId = s"$uuid:$indexOrdered"
+    try {
+      val ent = dataSpace.take(template.setInjectId(injectId), 0)
+      indexOrdered += 1
+      ent match {
+        case Some(entry) =>
+          sendLog()
+          Some(entry.data)
+        case None => None
+      }
+    } catch {
+      case _: Exception => throw new CollectException("Collector Error")
+    }
+  }
+
+  def collectManyOrdered(numObjects: Int, waitTime: Long): List[Serializable] = {
+    var buffer: ListBuffer[Serializable] = ListBuffer()
+    val start = System.currentTimeMillis()
+    var remainingTime = waitTime
+    var totalObjects = 0
+
+    while (totalObjects < numObjects && remainingTime > 0L) {
+      collectNextOrdered() match {
+        case None =>
+          try {
+            Thread.sleep(1)
+          } catch {
+            case e: InterruptedException => e.printStackTrace()
+          }
+        case Some(data) =>
+          if (data.isDefined) {
+            buffer ++= data
+            totalObjects += 1
+          }
+      }
+      remainingTime = waitTime - (System.currentTimeMillis() - start)
+    }
+    buffer.foreach(_ => sendLog())
     buffer.toList
   }
 

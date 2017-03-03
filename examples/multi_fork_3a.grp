@@ -1,12 +1,12 @@
 Graph graph
-Activity A toolkit.Jar.SplitCopy:2
-Activity B toolkit.Jar.AddParam:1
-Activity C toolkit.Jar.SplitCopy:2
-Activity D toolkit.Jar.AddParam:1
-Activity E toolkit.Jar.SplitCopy:2
-Activity F toolkit.Jar.AddParam:1
-Activity G toolkit.Jar.AddParam:1
-Activity H toolkit.Jar.Sum
-Activity I toolkit.Jar.Sum
-Activity J toolkit.Jar.Sum
+Activity A exocute.classes.SplitCopy:2
+Activity B exocute.classes.AddParam:1
+Activity C exocute.classes.SplitCopy:2
+Activity D exocute.classes.AddParam:1
+Activity E exocute.classes.SplitCopy:2
+Activity F exocute.classes.AddParam:1
+Activity G exocute.classes.AddParam:1
+Activity H exocute.classes.Sum
+Activity I exocute.classes.Sum
+Activity J exocute.classes.Sum
 Connection A->B,C : C->D,E : E->F,G : B->J : D->I : F->H : G->H : H->I : I->J

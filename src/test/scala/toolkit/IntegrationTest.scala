@@ -7,7 +7,7 @@ import exonode.clifton.config.BackupConfig
 import exonode.clifton.config.BackupConfig._
 import exonode.clifton.config.Protocol._
 import exonode.clifton.node._
-import exonode.clifton.node.entries.{DataEntry, ExoEntry}
+import exonode.clifton.node.entries.ExoEntry
 import exonode.clifton.signals.KillSignal
 import org.scalatest.{BeforeAndAfter, FlatSpec}
 
@@ -59,9 +59,6 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
     nodes.foreach(node => signalSpace.write(ExoEntry(node.nodeId, KillSignal), KILL_TIME))
     nodes.foreach(node => node.join())
   }
-
-  private val genericEntry = ExoEntry(null, null)
-  private val dataEntry = DataEntry(null, null, null, null)
 
   private def getTable: Option[TableType] = {
     signalSpace.read(ExoEntry(TABLE_MARKER, null), 0L).map(

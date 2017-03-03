@@ -164,7 +164,7 @@ class SystemAnalyser(updateTime: Int = 2, logs: LinkedBlockingDeque[LoggingSigna
         val newNDB = data.nodesDB.updated(log.nodeID, oldNodeInfo.setMessage(false))
         val nActDB = {
           val oldData = data.actDB(log.actIDfrom)
-          data.actDB.updated(log.actIDfrom, oldData.updateProcessedAndAverage(log.time))
+          data.actDB.updated(log.actIDfrom, oldData.updateProcessedAndAverage(log.processingTime))
         }
         val levelCount = processLevel(log.level, data)
         val otherCount = if (log.actIDto.equals("<")) data.otherCounters.decProcessingFinal else data.otherCounters.decProcessing

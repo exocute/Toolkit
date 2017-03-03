@@ -104,9 +104,9 @@ class ExoGraph(jars: List[File], val graph: GraphRep, graphId: String, graphTime
     val signalSpace = SpaceCache.getSignalSpace
     for (actId <- graph.getActivities :+ COLLECT_SIGNAL_MARKER) {
       val fullId = graphId + ":" + actId
-      while (signalSpace.takeMany(DataEntry(fullId, null, null, null), REMOVE_DATA_LIMIT).nonEmpty) {}
-      while (signalSpace.takeMany(BackupEntry(fullId, null, null, null), REMOVE_DATA_LIMIT).nonEmpty) {}
-      while (signalSpace.takeMany(BackupInfoEntry(fullId, null, null), REMOVE_DATA_LIMIT).nonEmpty) {}
+      while (signalSpace.takeMany(DataEntry(fullId, null, null, null, null), REMOVE_DATA_LIMIT).nonEmpty) {}
+      while (signalSpace.takeMany(BackupEntry(fullId, null, null, null, null), REMOVE_DATA_LIMIT).nonEmpty) {}
+      while (signalSpace.takeMany(BackupInfoEntry(fullId, null, null, null), REMOVE_DATA_LIMIT).nonEmpty) {}
     }
   }
 

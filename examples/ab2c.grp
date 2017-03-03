@@ -1,5 +1,5 @@
 Graph graph
-Activity A toolkit.Jar.DoubleString
-Activity B toolkit.Jar.Reverse:20
-Activity C toolkit.Jar.UpperCase
+Activity A exocute.classes.DoubleString
+Activity B exocute.classes.Reverse:20
+Activity C exocute.classes.UpperCase
 Connection A->B: B->C

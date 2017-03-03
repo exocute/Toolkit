@@ -1,6 +1,6 @@
 Graph graph
-Activity A toolkit.Jar.BytesToString:2
-Activity B toolkit.Jar.CountLetters
-Activity C toolkit.Jar.CountDigits
-Activity D toolkit.Jar.ShowResult
+Activity A exocute.classes.BytesToString:2
+Activity B exocute.classes.CountLetters
+Activity C exocute.classes.CountDigits
+Activity D exocute.classes.ShowResult
 Connection A->B,C : B->D : C->D

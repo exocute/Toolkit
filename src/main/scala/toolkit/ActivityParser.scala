@@ -2,6 +2,7 @@ package toolkit
 
 import org.parboiled2.{Rule1, _}
 import shapeless.{::, HNil}
+import exonode.clifton.signals._
 
 /**
   * Created by #ScalaTeam on 12/12/2016.
@@ -50,12 +51,27 @@ class ActivityParser(val input: ParserInput) extends Parser {
     * @return
     */
   def ReadActivity(graphRep: GraphRep): Rule0 = rule {
-    ignoreCase("activity") ~ WS1 ~ Id ~ WS1 ~ Id ~> (
+    //TODO: probably we can write this without duplication of code
+    (ignoreCase("activity") ~ WS1 ~ Id ~ WS1 ~ Id ~> (
       (id: String, name: String) => {
-        push(ActivityRep(id, name)) ~ ReadActivityParams ~ NLS ~ ReadActivityIE ~> {
-          (act: ActivityRep) => graphRep.addSingleActivity(act)
+        push(ActivityRep(id, name, ActivityMapType)) ~ ReadActivityParams ~ NLS ~ ReadActivityIE ~> {
+          (act: ActivityRep) => graphRep.addActivity(act)
         }
       })
+      |
+      ignoreCase("activityfilter") ~ WS1 ~ Id ~ WS1 ~ Id ~> (
+        (id: String, name: String) => {
+          push(ActivityRep(id, name, ActivityFilterType)) ~ ReadActivityParams ~ NLS ~ ReadActivityIE ~> {
+            (act: ActivityRep) => graphRep.addActivity(act)
+          }
+        })
+      |
+      ignoreCase("activityflatmap") ~ WS1 ~ Id ~ WS1 ~ Id ~> (
+        (id: String, name: String) => {
+          push(ActivityRep(id, name, ActivityFlatMapType)) ~ ReadActivityParams ~ NLS ~ ReadActivityIE ~> {
+            (act: ActivityRep) => graphRep.addActivity(act)
+          }
+        }))
   }
 
   /**

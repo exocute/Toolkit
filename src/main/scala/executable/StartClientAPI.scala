@@ -115,8 +115,8 @@ object StartClientAPI {
 
     println("  ______                      _       \n |  ____|                    | |      \n | |__  __  _____   ___ _   _| |_ ___ \n |  __| \\ \\/ / _ \\ / __| | | | __/ _ \\\n | |____ >  < (_) | (__| |_| | ||  __/\n |______/_/\\_\\___/ \\___|\\__,_|\\__\\___|\n                                      \n                                      ")
 
-    val starterExoGraph = ExocuteConfig.setHosts(SpaceCache.signalHost, SpaceCache.dataHost,SpaceCache.jarHost)
-    starterExoGraph.addGraph(file, jars, 60*60 * 1000) match {
+    val starterExoGraph = ExocuteConfig.setHosts(SpaceCache.signalHost, SpaceCache.dataHost, SpaceCache.jarHost)
+    starterExoGraph.addGraph(file, jars, 60 * 60 * 1000) match {
       case Failure(e) =>
         val msg = e.getMessage
         printlnExit(s"Error loading grp file:\n${if (msg == null) e else msg}")
@@ -148,12 +148,16 @@ object StartClientAPI {
                 } else {
                   println("Number not valid: " + a)
                 }
-              case "file" =>
+              case "file" => // DEBUG ONLY
                 val bytes: Array[Byte] = Files.readAllBytes(Paths.get(cmdData))
                 inj.inject(bytes)
               case "c" | "collect" | "take" =>
                 if (cmdData.isEmpty)
-                  println("Result: " + col.collect)
+                  col.collect() match {
+                    case Some(Some(v)) => println("Result: " + v)
+                    case Some(None) => println("Result was filtered")
+                    case _ => println("No result was Found")
+                  }
                 else {
                   val (maxElems, waitTime) =
                     if (cmdData.contains(" ")) {
@@ -162,9 +166,9 @@ object StartClientAPI {
                     } else
                       (cmdData.toInt, 2000L)
 
-                  val results = col.collectMany(maxElems, waitTime)
+                  val results = col.collectManyOrdered(maxElems, waitTime)
                   if (results.isEmpty)
-                    println("No results to collect.")
+                    println("No results to collect (or they were filtered).")
                   else {
                     println(s"Results (${results.size}):")
                     results.foreach(res => println(res))
