@@ -19,7 +19,7 @@ import exonode.clifton.signals.LoggingSignal
 class CliftonInjector(uuid: String, marker: String, rootActivity: String) extends Injector {
 
   private val dataSpace = SpaceCache.getDataSpace
-  private val templateData: DataEntry = DataEntry(rootActivity, marker, null,null, null)
+  private val templateData: DataEntry = DataEntry(rootActivity, marker, null, null, null)
   private val nextIndex = new AtomicInteger(0)
 
   def inject(input: Serializable): Int = {
@@ -39,7 +39,7 @@ class CliftonInjector(uuid: String, marker: String, rootActivity: String) extend
     if (occurrences < 1)
       throw new InjectException("Too few occurrences. Occurrences should be >= 1")
     else
-      (0 to occurrences).map(_ => inject(input))
+      (0 until occurrences).map(_ => inject(input))
   }
 
   def injectMany(inputs: Iterable[Serializable]): Vector[Int] = {

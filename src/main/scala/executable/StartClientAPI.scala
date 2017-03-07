@@ -151,6 +151,10 @@ object StartClientAPI {
               case "file" => // DEBUG ONLY
                 val bytes: Array[Byte] = Files.readAllBytes(Paths.get(cmdData))
                 inj.inject(bytes)
+              case "filen" => // DEBUG ONLY
+                val (n, input) = cmdData.splitAt(cmdData.indexOf(" "))
+                val bytes: Array[Byte] = Files.readAllBytes(Paths.get(input.trim))
+                inj.inject(n.toInt,bytes)
               case "c" | "collect" | "take" =>
                 if (cmdData.isEmpty)
                   col.collect() match {
