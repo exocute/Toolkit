@@ -3,7 +3,7 @@
 Scala Version of Exocute Plataform 
 
 -------------------------------------------------------------------------------
-Building highly concurrent software systems such as those on, grids, clusters, and groups of multicore processing systems, is difficult. As systems tend towards lower clock speeds and greater parallelism, the need to distribute and coordinate work on these systems becomes more of a pressing need. <br />
+Building highly concurrent software systems such as those on, grids, clusters, and groups of multicore processing systems, is difficult. As systems tend towards lower clock speeds and greater parallelism, the need to distribute and coordinate work on these systems becomes more of a pressing need.<br />
 Exocute is designed to make the job of distributing, coordinating and executing computer software over an arbitrary number of computing nodes simple. We call these processing elements Activities. These can be written in either Java/Scala or a ‘host’ programming language such as C or Fortran. In this introduction we give examples in Scala. <br />
 If you have a program written in a ‘host’ language and you don’t know Java/Scala, then a better place to start would be the host bindings information, or talking to the team about the specific host requirements. <br />
 We assume only a level of Java skill required to implement your particular application and not any knowledge of distributed Java/Scala programming, or distributed programming in general.<br />
