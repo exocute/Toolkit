@@ -3,19 +3,19 @@
 Scala Version of Exocute Plataform 
 
 -------------------------------------------------------------------------------
-Building highly concurrent software systems such as those on, grids, clusters, and groups of multicore processing systems, is difficult. As systems tend towards lower clock speeds and greater parallelism, the need to distribute and coordinate work on these systems becomes more of a pressing need. 
-Exocute is designed to make the job of distributing, coordinating and executing computer software over an arbitrary number of computing nodes simple. We call these processing elements Activities. These can be written in either Java/Scala or a ‘host’ programming language such as C or Fortran. In this introduction we give examples in Scala. 
-If you have a program written in a ‘host’ language and you don’t know Java/Scala, then a better place to start would be the host bindings information, or talking to the team about the specific host requirements. 
-We assume only a level of Java skill required to implement your particular application and not any knowledge of distributed Java/Scala programming, or distributed programming in general.
+Building highly concurrent software systems such as those on, grids, clusters, and groups of multicore processing systems, is difficult. As systems tend towards lower clock speeds and greater parallelism, the need to distribute and coordinate work on these systems becomes more of a pressing need. <br />
+Exocute is designed to make the job of distributing, coordinating and executing computer software over an arbitrary number of computing nodes simple. We call these processing elements Activities. These can be written in either Java/Scala or a ‘host’ programming language such as C or Fortran. In this introduction we give examples in Scala. <br />
+If you have a program written in a ‘host’ language and you don’t know Java/Scala, then a better place to start would be the host bindings information, or talking to the team about the specific host requirements. <br />
+We assume only a level of Java skill required to implement your particular application and not any knowledge of distributed Java/Scala programming, or distributed programming in general.<br />
 
 For more information about the Toolkit: http://bit.ly/2mitGuG
 
 ## Releases 
 
 07/03/2017 <br />
---> Toolkit v1.0 <br />
+--> ***Toolkit v1.0*** <br />
 How to use? <br />
-To launch the app run StartClientAPI.jar
+To launch the Toolkit app run StartClientAPI.jar
   ```
 java -jar StartClientAPI.jar [options] file_name[.grp]
 ```
@@ -48,7 +48,11 @@ Available commands:<br />
 | c                     | collects 1 result |  
 | c {n}                 | collects at most n results |  
 
+To launch the LogProcessor app run LogProcessor.jar
 
+  ```
+java -jar LogProcessor.jar [signalSpaceIP]
+```
   
   
 
