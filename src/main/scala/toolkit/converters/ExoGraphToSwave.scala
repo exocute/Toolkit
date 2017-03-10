@@ -5,6 +5,7 @@ import java.io.{File, Serializable}
 import clifton.graph.ExocuteConfig
 import exocute.Activity
 import exonode.clifton.node.CliftonClassLoader
+import exonode.clifton.signals.{ActivityFilterType, ActivityFlatMapType, ActivityMapType, ActivityType}
 import shapeless.{HNil, :: => @::}
 import swave.core.StreamOps.SubStreamOps
 import swave.core._
@@ -20,11 +21,11 @@ import scala.util.{Failure, Success}
   */
 object ExoGraphToSwave {
 
-  private trait Simple {
+  private trait ParameterLessActivity {
     def process(input: Serializable): Serializable
   }
 
-  private class SimpleActivity(act: Activity, params: Vector[String]) extends Simple {
+  private class SimpleActivity(act: Activity, params: Vector[String]) extends ParameterLessActivity {
     def process(input: Serializable): Serializable = {
       act.process(input, params)
     }
@@ -32,7 +33,7 @@ object ExoGraphToSwave {
 
   private val classesCache = mutable.Map[String, Class[_]]()
 
-  private def getActivity(loader: CliftonClassLoader, classPath: String, params: Vector[String]): Simple = {
+  private def getActivity(loader: CliftonClassLoader, classPath: String, params: Vector[String]): ParameterLessActivity = {
     val classFound = classesCache.getOrElse(classPath, {
       val c = loader.findClass(classPath)
       classesCache.update(classPath, c)
@@ -53,10 +54,11 @@ object ExoGraphToSwave {
   private def cutActivityAt(tree: ExoTree): ExoTree = {
     tree match {
       case ExoStart(next) => ExoStart(cutActivityAt(next))
-      case ExoMap(id, act, next) => ExoMap(id, act, cutActivityAt(next))
-      case ExoFork(id, act, nextList, ExoJoin(joinId, joinAct, joinNext)) =>
-        ExoFork(id, act, nextList.map(tree => cutActivityAt(tree)), ExoJoin(joinId, joinAct, cutActivityAt(joinNext)))
-      case ExoJoin(_, _, _) => ExoFinish
+      case ExoSimple(id, act, actType, next) => ExoSimple(id, act, actType, cutActivityAt(next))
+      case ExoFork(id, act, actType, nextList, ExoJoin(joinId, joinAct, joinActType, joinNext)) =>
+        ExoFork(id, act, actType, nextList.map(tree => cutActivityAt(tree)),
+          ExoJoin(joinId, joinAct, joinActType, cutActivityAt(joinNext)))
+      case ExoJoin(_, _, _, _) => ExoFinish
       case default => default
     }
   }
@@ -64,10 +66,10 @@ object ExoGraphToSwave {
   private def cleanTree(tree: ExoTree): ExoTree = {
     tree match {
       case ExoStart(next) => ExoStart(cleanTree(next))
-      case ExoMap(id, act, next) => ExoMap(id, act, cleanTree(next))
-      case ExoFork(id, act, nextList, ExoJoin(joinId, joinAct, joinNext)) =>
-        ExoFork(id, act, nextList.map(tree => cutActivityAt(tree)), ExoJoin(joinId, joinAct, cutActivityAt(joinNext)))
-      case ExoJoin(id, act, next) => ExoJoin(id, act, cleanTree(next))
+      case ExoSimple(id, act, actType, next) => ExoSimple(id, act, actType, cleanTree(next))
+      case ExoFork(id, act, actType, nextList, ExoJoin(joinId, joinAct, joinActType, joinNext)) =>
+        ExoFork(id, act, actType, nextList.map(tree => cutActivityAt(tree)), ExoJoin(joinId, joinAct, joinActType, cutActivityAt(joinNext)))
+      case ExoJoin(id, act, actType, next) => ExoJoin(id, act, actType, cleanTree(next))
       case default => default
     }
   }
@@ -87,10 +89,10 @@ object ExoGraphToSwave {
         case Nil =>
           seen.getOrElse(id, {
             val tree = {
-              if (graphRep.getReverseConnections(activityRep).size == 1)
-                ExoMap(id, activity, ExoFinish)
+              if (graphRep.getReverseConnections(activityRep).size <= 1)
+                ExoSimple(id, activity, activityRep.actType, ExoFinish)
               else
-                ExoJoin(id, activity, ExoFinish)
+                ExoJoin(id, activity, activityRep.actType, ExoFinish)
             }
             seen.update(id, tree)
             tree
@@ -98,10 +100,10 @@ object ExoGraphToSwave {
         case List(nextActRep) =>
           seen.getOrElse(id, {
             val tree = {
-              if (graphRep.getReverseConnections(activityRep).size == 1)
-                ExoMap(id, activity, convertToSwaveAux(nextActRep))
+              if (graphRep.getReverseConnections(activityRep).size <= 1)
+                ExoSimple(id, activity, activityRep.actType, convertToSwaveAux(nextActRep))
               else
-                ExoJoin(id, activity, convertToSwaveAux(nextActRep))
+                ExoJoin(id, activity, activityRep.actType, convertToSwaveAux(nextActRep))
             }
             seen.update(id, tree)
             tree
@@ -113,7 +115,7 @@ object ExoGraphToSwave {
               val actsMap = acts.map(act => getAll(act).flatMap(_.getId))
               val act1 :: act2 :: _ = actsMap
               val joinAct = act1.toStream.filter(s => act2.contains(s)).head
-              ExoFork(id, activity, acts, seen(joinAct))
+              ExoFork(id, activity, activityRep.actType, acts, seen(joinAct))
             }
             seen.update(id, tree)
             tree
@@ -128,26 +130,36 @@ object ExoGraphToSwave {
   private def convertTreeToSwave(graph: GraphRep, start: ExoTree, initial: Spout[_]): Spout[_] = {
     val seen = mutable.Set[String]()
 
+    def addSwaveStage(initialSpout: Spout[_], activity: ParameterLessActivity, actType: ActivityType): Spout[_] = {
+      actType match {
+        case ActivityMapType =>
+          initialSpout.map(input => activity.process(input.asInstanceOf[Serializable]))
+        case ActivityFilterType =>
+          initialSpout.filter(input => activity.process(input.asInstanceOf[Serializable]).asInstanceOf[Boolean])
+        case ActivityFlatMapType => ???
+      }
+    }
+
     def convertToSwaveAux(exoTree: ExoTree, initialSpout: Spout[_]): Option[Spout[_]] = {
       exoTree match {
         case ExoFinish =>
           Some(initialSpout)
         case ExoStart(next) =>
           convertToSwaveAux(next, initialSpout)
-        case ExoMap(id, activity, next) =>
+        case ExoSimple(id, activity, actType, next) =>
           if (seen.contains(id))
             None
           else {
             seen.update(id, included = true)
-            val spout = initialSpout.map(input => activity.process(input.asInstanceOf[Serializable]))
+            val spout = addSwaveStage(initialSpout, activity, actType)
             convertToSwaveAux(next, spout)
           }
-        case ExoFork(id, activity, next, joinTree) =>
-          def startLoop(a: AnyRef, after: List[(ExoTree, Int)]): AnyRef = after match {
-            case Nil => a
+        case ExoFork(id, activity, actType, next, joinTree) =>
+          def addSubStages(_spout: AnyRef, after: List[(ExoTree, Int)]): AnyRef = after match {
+            case Nil => _spout
             case (elem, index) :: others =>
-              val spout = a.asInstanceOf[StreamOps[_]#FanOut[HNil, Nothing]]
-              val activityWrapper = new Simple {
+              val spout = _spout.asInstanceOf[StreamOps[_]#FanOut[HNil, Nothing]]
+              val activityWrapper = new ParameterLessActivity {
                 override def process(inputVector: Serializable): Serializable = {
                   val input = inputVector.asInstanceOf[Vector[Serializable]](index)
                   elem.act.process(input)
@@ -155,21 +167,37 @@ object ExoGraphToSwave {
               }
               val elemConverted = convertToSwaveAux2(elem.setActivity(activityWrapper), spout.sub)
                 .asInstanceOf[SubStreamOps[_, HNil, Nothing, StreamOps[_]#FanOut[HNil, Nothing]]].end
-              startLoop(elemConverted, others)
+              addSubStages(elemConverted, others)
           }
 
-          val forkSpout = convertToSwaveAux(ExoMap(id, activity, ExoFinish), initialSpout).get
-          val forkBody = startLoop(forkSpout.fanOutBroadcast(), next.zipWithIndex)
-          val forkResult = forkBody.asInstanceOf[initialSpout.FanOut[Any @:: Any @:: HNil, Nothing]].fanInMerge().grouped(next.size).map(_.toVector)
+          val forkSpout = convertToSwaveAux(ExoSimple(id, activity, actType, ExoFinish), initialSpout).get
+          val forkBody = addSubStages(forkSpout.fanOutBroadcast(), next.zipWithIndex)
+          val forkResult = forkBody.asInstanceOf[initialSpout.FanOut[Any @:: Any @:: HNil, Nothing]]
+            .fanInMerge()
+            .grouped(next.size)
+            .map(_.toVector)
           convertToSwaveAux(joinTree, forkResult)
-        case ExoJoin(id, activity, next) =>
+        case ExoJoin(id, activity, actType, next) =>
           if (seen.contains(id))
             None
           else {
             seen.update(id, included = true)
-            val spout = initialSpout.map(input => activity.process(input.asInstanceOf[Serializable]))
+            val spout = addSwaveStage(initialSpout, activity, actType)
             convertToSwaveAux(next, spout)
           }
+      }
+    }
+
+    def p(a: AnyRef) = println(a)
+
+    def addSwaveStage2(_initialSpout: AnyRef, activity: ParameterLessActivity, actType: ActivityType): AnyRef = {
+      val initialSpout = _initialSpout.asInstanceOf[SubStreamOps[_, HNil, Nothing, StreamOps[_]#FanOut[HNil, Nothing]]]
+      actType match {
+        case ActivityMapType =>
+          initialSpout.map(input => activity.process(input.asInstanceOf[Serializable]))
+        case ActivityFilterType =>
+          initialSpout.filter(input => activity.process(input.asInstanceOf[Serializable]).asInstanceOf[Boolean])
+        case ActivityFlatMapType => ???
       }
     }
 
@@ -181,20 +209,20 @@ object ExoGraphToSwave {
           initialSpout
         case ExoStart(next) =>
           convertToSwaveAux2(next, initialSpout)
-        case ExoMap(id, activity, next) =>
+        case ExoSimple(id, activity, actType, next) =>
           if (seen.contains(id))
             None
           else {
             seen.update(id, included = true)
-            val spout = initialSpout.map(input => activity.process(input.asInstanceOf[Serializable]))
+            val spout = addSwaveStage2(initialSpout, activity, actType)
             convertToSwaveAux2(next, spout)
           }
-        case ExoFork(id, activity, next, joinTree) =>
+        case ExoFork(id, activity, actType, next, joinTree) =>
           def startLoop(a: AnyRef, after: List[(ExoTree, Int)]): AnyRef = after match {
             case Nil => a
             case (elem, index) :: others =>
               val spout = a.asInstanceOf[StreamOps[_]#FanOut[HNil, Nothing]]
-              val activityWrapper = new Simple {
+              val activityWrapper = new ParameterLessActivity {
                 override def process(inputVector: Serializable): Serializable = {
                   val input = inputVector.asInstanceOf[Vector[Serializable]](index)
                   elem.act.process(input)
@@ -205,17 +233,20 @@ object ExoGraphToSwave {
               startLoop(elemConverted, others)
           }
 
-          val forkSpout = convertToSwaveAux2(ExoMap(id, activity, ExoFinish), initialSpout)
+          val forkSpout = convertToSwaveAux2(ExoSimple(id, activity, actType, ExoFinish), initialSpout)
             .asInstanceOf[SubStreamOps[_, HNil, Nothing, StreamOps[_]#FanOut[HNil, Nothing]]]
           val forkBody = startLoop(forkSpout.fanOutBroadcast(), next.zipWithIndex)
-          val forkResult = forkBody.asInstanceOf[initialSpout.FanOut[Any @:: Any @:: HNil, Nothing]].fanInMerge().grouped(next.size).map(_.toVector)
+          val forkResult = forkBody.asInstanceOf[initialSpout.FanOut[Any @:: Any @:: HNil, Nothing]]
+            .fanInMerge()
+            .grouped(next.size)
+            .map(_.toVector)
           convertToSwaveAux2(joinTree, forkResult)
-        case ExoJoin(id, activity, next) =>
+        case ExoJoin(id, activity, actType, next) =>
           if (seen.contains(id))
             None
           else {
             seen.update(id, included = true)
-            val spout = initialSpout.map(input => activity.process(input.asInstanceOf[Serializable]))
+            val spout = addSwaveStage2(initialSpout, activity, actType)
             convertToSwaveAux2(next, spout)
           }
       }
@@ -230,6 +261,7 @@ object ExoGraphToSwave {
     for (bytes <- jarsInBytes)
       loader.init(bytes)
     val tree = cleanTree(convertToExoTree(loader, graph))
+    println(tree)
     val convertedSpout = convertTreeToSwave(graph, tree, initialSpout)
     convertedSpout
   }
@@ -238,10 +270,11 @@ object ExoGraphToSwave {
     println(Graph.from(spout.stage).withGlyphSet(GlyphSet.`2x2 ASCII`).render)
 
   def main(args: Array[String]): Unit = {
-//    val file = new File("examples\\multi_fork_1a.grp")
-        val file = new File("examples\\multi_fork_2a.grp")
-    //    val file = new File("examples\\multi_fork_3a.grp")
-    val jars = List(new File("examples\\classes.jar"))
+    //    val file = new File("examples", "multi_fork_1a.grp")
+    //    val file = new File("examples", "multi_fork_2a.grp")
+    //    val file = new File("examples", "multi_fork_3a.grp")
+    val file = new File("examples", "filterABCD2.grp")
+    val jars = List(new File("examples", "classes.jar"))
 
     val starterExoGraph = ExocuteConfig.setHosts()
     starterExoGraph.addGraph(file, jars, 60 * 60 * 1000) match {
@@ -260,43 +293,50 @@ object ExoGraphToSwave {
           .logSignal("Signal Catcher")
           .take(10)
           .drainTo(Drain.foreach(println))
+
+        exoGraph.closeGraph()
     }
   }
 
   private sealed trait ExoTree {
     val getId: Option[String] = None
     val nextList: List[ExoTree] = Nil
-    val act: Simple = null
+    val act: ParameterLessActivity = null
+    val actType: ActivityType = null
 
-    def setActivity(newAct: Simple): ExoTree = ???
+    def setActivity(newAct: ParameterLessActivity): ExoTree =
+      throw new Exception("This ExoTree doesn't have an activity")
   }
 
   private case class ExoStart(next: ExoTree) extends ExoTree {
     override def toString: String = s"Start->$next"
   }
 
-  private case class ExoMap(id: String, override val act: Simple, next: ExoTree) extends ExoTree {
+  private case class ExoSimple(id: String, override val act: ParameterLessActivity, override val actType: ActivityType,
+                               next: ExoTree) extends ExoTree {
     override val getId = Some(id)
     override val nextList = List(next)
 
-    override def setActivity(newAct: Simple) = ExoMap(id, newAct, next)
+    override def setActivity(newAct: ParameterLessActivity) = ExoSimple(id, newAct, actType, next)
 
     override def toString: String = s"Map($id)->$next"
   }
 
-  private case class ExoFork(id: String, override val act: Simple, override val nextList: List[ExoTree], joinTree: ExoTree) extends ExoTree {
+  private case class ExoFork(id: String, override val act: ParameterLessActivity, override val actType: ActivityType,
+                             override val nextList: List[ExoTree], joinTree: ExoTree) extends ExoTree {
     override val getId = Some(id)
 
-    override def setActivity(newAct: Simple) = ExoFork(id, newAct, nextList, joinTree)
+    override def setActivity(newAct: ParameterLessActivity) = ExoFork(id, newAct, actType, nextList, joinTree)
 
     override def toString: String = s"Fork($id to ${joinTree.getId.get})->${nextList.mkString("[", ", ", "]")} {$joinTree}"
   }
 
-  private case class ExoJoin(id: String, override val act: Simple, next: ExoTree) extends ExoTree {
+  private case class ExoJoin(id: String, override val act: ParameterLessActivity, override val actType: ActivityType,
+                             next: ExoTree) extends ExoTree {
     override val getId = Some(id)
     override val nextList = List(next)
 
-    override def setActivity(newAct: Simple) = ExoJoin(id, newAct, next)
+    override def setActivity(newAct: ParameterLessActivity) = ExoJoin(id, newAct, actType, next)
 
     override def toString: String = s"Join($id)->$next"
   }

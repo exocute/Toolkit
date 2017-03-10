@@ -1,22 +1,17 @@
 package executable
 
-import org.jfree.chart.ChartFactory
-import org.jfree.chart.ChartPanel
-import org.jfree.chart.plot.PiePlot
-import org.jfree.chart.plot.PlotOrientation
-import org.jfree.data.category.DefaultCategoryDataset
-import org.jfree.data.general.DefaultPieDataset
-import org.jfree.data.time.Millisecond
-import org.jfree.data.time.TimeSeries
-import org.jfree.data.time.TimeSeriesCollection
-import org.jfree.util.Rotation
-import javax.swing._
+import java.awt._
+import java.awt.event.{ActionEvent, ActionListener}
 import javax.swing.table.DefaultTableModel
 import javax.swing.text.DefaultCaret
-import java.awt._
-import java.awt.event.ActionEvent
-import java.awt.event.ActionListener
-import javax.swing.JFrame
+import javax.swing.{JFrame, _}
+
+import org.jfree.chart.plot.{PiePlot, PlotOrientation}
+import org.jfree.chart.{ChartFactory, ChartPanel}
+import org.jfree.data.category.DefaultCategoryDataset
+import org.jfree.data.general.DefaultPieDataset
+import org.jfree.data.time.{Millisecond, TimeSeries, TimeSeriesCollection}
+import org.jfree.util.Rotation
 
 import scala.collection.mutable
 

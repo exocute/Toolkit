@@ -24,6 +24,7 @@ object JarFileHandler {
         if (entryName.endsWith(".class")) {
           entryName = entryName.replace(".class", "")
           entryName = entryName.replace('/', '.')
+          entryName = entryName.replace('\\', '.')
           classNames = entryName :: classNames
         }
 

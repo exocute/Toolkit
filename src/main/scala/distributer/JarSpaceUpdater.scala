@@ -32,13 +32,13 @@ class JarSpaceUpdater() extends JarUpdater {
 
   private def updateClassEntries(jarFile: File, leaseTime: Long): Unit = {
     val classList = JarFileHandler.getClassNames(jarFile)
-    //    println(classList) // show this line in debug mode ?
+    //    println(classList)
     for (className <- classList) {
       updateClassEntry(jarFile, className, leaseTime)
     }
   }
 
-  def getAllClassEntries(jarFile : File) : List[String] = {
+  def getAllClassEntries(jarFile: File): List[String] = {
     JarFileHandler.getClassNames(jarFile)
   }
 

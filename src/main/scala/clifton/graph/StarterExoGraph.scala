@@ -54,7 +54,3 @@ class StarterExoGraph {
   }
 
 }
-
-object StarterExoGraph {
-  type GraphIO = (Injector, Collector)
-}

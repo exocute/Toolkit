@@ -25,7 +25,10 @@ object SpaceWatcher {
 
     def show(watcher: Watcher): Unit = {
       import watcher._
-      space.readMany(matchTemplate, DEFAULT_LIMIT).foreach(println)
+      space.readMany(matchTemplate, DEFAULT_LIMIT).foreach {
+        case entry: exonode.distributer.FlyJarEntry => println(s"Filename ${entry.fileName} (size ${entry.bytes.toVector.size})")
+        case elem => println(elem)
+      }
     }
 
     val jarSpace = getJarSpace
@@ -51,6 +54,7 @@ object SpaceWatcher {
           SpaceCache.cleanAllSpaces()
         case _ if entriesMap.contains(cmd) =>
           show(entriesMap(cmd))
+        case _ => //ignore command
       }
     }
   }

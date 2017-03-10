@@ -7,7 +7,7 @@ import toolkit.exceptions.{ActivitiesWithDuplicateId, InvalidConnection, Unknown
   *
   * Representation of the graph
   */
-class GraphRep(val name: String, importName: String, exportName: String, activitiesGraph: GraphImplementation) {
+class GraphRep(val name: String, importName: String, exportName: String, activitiesGraph: GraphImplementation) extends Serializable {
 
   /**
     * This construct allows users to create graphs just using the name
@@ -57,7 +57,7 @@ class GraphRep(val name: String, importName: String, exportName: String, activit
     * @param activityFrom
     * @param activityTo
     */
-  def addConnection(activityFrom: String, activityTo: List[String]): Unit = {
+  def addConnection(activityFrom: String, activityTo: Iterable[String]): Unit = {
     val from = activityById(activityFrom)
     for (to <- activityTo)
       addConnection(activityFrom, to)

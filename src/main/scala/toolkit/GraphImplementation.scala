@@ -7,7 +7,7 @@ import scala.collection.mutable
   *
   * Graph is defined has a HashMap of Activities to List of ActivityRep
   */
-class GraphImplementation {
+class GraphImplementation extends Serializable {
 
   /**
     * key: id of the activity

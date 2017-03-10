@@ -1,8 +1,8 @@
 package toolkit
 
+import exonode.clifton.signals.{ActivityType, _}
 import org.parboiled2.{Rule1, _}
 import shapeless.{::, HNil}
-import exonode.clifton.signals._
 
 /**
   * Created by #ScalaTeam on 12/12/2016.
@@ -51,27 +51,12 @@ class ActivityParser(val input: ParserInput) extends Parser {
     * @return
     */
   def ReadActivity(graphRep: GraphRep): Rule0 = rule {
-    //TODO: probably we can write this without duplication of code
-    (ignoreCase("activity") ~ WS1 ~ Id ~ WS1 ~ Id ~> (
-      (id: String, name: String) => {
-        push(ActivityRep(id, name, ActivityMapType)) ~ ReadActivityParams ~ NLS ~ ReadActivityIE ~> {
+    ActType ~ WS1 ~ Id ~ WS1 ~ Id ~> (
+      (actType: ActivityType, id: String, name: String) => {
+        push(ActivityRep(id, name, actType)) ~ ReadActivityParams ~ NLS ~ ReadActivityIE ~> {
           (act: ActivityRep) => graphRep.addActivity(act)
         }
       })
-      |
-      ignoreCase("activityfilter") ~ WS1 ~ Id ~ WS1 ~ Id ~> (
-        (id: String, name: String) => {
-          push(ActivityRep(id, name, ActivityFilterType)) ~ ReadActivityParams ~ NLS ~ ReadActivityIE ~> {
-            (act: ActivityRep) => graphRep.addActivity(act)
-          }
-        })
-      |
-      ignoreCase("activityflatmap") ~ WS1 ~ Id ~ WS1 ~ Id ~> (
-        (id: String, name: String) => {
-          push(ActivityRep(id, name, ActivityFlatMapType)) ~ ReadActivityParams ~ NLS ~ ReadActivityIE ~> {
-            (act: ActivityRep) => graphRep.addActivity(act)
-          }
-        }))
   }
 
   /**
@@ -110,15 +95,10 @@ class ActivityParser(val input: ParserInput) extends Parser {
     * @return
     */
   def Connection(graph: GraphRep): Rule0 = rule {
-    //    WS0 ~ Id ~ WS0 ~ "->" ~ WS0 ~ Id ~ zeroOrMore(WS0 ~ "," ~ WS0 ~ Id) ~> (
-    //      (a: String, b: String, seq: Any) => {
-    //        graph.addConnection(a, b :: seq.asInstanceOf[Seq[String]].toList)
-    //      })
-
-    WS0 ~ Id ~ WS0 ~ "->" ~ WS0 ~> ((a: String) => {
-      (Id * (WS0 ~ ',' ~ WS0)) ~> (_ match {
-        case seq: Seq[String] =>
-          graph.addConnection(a, seq.toList)
+    WS0 ~ (Id + (WS0 ~ ',' ~ WS0)) ~ WS0 ~ "->" ~ WS0 ~> ((seqFrom: Seq[String]) => {
+      (Id + (WS0 ~ ',' ~ WS0)) ~> ((seqTo: Seq[String]) => {
+        for (from <- seqFrom)
+          graph.addConnection(from, seqTo)
       })
     })
   }
@@ -133,7 +113,18 @@ class ActivityParser(val input: ParserInput) extends Parser {
   }
 
   def Type: Rule1[String] = rule {
-    capture(oneOrMore(CharPredicate.AlphaNum | '_' | '.' | '[' | ']')) ~> ((str: String) => str)
+    capture(oneOrMore(CharPredicate.AlphaNum | '_' | '.' | '[' | ']' | '#')) ~> ((str: String) => str)
+  }
+
+  private val mapStrToTypes: Map[String, ActivityType] =
+    Map("activity" -> ActivityMapType,
+      "activityfilter" -> ActivityFilterType,
+      "activityflatmap" -> ActivityFlatMapType)
+
+  def ActType: Rule1[ActivityType] = rule {
+    capture(ignoreCase("activity") | ignoreCase("activityfilter") | ignoreCase("activityflatmap")) ~> {
+      (actType: String) => mapStrToTypes(actType.toLowerCase)
+    }
   }
 
   /**

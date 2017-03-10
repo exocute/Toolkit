@@ -43,10 +43,14 @@ class ExoGraph(jars: List[File], val graph: GraphRep, graphId: String, graphTime
 
   private var lastTime = System.currentTimeMillis()
 
-  def verifyJarsAndGraphActivities(): Unit = {
-    val jarActivities = for (jar <- jars; act <- jarUpdater.getAllClassEntries(jar)) yield act
+  private def verifyJarsAndGraphActivities(): Unit = {
+    val jarActivities =
+      for {
+        jar <- jars
+        act <- jarUpdater.getAllClassEntries(jar)
+      } yield act
     val graphActivities = graph.getAllActivitiesNames
-    val diffActivities = graphActivities.diff(jarActivities)
+    val diffActivities = graphActivities.toSet.diff(jarActivities.toSet)
     if (diffActivities.nonEmpty)
       throw new MissingActivitiesException(diffActivities)
   }

@@ -17,7 +17,7 @@ trait Collector {
     * @return if there is nothing to collect it will return None, otherwise it will
     *         return Some(result)
     */
-  def collect(): Option[Serializable]
+  def collect(): Option[Option[Serializable]]
 
   /**
     * Will take from the space the first result that is available
@@ -27,7 +27,7 @@ trait Collector {
     * @return if there is nothing to collect it will return None, otherwise it will
     *         return Some(result)
     */
-  def collect(waitTime: Long): Option[Serializable]
+  def collect(waitTime: Long): Option[Option[Serializable]]
 
   /**
     * Returns the result with a specific inject index if it is available in the first waitTime ms.
@@ -37,7 +37,7 @@ trait Collector {
     * @return if there is nothing to collect it will return None, otherwise it will
     *         return Some(result)
     */
-  def collectIndex(injectIndex: Int, waitTime: Long = 0): Option[Serializable]
+  def collectIndex(injectIndex: Int, waitTime: Long = 0): Option[Option[Serializable]]
 
   /**
     * Returns at most numObjects from the space that are available
