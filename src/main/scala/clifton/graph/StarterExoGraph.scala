@@ -3,8 +3,8 @@ package clifton.graph
 import java.io.File
 import java.util.UUID
 
-import api.{Collector, Injector}
 import clifton.utilities.Utilities
+import toolkit.converters.ClassLoaderChecker
 import toolkit.{ActivityParser, GraphRep}
 
 import scala.util.{Failure, Success, Try}
@@ -33,6 +33,15 @@ class StarterExoGraph {
       case (graph: GraphRep, graphId: String) =>
         new ExoGraph(jars, graph, graphId, graphTimeOut)
     }
+  }
+
+  def generateJar(graph: GraphRep): Unit = {
+    val checker = new ClassLoaderChecker()
+
+    for (act <- graph.getAllActivityReps)
+      checker.loadClass(act.name)
+
+    println(checker.getAllClassNames)
   }
 
   private def getGraphRep(parser: ActivityParser): Try[GraphRep] = {

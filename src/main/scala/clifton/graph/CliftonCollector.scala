@@ -4,7 +4,7 @@ import java.io.Serializable
 
 import api.Collector
 import clifton.graph.exceptions.CollectException
-import exonode.clifton.config.Protocol.COLLECTED
+import exonode.clifton.config.Protocol.LOGCODE_COLLECTED
 import exonode.clifton.node.Log.{INFO, ND}
 import exonode.clifton.node.entries.DataEntry
 import exonode.clifton.node.{Log, SpaceCache}
@@ -39,7 +39,7 @@ class CliftonCollector(uuid: String, marker: String) extends Collector {
   }
 
   private def sendLog() = {
-    Log.receiveLog(LoggingSignal(COLLECTED, INFO, ND, ND, ND, ND, ND, "Result Collected", 0))
+    Log.receiveLog(LoggingSignal(LOGCODE_COLLECTED, INFO, ND, ND, ND, ND, ND, "Result Collected", 0))
   }
 
   def collect(): Option[Option[Serializable]] = {

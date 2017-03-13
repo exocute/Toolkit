@@ -22,7 +22,7 @@ object LogProcessor extends Thread {
 
   setDaemon(true)
 
-  private val logTemplate = ExoEntry(LOG_MARKER, null)
+  private val logTemplate = ExoEntry[LoggingSignal](LOG_MARKER, null)
   private val INTERVAL_TIME = 1000
   private val dateFormat: DateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
   private val MAX_LOGS_CALL = 20
@@ -41,7 +41,7 @@ object LogProcessor extends Thread {
     //    }
     analyseFile.start()
     while (true) {
-      val res: Iterable[ExoEntry] = space.takeMany(logTemplate, MAX_LOGS_CALL)
+      val res: Iterable[ExoEntry[LoggingSignal]] = space.takeMany(logTemplate, MAX_LOGS_CALL)
       if (res.nonEmpty) {
         val file: FileWriter = new FileWriter(LOG_FILE, true)
         val date: Date = new Date()

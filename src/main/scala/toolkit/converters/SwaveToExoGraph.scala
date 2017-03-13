@@ -54,22 +54,24 @@ object SwaveToExoGraph {
 
     def toActivityRep(stage: Stage, functionData: (Array[Byte], ActivityType)): ActivityRep = {
       val stageStr = stage.toString
-      swaveStagesMap.get(stageStr) match {
-        case None =>
-          val newId = createNewId()
-          swaveStagesMap.update(stageStr, newId)
-          val (functionBytes, functionType) = functionData
-          val functionInStr = new String(functionBytes.map(_.toChar))
-          activitiesMap.update(newId, functionBytes)
-          val actRep = new ActivityRep(newId, "toolkit.converters.SwaveActivity", functionType, Vector(s"swave.$newId", functionInStr), Vector(), "")
-          graph.addActivity(actRep)
-          actRep
-        case Some(activityId) => graph.activityById(activityId)
-      }
+
+      val newId = createNewId()
+      swaveStagesMap.update(stageStr, newId)
+      val (functionBytes, functionType) = functionData
+      val functionInStr = new String(functionBytes.map(_.toChar))
+      activitiesMap.update(newId, functionBytes)
+      val actRep = new ActivityRep(newId, "toolkit.converters.SwaveActivity", functionType, Vector(s"swave.$newId", functionInStr), Vector(), "")
+      graph.addActivity(actRep)
+      actRep
     }
 
-    def stageToActivityRep(stage: Stage): Option[ActivityRep] =
-      stageToActivity(stage).map(rep => toActivityRep(stage, rep))
+    def stageToActivityRep(stage: Stage): Option[ActivityRep] = {
+      val stageStr = stage.toString
+      swaveStagesMap.get(stageStr) match {
+        case Some(activityId) => Some(graph.activityById(activityId))
+        case None => stageToActivity(stage).map(rep => toActivityRep(stage, rep))
+      }
+    }
 
     def firstStage(stages: List[Stage]): Unit = {
       stages match {
@@ -136,7 +138,9 @@ object SwaveToExoGraph {
         //ignore this stage
         None
       case other =>
-        println(s"Unknown swave stage (${other._1}, ignoring...")
+        println(s"Unknown swave stage (${
+          other._1
+        }, ignoring...")
         None
     }
   }
@@ -171,7 +175,7 @@ object SwaveToExoGraph {
   }
 
   private def stringListToFile(strList: List[String]): String = {
-    strList.reduceLeft((acc, s) => acc + File.separatorChar + s)
+    strList.reduceLeft((acc, s) => acc + "/" + s) // always /
   }
 
   private val NECESSARY_SWAVE_CLASSES = List(stringListToFile(List("toolkit", "converters", "SwaveActivity.class")),
@@ -260,7 +264,7 @@ object SwaveToExoGraph {
       val loader = getClass.getClassLoader
 
       // Compress the file
-      for (source <- sources) {
+      for (source <- sources if !source.startsWith("java/lang")) {
         try {
           val resourceStream: InputStream = loader.getResourceAsStream(source)
           Option(resourceStream).foreach {

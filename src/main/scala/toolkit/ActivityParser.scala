@@ -22,7 +22,7 @@ class ActivityParser(val input: ParserInput) extends Parser {
     *
     * @return
     */
-  def GraphRule: Rule1[GraphRep] = rule {
+  private def GraphRule: Rule1[GraphRep] = rule {
     ignoreCase("graph") ~ WS1 ~ Id ~ NLS ~>
       ((graphName: String) => {
         push(new GraphRep(graphName)) ~ CreateGraph
@@ -34,13 +34,13 @@ class ActivityParser(val input: ParserInput) extends Parser {
     *
     * @return
     */
-  def CreateGraph: Rule[GraphRep :: HNil, GraphRep :: HNil] = rule {
+  private def CreateGraph: Rule[GraphRep :: HNil, GraphRep :: HNil] = rule {
     GraphImportExport ~> ((graph: GraphRep) => {
       ReadActivity(graph) ~ zeroOrMore(ReadActivity(graph) | Connections(graph)) ~ push(graph)
     })
   }
 
-  def GraphImportExport: Rule[GraphRep :: HNil, GraphRep :: HNil] = rule {
+  private def GraphImportExport: Rule[GraphRep :: HNil, GraphRep :: HNil] = rule {
     zeroOrMore((ignoreCase("import") ~ WS1 ~ Type ~ NLS ~> ((graph: GraphRep, importName: String) => graph.setImport(importName)))
       | (ignoreCase("export") ~ WS1 ~ Type ~ NLS ~> ((graph: GraphRep, exportName: String) => graph.setExport(exportName))))
   }
@@ -50,7 +50,7 @@ class ActivityParser(val input: ParserInput) extends Parser {
     *
     * @return
     */
-  def ReadActivity(graphRep: GraphRep): Rule0 = rule {
+  private def ReadActivity(graphRep: GraphRep): Rule0 = rule {
     ActType ~ WS1 ~ Id ~ WS1 ~ Id ~> (
       (actType: ActivityType, id: String, name: String) => {
         push(ActivityRep(id, name, actType)) ~ ReadActivityParams ~ NLS ~ ReadActivityIE ~> {
@@ -64,7 +64,7 @@ class ActivityParser(val input: ParserInput) extends Parser {
     *
     * @return
     */
-  def ReadActivityParams: Rule[ActivityRep :: HNil, ActivityRep :: HNil] = rule {
+  private def ReadActivityParams: Rule[ActivityRep :: HNil, ActivityRep :: HNil] = rule {
     zeroOrMore(':' ~ ParamStr ~> ((act: ActivityRep, parameter: String) => act.addParameter(parameter)))
   }
 
@@ -73,7 +73,7 @@ class ActivityParser(val input: ParserInput) extends Parser {
     *
     * @return
     */
-  def ReadActivityIE: Rule[ActivityRep :: HNil, ActivityRep :: HNil] = rule {
+  private def ReadActivityIE: Rule[ActivityRep :: HNil, ActivityRep :: HNil] = rule {
     zeroOrMore(ignoreCase("import") ~ WS1 ~ Type ~ NLS ~> ((act: ActivityRep, importName: String) => act.addImport(importName))
       | ignoreCase("export") ~ WS1 ~ Type ~ NLS ~> ((act: ActivityRep, exportName: String) => act.setExport(exportName)))
   }
@@ -84,7 +84,7 @@ class ActivityParser(val input: ParserInput) extends Parser {
     * @param graph The GraphClass object to be instantiated
     * @return
     */
-  def Connections(graph: GraphRep): Rule0 = rule {
+  private def Connections(graph: GraphRep): Rule0 = rule {
     ignoreCase("connection") ~ WS1 ~ Connection(graph) ~ zeroOrMore(WS0 ~ ":" ~ Connection(graph)) ~ NLS
   }
 
@@ -94,12 +94,15 @@ class ActivityParser(val input: ParserInput) extends Parser {
     * @param graph The GraphClass object to be instantiated
     * @return
     */
-  def Connection(graph: GraphRep): Rule0 = rule {
-    WS0 ~ (Id + (WS0 ~ ',' ~ WS0)) ~ WS0 ~ "->" ~ WS0 ~> ((seqFrom: Seq[String]) => {
-      (Id + (WS0 ~ ',' ~ WS0)) ~> ((seqTo: Seq[String]) => {
-        for (from <- seqFrom)
-          graph.addConnection(from, seqTo)
-      })
+  private def Connection(graph: GraphRep): Rule0 = rule {
+    WS0 ~ ((Id + (WS0 ~ ',' ~ WS0)) + (WS0 ~ "->" ~ WS0)) ~> ((connects: Seq[Seq[String]]) => {
+      for {
+        (conns1, conns2) <- connects.zip(connects.tail)
+        conn1 <- conns1
+        conn2 <- conns2
+      } {
+        graph.addConnection(conn1, conn2)
+      }
     })
   }
 
@@ -108,11 +111,11 @@ class ActivityParser(val input: ParserInput) extends Parser {
     *
     * @return The string containing the alpha numeric word
     */
-  def Id: Rule1[String] = rule {
+  private def Id: Rule1[String] = rule {
     capture(oneOrMore(CharPredicate.AlphaNum | '_' | '.')) ~> ((str: String) => str)
   }
 
-  def Type: Rule1[String] = rule {
+  private def Type: Rule1[String] = rule {
     capture(oneOrMore(CharPredicate.AlphaNum | '_' | '.' | '[' | ']' | '#')) ~> ((str: String) => str)
   }
 
@@ -121,18 +124,18 @@ class ActivityParser(val input: ParserInput) extends Parser {
       "activityfilter" -> ActivityFilterType,
       "activityflatmap" -> ActivityFlatMapType)
 
-  def ActType: Rule1[ActivityType] = rule {
+  private def ActType: Rule1[ActivityType] = rule {
     capture(ignoreCase("activity") | ignoreCase("activityfilter") | ignoreCase("activityflatmap")) ~> {
       (actType: String) => mapStrToTypes(actType.toLowerCase)
     }
   }
 
   /**
-    * reads one paramater of an Activity and creates a String. Parameters are separated by ':'.
+    * reads one parameter of an Activity and creates a String. Parameters are separated by ':'.
     *
     * @return The string containing the parameter
     */
-  def ParamStr: Rule1[String] = rule {
+  private def ParamStr: Rule1[String] = rule {
     capture(oneOrMore(noneOf(":\n"))) ~ WS0
   }
 
@@ -141,7 +144,7 @@ class ActivityParser(val input: ParserInput) extends Parser {
     *
     * @return
     */
-  def ANY_WS: Rule0 = rule {
+  private def ANY_WS: Rule0 = rule {
     zeroOrMore(anyOf(" \t\n"))
   }
 
@@ -150,7 +153,7 @@ class ActivityParser(val input: ParserInput) extends Parser {
     *
     * @return
     */
-  def WS1: Rule0 = rule {
+  private def WS1: Rule0 = rule {
     quiet(oneOrMore(anyOf(" \t")))
   }
 
@@ -159,7 +162,7 @@ class ActivityParser(val input: ParserInput) extends Parser {
     *
     * @return
     */
-  def WS0: Rule0 = rule {
+  private def WS0: Rule0 = rule {
     quiet(zeroOrMore(anyOf(" \t")))
   }
 
@@ -168,7 +171,7 @@ class ActivityParser(val input: ParserInput) extends Parser {
     *
     * @return
     */
-  def NL: Rule0 = rule {
+  private def NL: Rule0 = rule {
     oneOrMore('\n')
   }
 
@@ -177,7 +180,7 @@ class ActivityParser(val input: ParserInput) extends Parser {
     *
     * @return
     */
-  def NLS: Rule0 = rule {
+  private def NLS: Rule0 = rule {
     WS0 ~ optional('\n') ~ ANY_WS
   }
 

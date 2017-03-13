@@ -27,7 +27,7 @@ class CliftonInjector(uuid: String, marker: String, rootActivity: String) extend
     val injectId = s"$uuid:$currentIndex"
     val dataEntry = templateData.setInjectId(injectId).setData(Some(input))
     try {
-      Log.receiveLog(LoggingSignal(INJECTED, INFO, ND, ND, ND, ND, ND, "Injected Input " + injectId, 0))
+      Log.receiveLog(LoggingSignal(LOGCODE_INJECTED, INFO, ND, ND, ND, ND, ND, "Injected Input " + injectId, 0))
       dataSpace.write(dataEntry, INJECTOR_LEASE_TIME)
     } catch {
       case e: Exception => throw new InjectException("Internal Inject Error")
