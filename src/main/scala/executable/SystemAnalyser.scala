@@ -124,7 +124,7 @@ class SystemAnalyser(updateTime: Int = 2, logs: LinkedBlockingDeque[LoggingSigna
   def processLog(data: DataBase, log: LoggingSignal, graphics: Graphics): DataBase = {
     GraphicInterfaceScala.addLogLine(dateFormat.format(new Date) + " - " + log)
     log.code match {
-      case STARTED_NODE =>
+      case LOGCODE_STARTED_NODE =>
         val nDB = data.nodesDB + (log.nodeID -> InfoNode(log.graphID, log.actIDfrom, log.actIDto, log.injID, false))
         val levelCount = processLevel(log.level, data)
         val newActDB = if (data.actDB.contains(log.actIDto)) data.actDB + (log.actIDto -> data.actDB(log.actIDto).incNodeCount)
@@ -134,10 +134,10 @@ class SystemAnalyser(updateTime: Int = 2, logs: LinkedBlockingDeque[LoggingSigna
         data.setNodesActandCount(nDB, newActDB, levelCount)
 
       //not utility defined yet
-      case STARTED_GRAPH =>
+      case LOGCODE_STARTED_GRAPH =>
         GraphicInterfaceScala.addErrorEvents(dateFormat.format(new Date), log.message)
         data
-      case CHANGED_ACT =>
+      case LOGCODE_CHANGED_ACT =>
         //update nodeDB
         val oldNodeInfo = data.nodesDB(log.nodeID)
         val newNDB = data.nodesDB.updated(log.nodeID, oldNodeInfo.setChangeAct(log.actIDfrom, log.actIDto))
@@ -153,14 +153,14 @@ class SystemAnalyser(updateTime: Int = 2, logs: LinkedBlockingDeque[LoggingSigna
         val levelCount = processLevel(log.level, data)
         if (log.actIDto.equals("@")) GraphicInterfaceScala.addErrorEvents(dateFormat.format(new Date), "Analyser Started : " + log.nodeID)
         data.setNodesActandCount(newNDB, newActDB, levelCount)
-      case PROCESSING_INPUT =>
+      case LOGCODE_PROCESSING_INPUT =>
         //update nodeDB
         val oldNodeInfo = data.nodesDB(log.nodeID)
         val newNDB = data.nodesDB.updated(log.nodeID, oldNodeInfo.setMessage(true))
         val levelCount = processLevel(log.level, data)
         val otherCount = data.otherCounters.incProcessing
         data.setNodesCountandOthers(newNDB, levelCount, otherCount)
-      case FINISHED_PROCESSING =>
+      case LOGCODE_FINISHED_PROCESSING =>
         val oldNodeInfo = data.nodesDB(log.nodeID)
         val newNDB = data.nodesDB.updated(log.nodeID, oldNodeInfo.setMessage(false))
         val nActDB = {
@@ -170,23 +170,23 @@ class SystemAnalyser(updateTime: Int = 2, logs: LinkedBlockingDeque[LoggingSigna
         val levelCount = processLevel(log.level, data)
         val otherCount = if (log.actIDto.equals("<")) data.otherCounters.decProcessingFinal else data.otherCounters.decProcessing
         DataBase(newNDB, nActDB, levelCount, otherCount)
-      case FAILED =>
+      case LOGCODE_FAILED =>
         val levelCount = processLevel(log.level, data)
         data.setCountLev(levelCount)
-      case DATA_RECOVERED =>
+      case LOGCODE_DATA_RECOVERED =>
         val levelCount = processLevel(log.level, data)
         val otherCount = levelCount.incRecovered
         data.setCountLev(otherCount)
-      case INJECTED =>
+      case LOGCODE_INJECTED =>
         val otherCount = data.otherCounters.incInjected
         data.setOtherCounters(otherCount)
-      case COLLECTED =>
+      case LOGCODE_COLLECTED =>
         val otherCount = data.otherCounters.incCollected
         data.setOtherCounters(otherCount)
-      case ERROR_PROCESSING =>
+      case LOGCODE_ERROR_PROCESSING =>
         //TODO should be updated on the next version
         data.setCountLev(data.countLevels.incError)
-      case NODE_SHUTDOWN =>
+      case LOGCODE_NODE_SHUTDOWN =>
         val newNDB = data.nodesDB - log.nodeID
         val actProcessing = data.nodesDB(log.nodeID).actIDFrom
         val newACTDB = {
@@ -196,16 +196,16 @@ class SystemAnalyser(updateTime: Int = 2, logs: LinkedBlockingDeque[LoggingSigna
         GraphicInterfaceScala.removeNode(log.nodeID)
         GraphicInterfaceScala.addErrorEvents(dateFormat.format(new Date), log.message + " : " + log.nodeID)
         data.setNodesAndAct(newNDB, newACTDB)
-      case VALUES_LOST =>
+      case LOGCODE_VALUES_LOST =>
         //TODO should be updated on the next version
         data.setCountLev(data.countLevels.incWarn)
-      case ACTIVITY_NOT_FOUND =>
+      case LOGCODE_ACTIVITY_NOT_FOUND =>
         //TODO should be updated on the next version
         data.setCountLev(data.countLevels.incError)
-      case CLASS_NOT_LOADED =>
+      case LOGCODE_CLASS_NOT_LOADED =>
         //TODO should be updated on the next version
         data.setCountLev(data.countLevels.incWarn)
-      case INFORMATION_LOST =>
+      case LOGCODE_INFORMATION_LOST =>
         //TODO should be updated on the next version
         data.setCountLev(data.countLevels.incWarn)
     }
