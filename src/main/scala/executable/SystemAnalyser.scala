@@ -60,24 +60,26 @@ case class ActDB(nodeCount: Int, processedCount: Int, avgTime: Double, sumProces
 
 }
 
-case class DataBase(nodesDB: HashMap[String, InfoNode], actDB: HashMap[String, ActDB], countLevels: SignificantCount, otherCounters: ProcessedAndInjected) {
-  def setNodeID(nDB: HashMap[String, InfoNode]) = DataBase(nDB, actDB, countLevels, otherCounters)
+case class DataBase(nodesDB: HashMap[String, InfoNode], actDB: HashMap[String, ActDB], countLevels: SignificantCount, otherCounters: ProcessedAndInjected, graphUID: List[(String, String)]) {
+  def setNodeID(nDB: HashMap[String, InfoNode]) = DataBase(nDB, actDB, countLevels, otherCounters, graphUID)
 
-  def setActID(aDB: HashMap[String, ActDB]) = DataBase(nodesDB, aDB, countLevels, otherCounters)
+  def setActID(aDB: HashMap[String, ActDB]) = DataBase(nodesDB, aDB, countLevels, otherCounters, graphUID)
 
-  def setCountLev(cLevel: SignificantCount) = DataBase(nodesDB, actDB, cLevel, otherCounters)
+  def setCountLev(cLevel: SignificantCount) = DataBase(nodesDB, actDB, cLevel, otherCounters, graphUID)
 
-  def setOtherCounters(oCount: ProcessedAndInjected) = DataBase(nodesDB, actDB, countLevels, oCount)
+  def setOtherCounters(oCount: ProcessedAndInjected) = DataBase(nodesDB, actDB, countLevels, oCount, graphUID)
 
-  def setNodesAndAct(nDB: HashMap[String, InfoNode], aDB: HashMap[String, ActDB]) = DataBase(nDB, aDB, countLevels, otherCounters)
+  def setNodesAndAct(nDB: HashMap[String, InfoNode], aDB: HashMap[String, ActDB]) = DataBase(nDB, aDB, countLevels, otherCounters, graphUID)
 
-  def setNodesActandCount(nDB: HashMap[String, InfoNode], aDB: HashMap[String, ActDB], cLevel: SignificantCount) = DataBase(nDB, aDB, cLevel, otherCounters)
+  def setNodesActandCount(nDB: HashMap[String, InfoNode], aDB: HashMap[String, ActDB], cLevel: SignificantCount) = DataBase(nDB, aDB, cLevel, otherCounters, graphUID)
 
-  def setNodesCountandOthers(nDB: HashMap[String, InfoNode], cLevel: SignificantCount, oCount: ProcessedAndInjected) = DataBase(nDB, actDB, cLevel, oCount)
+  def setNodesCountandOthers(nDB: HashMap[String, InfoNode], cLevel: SignificantCount, oCount: ProcessedAndInjected) = DataBase(nDB, actDB, cLevel, oCount, graphUID)
 
-  def setNodesAndCount(nDB: HashMap[String, InfoNode], cLevel: SignificantCount) = DataBase(nDB, actDB, cLevel, otherCounters)
+  def setNodesAndCount(nDB: HashMap[String, InfoNode], cLevel: SignificantCount) = DataBase(nDB, actDB, cLevel, otherCounters, graphUID)
 
-  def setCounters(cLevel: SignificantCount, oCount: ProcessedAndInjected) = DataBase(nodesDB, actDB, cLevel, oCount)
+  def setCounters(cLevel: SignificantCount, oCount: ProcessedAndInjected) = DataBase(nodesDB, actDB, cLevel, oCount, graphUID)
+
+  def addUID(uid: (String, String)) = DataBase(nodesDB, actDB, countLevels, otherCounters, uid :: graphUID)
 }
 
 case class Graphics(top5: List[String], actData: List[String]) {
@@ -97,7 +99,7 @@ class SystemAnalyser(updateTime: Int = 2, logs: LinkedBlockingDeque[LoggingSigna
 
     val graphics = Graphics(Nil, Nil)
     startGraphics(graphics)
-    processingLog(DataBase(new HashMap[String, InfoNode](), new HashMap[String, ActDB](), SignificantCount(0, 0, 0, 0), ProcessedAndInjected(0, 0, 0, 0)), graphics)
+    processingLog(DataBase(new HashMap[String, InfoNode](), new HashMap[String, ActDB](), SignificantCount(0, 0, 0, 0), ProcessedAndInjected(0, 0, 0, 0), Nil), graphics)
   }
 
   @tailrec
@@ -133,12 +135,11 @@ class SystemAnalyser(updateTime: Int = 2, logs: LinkedBlockingDeque[LoggingSigna
         GraphicInterfaceScala.addNode(log.nodeID)
         data.setNodesActandCount(nDB, newActDB, levelCount)
 
-      //not utility defined yet
       case LOGCODE_STARTED_GRAPH =>
         GraphicInterfaceScala.addErrorEvents(dateFormat.format(new Date), log.message)
-        data
+        val graphUID = (log.graphID.split(':').head, log.graphID.split(':').last)
+        data.addUID(graphUID)
       case LOGCODE_CHANGED_ACT =>
-        //update nodeDB
         val oldNodeInfo = data.nodesDB(log.nodeID)
         val newNDB = data.nodesDB.updated(log.nodeID, oldNodeInfo.setChangeAct(log.actIDfrom, log.actIDto))
         //update actDB
@@ -169,7 +170,7 @@ class SystemAnalyser(updateTime: Int = 2, logs: LinkedBlockingDeque[LoggingSigna
         }
         val levelCount = processLevel(log.level, data)
         val otherCount = if (log.actIDto.equals("<")) data.otherCounters.decProcessingFinal else data.otherCounters.decProcessing
-        DataBase(newNDB, nActDB, levelCount, otherCount)
+        DataBase(newNDB, nActDB, levelCount, otherCount, data.graphUID)
       case LOGCODE_FAILED =>
         val levelCount = processLevel(log.level, data)
         data.setCountLev(levelCount)
@@ -222,7 +223,15 @@ class SystemAnalyser(updateTime: Int = 2, logs: LinkedBlockingDeque[LoggingSigna
     val listTop5 = top5Activites.map(x => x._1)
     val toRemove = graphics.top5.diff(listTop5)
     toRemove.foreach(elem => GraphicInterfaceScala.removeTopActivity(elem))
-    top5Activites.foreach(elem => GraphicInterfaceScala.updateTopActivity(elem._1, elem._2))
+    for ((actName, value) <- top5Activites) {
+      if (actName.length > 1) {
+        val separated = actName.split(':')
+        val graphID = separated.head
+        val actID = separated.last
+        val fullName = actID + ':' + database.graphUID.filter(_._1 == graphID).head._2
+        GraphicInterfaceScala.updateTopActivity(fullName, value)
+      } else GraphicInterfaceScala.updateTopActivity(actName, value)
+    }
 
     //(error,warn, recovered)
     val levels = database.countLevels.getAll.toArray.drop(1)
@@ -245,7 +254,13 @@ class SystemAnalyser(updateTime: Int = 2, logs: LinkedBlockingDeque[LoggingSigna
 
 
     for (act <- diff) {
-      GraphicInterfaceScala.addActivityRank(act, database.actDB(act).nodeCount.toString, database.actDB(act).avgTime.toString)
+      if (act.length > 1) {
+        val separated = act.split(':')
+        val graphID = separated.head
+        val actID = separated.last
+        val fullName = actID + ':' + database.graphUID.filter(_._1 == graphID).head._2
+        GraphicInterfaceScala.addActivityRank(fullName, database.actDB(act).nodeCount.toString, database.actDB(act).avgTime.toString)
+      } else GraphicInterfaceScala.addActivityRank(act, database.actDB(act).nodeCount.toString, database.actDB(act).avgTime.toString)
     }
     val nActRankList = diff.reverse ++ actualAct
 
