@@ -37,17 +37,17 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
   private def startGraphManual(grpText: String): ExoGraph = {
     ExocuteConfig.setHosts().addGraph(grpText, List(jarFile), MAX_TIME_FOR_EACH_TEST) match {
       case Success(exoGraph) => exoGraph
-      case Failure(e) => throw new Exception
+      case Failure(e) => throw e
     }
   }
 
   private var allNodes = List[CliftonNode]()
 
-  private def launchNNodes(nodes: Int)(implicit conf: BackupConfig): List[CliftonNode] = {
+  private def launchNNodes(nodes: Int, conf: BackupConfig = BackupConfigDefault): List[CliftonNode] = {
     val nodesList = for {
       _ <- 1 to nodes
     } yield {
-      val node = new CliftonNode()
+      val node = new CliftonNode()(conf)
       allNodes = node :: allNodes
       node
     }
@@ -174,7 +174,7 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
   }
 
   "Inject, stop nodes, collect" should "collect results even if some nodes fail while processing" in {
-    val exoGraph = startGraphManual("GRAPH test\nActivity a toolkit.Jar.DoubleString:60")
+    val exoGraph = startGraphManual(s"GRAPH test\nActivity a ${classOf[exocute.classes.DoubleString].getName}:60")
     val inj = exoGraph.injector
     val coll = exoGraph.collector
 
@@ -182,14 +182,14 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
     val nNodesToKill = 2
     val nInputs = nNodes
 
-    val factConf = new BackupConfig {
+    val fastConf = new BackupConfig {
       override def BACKUP_TIMEOUT_TIME: Long = 60 * 1000
     }
 
     // analyser
-    launchNNodes(1)(factConf)
+    launchNNodes(1, fastConf)
     Thread.sleep(EXPECTED_TIME_TO_CONSENSUS)
-    val nodes = launchNNodes(nNodes)(factConf)
+    val nodes = launchNNodes(nNodes, fastConf)
 
     // wait for all nodes to get the activity
     Thread.sleep(30 * 1000)

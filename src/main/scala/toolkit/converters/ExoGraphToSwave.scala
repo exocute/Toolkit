@@ -2,7 +2,7 @@ package toolkit.converters
 
 import java.io.{File, Serializable}
 
-import clifton.graph.ExocuteConfig
+import clifton.graph.ExoGraph
 import exocute.Activity
 import exonode.clifton.node.CliftonClassLoader
 import exonode.clifton.signals.{ActivityFilterType, ActivityFlatMapType, ActivityMapType, ActivityType}
@@ -14,7 +14,6 @@ import toolkit.{ActivityRep, GraphRep}
 
 import scala.collection.mutable
 import scala.language.existentials
-import scala.util.{Failure, Success}
 
 /**
   * Created by #ScalaTeam on 23-02-2017.
@@ -255,8 +254,8 @@ object ExoGraphToSwave {
     convertToSwaveAux(start, initial).get
   }
 
-  def convertExoGraphToSwave(jars: List[File], graph: GraphRep, initialSpout: Spout[_]): Spout[_] = {
-    val jarsInBytes = jars.map(jarFile => CliftonClassLoader.getJarAsBytes(jarFile).get)
+  def convertExoGraphToSwave(jarList: List[File], graph: GraphRep, initialSpout: Spout[_]): Spout[_] = {
+    val jarsInBytes = jarList.map(jarFile => CliftonClassLoader.getJarAsBytes(jarFile).get)
     val loader = new CliftonClassLoader()
     for (bytes <- jarsInBytes)
       loader.init(bytes)
@@ -269,32 +268,9 @@ object ExoGraphToSwave {
   def show(spout: Spout[_]): Unit =
     println(Graph.from(spout.stage).withGlyphSet(GlyphSet.`2x2 ASCII`).render)
 
-  def main(args: Array[String]): Unit = {
-    //    val file = new File("examples", "multi_fork_1a.grp")
-    //    val file = new File("examples", "multi_fork_2a.grp")
-    //    val file = new File("examples", "multi_fork_3a.grp")
-    val file = new File("examples", "filterABCD2.grp")
-    val jars = List(new File("examples", "classes.jar"))
-
-    val starterExoGraph = ExocuteConfig.setHosts()
-    starterExoGraph.addGraph(file, jars, 60 * 60 * 1000) match {
-      case Failure(e) => e.printStackTrace()
-      case Success(exoGraph) =>
-        val graph = exoGraph.graph
-        implicit val env = StreamEnv()
-
-        val input = Stream.from(1).map(_.toLong)
-        val initialSpout = Spout.fromIterable(input)
-
-        val convertedSpout = convertExoGraphToSwave(jars, graph, initialSpout)
-        show(convertedSpout)
-
-        convertedSpout
-          .logSignal("Signal Catcher")
-          .take(10)
-          .drainTo(Drain.foreach(println))
-
-        exoGraph.closeGraph()
+  implicit class ExoGraphWithSwave(exoGraph: ExoGraph) {
+    def toSwave(jarList: List[File], input: Iterable[_]): Spout[_] = {
+      convertExoGraphToSwave(jarList, exoGraph.graph, Spout.fromIterable(input))
     }
   }
 

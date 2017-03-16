@@ -71,7 +71,7 @@ class CliftonCollector(uuid: String, marker: String) extends Collector {
       val amount = math.min(MAX_COLLECT_EACH_CALL, numObjects - totalObjects)
       val results: Iterable[DataEntry] = dataSpace.takeMany(template, amount)
       if (results.nonEmpty) {
-        val newResults = results.map(_.data).filter(_.isDefined)
+        val newResults = results.map(_.data).filter(_.isDefined).map(_.get)
         buffer ++= newResults
         totalObjects += newResults.size
       } else {
