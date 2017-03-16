@@ -11,7 +11,7 @@ import toolkit.{ActivityParser, GraphRep}
 import scala.util.{Failure, Success, Try}
 
 /**
-  * Created by #ScalaTeam on 02/01/2017.
+  * Created by #GrowinScala
   *
   * Receives a graph and loads the jar, inserts the representation of every activity of the graph in space and returns
   * an Injector and Collector to interact with the graph and the API

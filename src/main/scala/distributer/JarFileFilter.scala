@@ -5,7 +5,7 @@ import java.io.File
 import scala.collection.mutable
 
 /**
-  * Created by #ScalaTeam on 21-12-2016.
+  * Created by #GrowinScala
   */
 class JarFileFilter extends java.io.FilenameFilter {
 

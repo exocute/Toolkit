@@ -19,7 +19,7 @@ import scala.language.implicitConversions
 import scala.util.Try
 
 /**
-  * Created by #ScalaTeam on 03-02-2017.
+  * Created by #GrowinScala
   *
   * @param swaveObj the spout object to be converted
   */

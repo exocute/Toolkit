@@ -9,7 +9,7 @@ import toolkit.{ActivityRep, GraphRep}
 import scala.collection.mutable
 
 /**
-  * Created by #ScalaTeam on 20/12/2016.
+  * Created by #GrowinScala
   *
   * Receives a graph representation and writes the ActivitySignals into the space
   */

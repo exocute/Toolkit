@@ -13,7 +13,7 @@ import exonode.clifton.signals.LoggingSignal
 import scala.collection.mutable.ListBuffer
 
 /**
-  * Created by #ScalaTeam on 21/12/2016.
+  * Created by #GrowinScala
   *
   * collects results from the space saved in dataEntries with a < marker
   */

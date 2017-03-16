@@ -7,7 +7,7 @@ import exonode.clifton.node.SpaceCache
 import exonode.distributer.{FlyClassEntry, FlyJarEntry}
 
 /**
-  * Created by #ScalaTeam on 21-12-2016.
+  * Created by #GrowinScala
   */
 class JarSpaceUpdater() extends JarUpdater {
 

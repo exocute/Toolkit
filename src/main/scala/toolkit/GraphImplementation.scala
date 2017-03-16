@@ -3,7 +3,7 @@ package toolkit
 import scala.collection.mutable
 
 /**
-  * Created by #ScalaTeam on 12/12/2016.
+  * Created by #GrowinScala
   *
   * Graph is defined has a HashMap of Activities to List of ActivityRep
   */

@@ -6,7 +6,7 @@ import exonode.clifton.node.entries.ExoEntry
 import exonode.clifton.signals.KillSignal
 
 /**
-  * Created by #ScalaTeam on 23/02/2017.
+  * Created by #GrowinScala
   */
 object LaunchNodes {
 

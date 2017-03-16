@@ -14,7 +14,7 @@ import exonode.clifton.signals.LoggingSignal
 import toolkit.GraphRep
 
 /**
-  * Created by #ScalaTeam on 07-02-2017.
+  * Created by #GrowinScala
   */
 class ExoGraphTimeOut(jars: List[File], val graph: GraphRep, graphId: String, graphTimeOut: Long) extends ExoGraph {
 

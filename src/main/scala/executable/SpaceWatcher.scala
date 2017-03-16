@@ -7,7 +7,7 @@ import exonode.clifton.node.entries.{BackupEntry, BackupInfoEntry, DataEntry, Ex
 import exonode.distributer.{FlyClassEntry, FlyJarEntry}
 
 /**
-  * Created by #ScalaTeam on 08-02-2017.
+  * Created by #GrowinScala
   */
 object SpaceWatcher {
 

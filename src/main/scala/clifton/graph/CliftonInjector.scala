@@ -12,7 +12,7 @@ import exonode.clifton.node.entries.DataEntry
 import exonode.clifton.signals.LoggingSignal
 
 /**
-  * Created by #ScalaTeam on 21/12/2016.
+  * Created by #GrowinScala
   *
   * Injects input into the data space
   */

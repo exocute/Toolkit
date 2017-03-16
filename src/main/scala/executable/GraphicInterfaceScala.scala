@@ -16,7 +16,7 @@ import org.jfree.util.Rotation
 import scala.collection.mutable
 
 /**
-  * Created by #ScalaTeam on 21/02/2017.
+  * Created by #GrowinScala
   */
 object GraphicInterfaceScala {
 

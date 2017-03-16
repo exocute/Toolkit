@@ -7,7 +7,7 @@ import java.util.jar.{JarEntry, JarInputStream};
 
 
 /**
-  * Created by #ScalaTeam on 21/12/2016.
+  * Created by #GrowinScala
   */
 object JarFileHandler {
 

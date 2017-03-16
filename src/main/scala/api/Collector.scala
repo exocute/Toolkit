@@ -3,10 +3,10 @@ package api
 import java.io.Serializable
 
 /**
+  * Created by #GrowinScala
+  *
   * Collector is a simple trait to use of the CliftonCollector
   * Collector allows you to collect results from the space
-  *
-  * Created by #ScalaTeam on 20/01/2017.
   */
 trait Collector {
 

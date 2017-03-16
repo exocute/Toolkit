@@ -14,7 +14,7 @@ import org.scalatest.{BeforeAndAfter, FlatSpec}
 import scala.util.{Failure, Success}
 
 /**
-  * Created by #ScalaTeam on 20/01/2017.
+  * Created by #GrowinScala
   */
 class IntegrationTest extends FlatSpec with BeforeAndAfter {
 

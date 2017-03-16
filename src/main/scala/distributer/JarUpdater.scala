@@ -3,7 +3,7 @@ package distributer
 import java.io.File
 
 /**
-  * Created by #ScalaTeam on 21-12-2016.
+  * Created by #GrowinScala
   */
 trait JarUpdater {
 

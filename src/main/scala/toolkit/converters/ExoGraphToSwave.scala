@@ -16,7 +16,7 @@ import scala.collection.mutable
 import scala.language.existentials
 
 /**
-  * Created by #ScalaTeam on 23-02-2017.
+  * Created by #GrowinScala
   */
 object ExoGraphToSwave {
 

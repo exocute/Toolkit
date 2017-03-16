@@ -11,7 +11,7 @@ import exonode.clifton.signals.KillSignal
 import scala.util.{Failure, Success}
 
 /**
-  * Created by #ScalaTeam on 04/01/2017.
+  * Created by #GrowinScala
   *
   * Allows users to insert a graph in the space, inject and collect inputs and results respectively
   */

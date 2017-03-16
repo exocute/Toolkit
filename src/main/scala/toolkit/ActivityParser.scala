@@ -5,7 +5,7 @@ import org.parboiled2.{Rule1, _}
 import shapeless.{::, HNil}
 
 /**
-  * Created by #ScalaTeam on 12/12/2016.
+  * Created by #GrowinScala
   *
   * This parser receives a .pln file containing a graph structure and parse it.
   *

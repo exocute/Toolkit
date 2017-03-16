@@ -3,7 +3,7 @@ package toolkit
 import exonode.clifton.signals.ActivityType
 
 /**
-  * Created by #ScalaTeam on 12/12/2016.
+  * Created by #GrowinScala
   *
   * Representation of an activity
   */

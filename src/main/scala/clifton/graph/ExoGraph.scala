@@ -4,7 +4,7 @@ import api.{Collector, Injector}
 import toolkit.GraphRep
 
 /**
-  * Created by #ScalaTeam on 15-03-2017.
+  * Created by #GrowinScala
   */
 trait ExoGraph {
 
