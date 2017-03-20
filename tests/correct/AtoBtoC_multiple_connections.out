@@ -1,0 +1,14 @@
+Graph AtoBtoC_multiple_connections
+Import Int
+Export Int
+Activity A com.classes.IntToString:10
+Import Int
+Export String
+Activity B com.classes.StringToFloat
+Import String
+Export Float
+Activity C com.classes.Floor:100
+Import Float
+Export Int
+Connection A -> B
+Connection B -> C

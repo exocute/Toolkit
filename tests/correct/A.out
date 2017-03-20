@@ -1,0 +1,6 @@
+Graph onlyA
+Import Int
+Export String
+Activity A com.classes.T
+Import Int
+Export String

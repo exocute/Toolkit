@@ -1,0 +1,8 @@
+// graph name can't have spaces
+
+Graph name with spaces
+	Import imp1
+	Export exp2
+	Activity act1 act.ex
+	Activity act2 act.ex.other
+	connection act1 -> act2

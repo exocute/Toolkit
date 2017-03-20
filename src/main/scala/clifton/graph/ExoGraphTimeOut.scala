@@ -38,7 +38,7 @@ class ExoGraphTimeOut(jars: List[File], val graph: GraphRep, graphId: String, gr
   {
     val startMsg = s"Graph <${graph.name}> is ready to receive injects"
     println(graphId + ";" + startMsg)
-    Log.receiveLog(LoggingSignal(LOGCODE_STARTED_GRAPH, INFO, ND, graphId+":"+graph.name, ND, ND, ND, "Graph Started - " + graph.name, 0))
+    Log.receiveLog(LoggingSignal(LOGCODE_STARTED_GRAPH, INFO, ND, graphId + ":" + graph.name, ND, ND, ND, "Graph Started - " + graph.name, 0))
   }
 
   private var lastTime = System.currentTimeMillis()
@@ -49,10 +49,10 @@ class ExoGraphTimeOut(jars: List[File], val graph: GraphRep, graphId: String, gr
         jar <- jars
         act <- jarUpdater.getAllClassEntries(jar)
       } yield act
-    val graphActivities = graph.getAllActivitiesNames
-    val diffActivities = graphActivities.toSet.diff(jarActivities.toSet)
-    if (diffActivities.nonEmpty)
-      throw new MissingActivitiesException(diffActivities)
+    val activities = graph.getActivities.map(_.className)
+    val missingActivities = activities.toSet.diff(jarActivities.toSet)
+    if (missingActivities.nonEmpty)
+      throw new MissingActivitiesException(missingActivities)
   }
 
   private def updateAllEntries(): Unit = {
@@ -97,8 +97,8 @@ class ExoGraphTimeOut(jars: List[File], val graph: GraphRep, graphId: String, gr
   }
 
   private def updateGraphInSpace(graph: GraphRep, graphId: String) = {
-    val activities = graph.getActivities
-    val exoEntry = ExoEntry(GRAPH_MARKER, (graphId, activities))
+    val activities = graph.getActivities.map(_.id).toVector
+    val exoEntry = ExoEntry[GraphEntryType](GRAPH_MARKER, (graphId, activities))
     val signalSpace = SpaceCache.getSignalSpace
     signalSpace.take(exoEntry, 0)
     signalSpace.write(exoEntry, TIMEOUT)
@@ -106,17 +106,20 @@ class ExoGraphTimeOut(jars: List[File], val graph: GraphRep, graphId: String, gr
 
   private def removeData(graph: GraphRep, graphId: String): Unit = {
     val signalSpace = SpaceCache.getSignalSpace
-    for (actId <- graph.getActivities :+ COLLECT_SIGNAL_MARKER) {
+    def remove(actId: String) = {
       val fullId = graphId + ":" + actId
       while (signalSpace.takeMany(DataEntry(fullId, null, null, null, null), REMOVE_DATA_LIMIT).nonEmpty) {}
       while (signalSpace.takeMany(BackupEntry(fullId, null, null, null, null), REMOVE_DATA_LIMIT).nonEmpty) {}
       while (signalSpace.takeMany(BackupInfoEntry(fullId, null, null, null), REMOVE_DATA_LIMIT).nonEmpty) {}
     }
+    remove(COLLECT_SIGNAL_MARKER)
+    for (actId <- graph.getActivities.map(_.id))
+      remove(actId)
   }
 
   private def removeGraphFromSpace(graph: GraphRep, graphId: String) = {
-    val activities = graph.getActivities
-    val exoEntry = ExoEntry(GRAPH_MARKER, (graphId, activities))
+//    val activities = graph.getActivities.toVector
+    val exoEntry = ExoEntry[GraphEntryType](GRAPH_MARKER, (graphId, null))
     SpaceCache.getSignalSpace.take(exoEntry, 0)
   }
 

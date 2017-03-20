@@ -1,0 +1,8 @@
+// connection with an unknown activity
+
+Graph connection_to_unknown_activity
+	Import imp1
+	Export exp2
+	Activity act1 act.ex
+	Activity act2 act.ex.other
+	connection act1 -> act3

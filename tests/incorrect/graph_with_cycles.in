@@ -1,0 +1,11 @@
+// Graph was a cycle
+
+Graph graph_with_cycles
+	Import imp1
+	Export exp2
+	Activity A classes.A
+	Activity B classes.B
+	Activity C classes.C
+	Activity D classes.D
+	Connection A -> B -> C -> D
+	Connection C -> B

@@ -35,9 +35,7 @@ class ActivityParser(val input: ParserInput) extends Parser {
     * @return
     */
   private def CreateGraph: Rule[GraphRep :: HNil, GraphRep :: HNil] = rule {
-    GraphImportExport ~> ((graph: GraphRep) => {
-      ReadActivity(graph) ~ zeroOrMore(ReadActivity(graph) | Connections(graph)) ~ push(graph)
-    })
+    GraphImportExport ~ ReadActivity ~ zeroOrMore(ReadActivity | Connections)
   }
 
   private def GraphImportExport: Rule[GraphRep :: HNil, GraphRep :: HNil] = rule {
@@ -50,9 +48,9 @@ class ActivityParser(val input: ParserInput) extends Parser {
     *
     * @return
     */
-  private def ReadActivity(graphRep: GraphRep): Rule0 = rule {
+  private def ReadActivity: Rule[GraphRep :: HNil, GraphRep :: HNil] = rule {
     ActType ~ WS1 ~ Id ~ WS1 ~ Id ~> (
-      (actType: ActivityType, id: String, name: String) => {
+      (graphRep: GraphRep, actType: ActivityType, id: String, name: String) => {
         push(ActivityRep(id, name, actType)) ~ ReadActivityParams ~ NLS ~ ReadActivityIE ~> {
           (act: ActivityRep) => graphRep.addActivity(act)
         }
@@ -74,34 +72,36 @@ class ActivityParser(val input: ParserInput) extends Parser {
     * @return
     */
   private def ReadActivityIE: Rule[ActivityRep :: HNil, ActivityRep :: HNil] = rule {
-    zeroOrMore(ignoreCase("import") ~ WS1 ~ Type ~ NLS ~> ((act: ActivityRep, importName: String) => act.addImport(importName))
-      | ignoreCase("export") ~ WS1 ~ Type ~ NLS ~> ((act: ActivityRep, exportName: String) => act.setExport(exportName)))
+    zeroOrMore(ignoreCase("import") ~ WS1 ~ (Type + (WS0 ~ ',' ~ WS0)) ~ NLS ~>
+      ((initialAct: ActivityRep, importNames: Seq[String]) =>
+        importNames.foldLeft(initialAct)((act, importName) => act.addImport(importName)))
+      | ignoreCase("export") ~ WS1 ~ (Type + (WS0 ~ ',' ~ WS0)) ~ NLS ~>
+      ((initialAct: ActivityRep, exportNames: Seq[String]) =>
+        exportNames.foldLeft(initialAct)((act, exportName) => act.addExport(exportName))
+        ))
   }
 
   /**
     * collects the connections and dependencies between the different Graph Activities
     *
-    * @param graph The GraphClass object to be instantiated
     * @return
     */
-  private def Connections(graph: GraphRep): Rule0 = rule {
-    ignoreCase("connection") ~ WS1 ~ Connection(graph) ~ zeroOrMore(WS0 ~ ":" ~ Connection(graph)) ~ NLS
+  private def Connections: Rule[GraphRep :: HNil, GraphRep :: HNil] = rule {
+    ignoreCase("connection") ~ WS1 ~ Connection ~ zeroOrMore(WS0 ~ ":" ~ Connection) ~ NLS
   }
 
   /**
     * collect a single connection and dependencies between the different Graph Activities
     *
-    * @param graph The GraphClass object to be instantiated
     * @return
     */
-  private def Connection(graph: GraphRep): Rule0 = rule {
-    WS0 ~ ((Id + (WS0 ~ ',' ~ WS0)) + (WS0 ~ "->" ~ WS0)) ~> ((connects: Seq[Seq[String]]) => {
-      for {
-        (conns1, conns2) <- connects.zip(connects.tail)
-        conn1 <- conns1
-        conn2 <- conns2
-      } {
-        graph.addConnection(conn1, conn2)
+  private def Connection: Rule[GraphRep :: HNil, GraphRep :: HNil] = rule {
+    WS0 ~ ((Id + (WS0 ~ ',' ~ WS0)) + (WS0 ~ "->" ~ WS0)) ~> ((initGraphRep: GraphRep, connects: Seq[Seq[String]]) => {
+      connects.zip(connects.tail).foldLeft(initGraphRep) {
+        case (graphRep, (conns1, conns2)) =>
+          conns1.foldLeft(graphRep)((graphRep, conn1) =>
+            conns2.foldLeft(graphRep)((graphRep, conn2) =>
+              graphRep.addConnection(conn1, conn2)))
       }
     })
   }
@@ -164,15 +164,6 @@ class ActivityParser(val input: ParserInput) extends Parser {
     */
   private def WS0: Rule0 = rule {
     quiet(zeroOrMore(anyOf(" \t")))
-  }
-
-  /**
-    * catches one or more end of lines
-    *
-    * @return
-    */
-  private def NL: Rule0 = rule {
-    oneOrMore('\n')
   }
 
   /**

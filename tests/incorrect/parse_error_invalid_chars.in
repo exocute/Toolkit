@@ -1,0 +1,6 @@
+// forbidden chars in import type
+
+Graph parse_error_invalid_chars
+	Import imp1.*/-#
+	Export exp2
+	Activity A classes.A

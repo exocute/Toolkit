@@ -79,12 +79,12 @@ object ExoGraphToSwave {
     def convertToSwaveAux(activityRep: ActivityRep): ExoTree = {
       val id = activityRep.id
       val activity = try {
-        getActivity(loader, activityRep.name, activityRep.parameters)
+        getActivity(loader, activityRep.className, activityRep.parameters)
       } catch {
         case _: java.lang.LinkageError => return seen(id)
       }
 
-      graphRep.getConnections(activityRep) match {
+      graphRep.getConnections(activityRep).toList match {
         case Nil =>
           seen.getOrElse(id, {
             val tree = {
@@ -186,8 +186,6 @@ object ExoGraphToSwave {
           }
       }
     }
-
-    def p(a: AnyRef) = println(a)
 
     def addSwaveStage2(_initialSpout: AnyRef, activity: ParameterLessActivity, actType: ActivityType): AnyRef = {
       val initialSpout = _initialSpout.asInstanceOf[SubStreamOps[_, HNil, Nothing, StreamOps[_]#FanOut[HNil, Nothing]]]

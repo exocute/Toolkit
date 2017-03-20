@@ -1,9 +1,0 @@
-	// connection as parameter
-
-Graph graph
-	Import imp1
-	Export exp2
-	Activity act1 act.ex:connection[act1,act2]
-	Activity act2 act.ex.other
-	Activity act3 act.ex.other.other
-	connection[act1;act2]

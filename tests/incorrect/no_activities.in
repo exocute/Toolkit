@@ -1,0 +1,5 @@
+// Graph doesn't have any activity
+
+Graph no_activities
+	Import imp1
+	Export exp2

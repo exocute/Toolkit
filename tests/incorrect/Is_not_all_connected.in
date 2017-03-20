@@ -1,0 +1,10 @@
+// Activity act3 is not connected: Error -> GraphHasNoRoot
+// graph doesn't have a single root
+
+Graph Is_not_all_connected
+	Import imp1
+	Export exp2
+	Activity act1 act.ex
+	Activity act2 act.ex.other
+	Activity act3 act.ex.other.other
+	connection act1 -> act2

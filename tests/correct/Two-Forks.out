@@ -1,0 +1,26 @@
+Graph Two_Forks
+Import Int
+Export Double
+Activity A com.classes.A:10
+Import Int
+Export String, Float
+Activity B com.classes.B
+Import String
+Export Int, Float
+Activity C com.classes.C:60:1:134
+Import Int
+Export String
+Activity D com.classes.D
+Import Float
+Export Int
+Activity E com.classes.E:param1:param2:param3
+Import Float
+Export String
+Activity F com.classes.F
+Import String, Int, String
+Export Double
+Connection A -> B, E
+Connection B -> C, D
+Connection C -> F
+Connection D -> F
+Connection E -> F

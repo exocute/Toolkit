@@ -87,7 +87,7 @@ object StartClientAPI {
             printlnExit(getHelpString)
           case "--version" =>
             //FIXME get version dynamically ?
-            printlnExit("Exocute version: 0.1")
+            printlnExit("Exocute version: 1.1")
           case _ =>
             if (cmd.startsWith("-")) {
               println("Unknown command: " + cmd)
@@ -154,7 +154,7 @@ object StartClientAPI {
               case "filen" => // DEBUG ONLY
                 val (n, input) = cmdData.splitAt(cmdData.indexOf(" "))
                 val bytes: Array[Byte] = Files.readAllBytes(Paths.get(input.trim))
-                inj.inject(n.toInt,bytes)
+                inj.inject(n.toInt, bytes)
               case "c" | "collect" | "take" =>
                 if (cmdData.isEmpty)
                   col.collect() match {

@@ -8,7 +8,7 @@ import clifton.utilities.Utilities
 import toolkit.converters.ClassLoaderChecker
 import toolkit.{ActivityParser, GraphRep}
 
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 /**
   * Created by #GrowinScala
@@ -38,8 +38,8 @@ class StarterExoGraph {
   def generateJar(graph: GraphRep): Try[File] = {
     val checker = new ClassLoaderChecker()
 
-    for (act <- graph.getAllActivityReps)
-      checker.loadClass(act.name)
+    for (act <- graph.getActivities)
+      checker.loadClass(act.className)
 
     val sources = checker.getAllClassNames
 
@@ -90,10 +90,7 @@ class StarterExoGraph {
     val plnClean = Utilities.clearCommnents(fileAsText)
     val parser = new ActivityParser(plnClean)
     val res: Try[GraphRep] = parser.InputLine.run()
-    res.flatMap(graph => {
-      if (graph.checkValidGraph()) Success(graph)
-      else Failure(new Exception("Graph is not valid"))
-    })
+    res.flatMap(graph => graph.checkValidGraph())
   }
 
 }

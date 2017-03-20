@@ -1,0 +1,7 @@
+// connection with a parser error
+
+Graph parse_error_connection
+	Activity act1 act.ex
+	Activity act2 act.ex.other
+	Activity act3 act.ex.other.other
+	connection -> act3 -> act1 -> act2

@@ -16,7 +16,8 @@ import scala.collection.mutable
 import scala.concurrent.Future
 import scala.io.Source
 import scala.language.implicitConversions
-import scala.util.Try
+import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try}
 
 /**
   * Created by #GrowinScala
@@ -65,7 +66,7 @@ private class SwaveToExoGraph(swaveObj: Spout[_]) {
       val functionInStr = new String(functionBytes.map(_.toChar))
       activitiesMap.update(newId, functionBytes)
       functionsMap.update(newId, function)
-      val actRep = new ActivityRep(newId, "toolkit.converters.SwaveActivity", functionType, Vector(s"$uuid.$newId", functionInStr), Vector(), "")
+      val actRep = new ActivityRep(newId, "toolkit.converters.SwaveActivity", functionType, Vector(s"$uuid.$newId", functionInStr), Vector(), Vector())
       graph.addActivity(actRep)
       actRep
     }
@@ -73,7 +74,7 @@ private class SwaveToExoGraph(swaveObj: Spout[_]) {
     def stageToActivityRep(stage: Stage): Option[ActivityRep] = {
       val stageStr = stage.toString
       swaveStagesMap.get(stageStr) match {
-        case Some(activityId) => Some(graph.activityById(activityId))
+        case Some(activityId) => Some(graph.getActivity(activityId))
         case None => stageToActivity(stage).map(rep => toActivityRep(stage, rep))
       }
     }
@@ -89,7 +90,7 @@ private class SwaveToExoGraph(swaveObj: Spout[_]) {
               otherStages(actRep, stage.inputStages)
           }
         case _ =>
-          throw new NotAValidSwave
+          throw new NotAValidSwave(new Exception("The first swave stage can only have one source"))
       }
     }
 
@@ -155,16 +156,11 @@ private class SwaveToExoGraph(swaveObj: Spout[_]) {
   def show(spout: Spout[_]): Unit =
     println(Graph.from(spout.stage).withGlyphSet(GlyphSet.`2x2 ASCII`).render)
 
-  private def getGraphRep(swaveObj: Spout[_], uuid: String): Option[GraphRep] = {
+  private def getGraphRep(swaveObj: Spout[_], uuid: String): Try[GraphRep] = {
     val s = swaveObj.stage
 
     val graphRep = getSwaveCompositionToGraph(s, uuid)
-    if (graphRep.checkValidGraph())
-      Some(graphRep)
-    else {
-      println(graphRep)
-      None
-    }
+    graphRep.checkValidGraph()
   }
 
   private def injectSwaveData(exoGraph: ExoGraph): Vector[Int] = {
@@ -194,7 +190,7 @@ private class SwaveToExoGraph(swaveObj: Spout[_]) {
     catchExceptions {
       val uuid = UUID.randomUUID().toString
       getGraphRep(swaveObj, uuid) match {
-        case Some(graphRep) =>
+        case Success(graphRep) =>
           val sourceFiles = necessarySwaveClassesBar
           val tempJarFile = File.createTempFile("swaveClasses", ".jar")
           createJar(tempJarFile, sourceFiles)
@@ -203,8 +199,8 @@ private class SwaveToExoGraph(swaveObj: Spout[_]) {
           tempJarFile.deleteOnExit()
 
           new ExoGraphWithResults(exoGraph, injectSwaveData(exoGraph))
-        case None =>
-          throw new NotAValidSwave
+        case Failure(e) =>
+          throw new NotAValidSwave(e)
       }
     }
   }
@@ -287,7 +283,7 @@ private class SwaveToExoGraph(swaveObj: Spout[_]) {
     catchExceptions {
       val uuid = UUID.randomUUID().toString
       getGraphRep(swaveObj, uuid) match {
-        case Some(graphRep) =>
+        case Success(graphRep) =>
           val swaveSourcesSets = for {
             (_, bytes) <- activitiesMap
             classPath <- {
@@ -310,8 +306,8 @@ private class SwaveToExoGraph(swaveObj: Spout[_]) {
           //          show(swaveObj)
 
           new ExoGraphWithResults(exoGraph, injectSwaveData(exoGraph))
-        case None =>
-          throw new NotAValidSwave
+        case Failure(e) =>
+          throw new NotAValidSwave(e)
       }
     }
   }
@@ -321,7 +317,7 @@ private class SwaveToExoGraph(swaveObj: Spout[_]) {
       b
     } catch {
       case e: NotAValidSwave => throw e
-      case _: Exception => throw new NotAValidSwave
+      case NonFatal(e) => throw new NotAValidSwave(e)
     }
   }
 
@@ -406,7 +402,7 @@ private class SwaveToExoGraph(swaveObj: Spout[_]) {
     def getClassesNeeded: Set[String] = classNames.toSet
   }
 
-  class NotAValidSwave extends Exception("This swave object can't be converted to an ExoGraph")
+  class NotAValidSwave(e: Throwable) extends Exception(s"This swave object can't be converted to an ExoGraph ($e)")
 
 }
 
@@ -428,7 +424,7 @@ object SwaveToExoGraph {
 
       closeGraph()
 
-      // filter all empty results (filtered)
+      // filter all empty results (elements that didn't pass in filter transformations)
       elems.flatMap(_.get.toList)
     }
   }

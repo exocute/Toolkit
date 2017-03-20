@@ -1,0 +1,11 @@
+Graph AtoB
+Import Int
+Export Float
+	Activity A com.classes.A:14
+	Import Int
+	Export String
+	Activity B com.classes.B:50
+	Import String
+	Export Float
+	
+Connection A -> B

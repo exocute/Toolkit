@@ -61,9 +61,7 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
   }
 
   private def getTable: Option[TableType] = {
-    signalSpace.read(ExoEntry(TABLE_MARKER, null), 0L).map(
-      _.payload.asInstanceOf[TableType]
-    )
+    signalSpace.read(ExoEntry[TableType](TABLE_MARKER, null), 0L).map(_.payload)
   }
 
   before {
@@ -142,7 +140,7 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
     //wait a few seconds
     Thread.sleep(NODE_CHECK_TABLE_TIME * 3)
 
-    injects.foldRight(List[String]())((s, list) => coll.collectIndex(s).get.toString :: list) match {
+    injects.foldRight(List[String]())((s, list) => coll.collectIndex(s).get.get.toString :: list) match {
       case vec if vec.length == amountOfInputs =>
         val expected = someStrings.map(s => (s + s).reverse.map(_.toUpper)).toList
         assert(vec == expected)
@@ -174,7 +172,7 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
   }
 
   "Inject, stop nodes, collect" should "collect results even if some nodes fail while processing" in {
-    val exoGraph = startGraphManual(s"GRAPH test\nActivity a ${classOf[exocute.classes.DoubleString].getName}:60")
+    val exoGraph = startGraphManual(s"Graph test\nActivity a ${classOf[exocute.classes.DoubleString].getName}:60")
     val inj = exoGraph.injector
     val coll = exoGraph.collector
 

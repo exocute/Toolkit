@@ -1,0 +1,18 @@
+Graph Fork_simple
+Import Int
+Export Int
+Activity A com.classes.IntToString:10
+Import Int
+Export String, Float
+Activity B com.classes.StringToFloat
+Import String
+Export Int
+Activity C com.classes.Floor:60:1:134
+Import Float
+Export Int
+Activity D com.classes.Sum
+Import Int, Int
+Export Int
+Connection A -> B, C
+Connection B -> D
+Connection C -> D

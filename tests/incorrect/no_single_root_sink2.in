@@ -1,0 +1,9 @@
+// graph doesn't have a single root
+
+Graph no_single_root_sink2
+	Import imp1
+	Export exp2
+	Activity act1 act.ex
+	Activity act2 act.ex.other
+	Activity act3 act.ex.other.other
+	connection act1, act2 -> act3

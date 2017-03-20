@@ -1,10 +1,10 @@
 package toolkit
 
-import java.io.File
+import java.io.{File, FileNotFoundException}
+
 import org.scalatest._
 
-import scala.util.{Try, Success}
-
+import scala.util.{Failure, Success, Try}
 
 /**
   * Created by #GrowinScala
@@ -14,13 +14,13 @@ import scala.util.{Try, Success}
   * incorrect directory just needs the incorrect input files
   */
 
-class AutomaticTesterOfParser extends FlatSpec {
+class ParserTest extends FlatSpec {
 
   /**
     * takes a path directory and returns a list of Files that are from the type ".in"
     *
     * @param dir - String with the path
-    * @return List of files that respect condictions
+    * @return List of files that respect conditions
     */
   def getListOfFiles(dir: String): List[File] = {
     val d = new File(dir)
@@ -38,7 +38,6 @@ class AutomaticTesterOfParser extends FlatSpec {
     * @return returns true if file's extension is ".in", false otherwise
     */
   def isInputFile(file: File): Boolean = file.getName.endsWith(".in")
-
 
   /**
     * takes a string with the all file and removes all '\r' and removes all comments '//'
@@ -89,10 +88,9 @@ class AutomaticTesterOfParser extends FlatSpec {
     * tests if the pln file is correct
     *
     * @param path
-    * @param testContent true if needs to compare with output file
     * @return true if it's correct, false otherwise
     */
-  def testFile(path: String, testContent: Boolean): Boolean = {
+  def testFile(path: String): Boolean = {
     val pln = readFile(path)
     val plnClean = clearComments(pln)
     val parser = new ActivityParser(plnClean)
@@ -101,18 +99,62 @@ class AutomaticTesterOfParser extends FlatSpec {
       case Success(graph) =>
         println(path + ":")
 
-        //        println(graph)
-        if (!testContent)
-          graph.checkValidGraph()
-        else {
-          val expected: String = readFile(getResultFile(path))
-          val validOut = validateFiles(graph.toString, expected)
-          println(s"---\n${graph.toString}\n---\n$expected\n---\n")
-          validOut && graph.checkValidGraph()
+        {
+          try {
+            val expected: String = readFile(getResultFile(path))
+            val validOut = validateFiles(graph.toString, expected)
+            if (!validOut)
+              println(s"---\n${graph.toString}\n---\n$expected\n---\n")
+            validOut
+          } catch {
+            case _: FileNotFoundException =>
+              println("Out file should be:")
+              println(graph.toString)
+              false
+          }
+        } && {
+          graph.checkValidGraph() match {
+            case Success(_) => true
+            case Failure(e) => throw e
+          }
         }
-      case exp =>
-        println(exp)
+      case Failure(exp) =>
+        throw exp
+    }
+  }
+
+  /**
+    * tests if the pln file is correct
+    *
+    * @param path
+    * @return true if it's correct, false otherwise
+    */
+  def testFileShouldFail(path: String): Boolean = {
+    val expectedException: Try[String] = Try(readFile(getResultFile(path)))
+
+    val pln = readFile(path)
+    val plnClean = clearComments(pln)
+    val parser = new ActivityParser(plnClean)
+    val res: Try[GraphRep] = parser.InputLine.run()
+    res.flatMap(_.checkValidGraph()) match {
+      case Success(graph: GraphRep) =>
+        if (expectedException.isSuccess) {
+          println(path + s": should have failed with ${expectedException.get} exception")
+        } else {
+          println(path + ": should have failed")
+        }
         false
+      case Failure(e) =>
+        if (expectedException.isSuccess) {
+          val expected = expectedException.get
+          val same = e.toString startsWith expected
+          if (!same)
+            println(s"Exception expected: $expected, found: ${e.toString}")
+          same
+        } else {
+          println(s"Exception caught: $e")
+          false
+        }
     }
   }
 
@@ -120,9 +162,13 @@ class AutomaticTesterOfParser extends FlatSpec {
     * tests the files supposed to be correct
     */
   getListOfFiles("tests" + File.separatorChar + "correct").foreach {
-    f =>
-      f.getName should "succeed" in {
-        assert(testFile(f.getAbsolutePath, true))
+    file =>
+      file.getName should "succeed" in {
+        assert({
+          val v = testFile(file.getAbsolutePath)
+          if (!v) Thread.sleep(200)
+          v
+        })
       }
   }
 
@@ -130,9 +176,13 @@ class AutomaticTesterOfParser extends FlatSpec {
     * tests the files supposed to be incorrect
     */
   getListOfFiles("tests" + File.separatorChar + "incorrect").foreach {
-    f =>
-      f.getName should "Not Succeed" in {
-        assert(!testFile(f.getAbsolutePath, false))
+    file =>
+      file.getName should "Not Succeed" in {
+        assert({
+          val v = testFileShouldFail(file.getAbsolutePath)
+          if (!v) Thread.sleep(200)
+          v
+        })
       }
   }
 

@@ -5,4 +5,4 @@ package toolkit.exceptions
   *
   * Each activity should have a unique identifier
   */
-class ActivitiesWithDuplicateId(id: String) extends Exception("Activities with duplicate identifier: " + id)
+class ActivitiesWithDuplicateId(id: String) extends Exception("Activities with duplicate identifiers: " + id)

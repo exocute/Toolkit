@@ -20,7 +20,7 @@ object GraphCreator {
     val signalSpace = SpaceCache.getSignalSpace
 
     def addSignal(act: ActivityRep): Unit = {
-      val name = act.name
+      val name = act.className
       val params = act.parameters
 
       val inActivities = graph.getReverseConnections(act)

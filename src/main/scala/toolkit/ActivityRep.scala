@@ -7,44 +7,50 @@ import exonode.clifton.signals.ActivityType
   *
   * Representation of an activity
   */
-case class ActivityRep(id: String, name: String, actType: ActivityType,
-                       parameters: Vector[String], importName: Vector[String], exportName: String) {
+case class ActivityRep(id: String, className: String, actType: ActivityType,
+                       parameters: Vector[String], importNames: Vector[String], exportNames: Vector[String]) {
 
   def addParameter(newParameter: String): ActivityRep = {
-    ActivityRep(id, name, actType, parameters :+ newParameter, importName, exportName)
+    ActivityRep(id, className, actType, parameters :+ newParameter, importNames, exportNames)
   }
 
   def addImport(newImport: String): ActivityRep = {
-    ActivityRep(id, name, actType, parameters, importName :+ newImport, exportName)
+    ActivityRep(id, className, actType, parameters, importNames :+ newImport, exportNames)
   }
 
-  def setExport(newExport: String): ActivityRep = {
-    ActivityRep(id, name, actType, parameters, importName, newExport)
+  def addExport(newExport: String): ActivityRep = {
+    ActivityRep(id, className, actType, parameters, importNames, exportNames :+ newExport)
   }
 
   /**
-    * two activities are equals when their id are the same
+    * Checks if two activities are equal using their id
     *
-    * @param that
-    * @return true if equals, false otherwise
+    * @param that object to check
+    * @return true if the activities are equal, false otherwise
     */
   override def equals(that: Any): Boolean = that match {
     case ActivityRep(idVal, _, _, _, _, _) => this.id == idVal
     case _ => false
   }
 
-  override def hashCode(): Int = id.hashCode
+  override def hashCode: Int = id.hashCode
 
-  private def getListOfActivityParameters = List("Id" -> id, "Name" -> name, "Type" -> actType.toString, "Import" -> importName.mkString(","), "Export" -> exportName, "Parameters" -> parameters.mkString(","))
+  override def toString: String = {
+    s"$actType $id $className${showIf(parameters.nonEmpty, ":" + parameters.mkString(":"))}" +
+      s"${showIf(importNames.nonEmpty, s"\nImport ${importNames.mkString(", ")}")}" +
+      s"${showIf(exportNames.nonEmpty, s"\nExport ${exportNames.mkString(", ")}")}"
+  }
 
-  private def showValidParameters(list: List[(String, String)]) = list.filter(_._2.nonEmpty).map { case (key, value) => key + ": " + value }
+  private def showIf(test: Boolean, exp: => Any): String =
+    if (test) exp.toString else ""
 
-  override def toString: String = showValidParameters(getListOfActivityParameters).mkString(", ")
+  private def showIf(test: String, exp: => Any): String =
+    if (test.nonEmpty) exp.toString else ""
 
 }
 
 object ActivityRep {
   def apply(id: String, name: String, actType: ActivityType): ActivityRep = {
-    ActivityRep(id, name, actType, Vector[String](), Vector[String](), "")
+    ActivityRep(id, name, actType, Vector(), Vector(), Vector())
   }
 }
