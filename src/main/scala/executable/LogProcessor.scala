@@ -12,7 +12,7 @@ import exonode.clifton.node.entries.ExoEntry
 import exonode.clifton.signals.LoggingSignal
 
 /**
-  * Created by #ScalaTeam on 04/01/2017.
+  * Created by #GrowinScala
   *
   * Reads all log entries and writes them in a local file
   */

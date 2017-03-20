@@ -1,6 +1,6 @@
 package clifton.graph.exceptions
 
 /**
-  * Created by #ScalaTeam on 21/12/2016.
+  * Created by #GrowinScala
   */
 class CollectException(msg: String) extends Exception(msg)

@@ -1,7 +1,8 @@
 package clifton.graph
 
-import java.io.File
+import java.io._
 import java.util.UUID
+import java.util.zip.{ZipEntry, ZipOutputStream}
 
 import clifton.utilities.Utilities
 import toolkit.converters.ClassLoaderChecker
@@ -10,7 +11,7 @@ import toolkit.{ActivityParser, GraphRep}
 import scala.util.{Failure, Success, Try}
 
 /**
-  * Created by #ScalaTeam on 02/01/2017.
+  * Created by #GrowinScala
   *
   * Receives a graph and loads the jar, inserts the representation of every activity of the graph in space and returns
   * an Injector and Collector to interact with the graph and the API
@@ -29,36 +30,69 @@ class StarterExoGraph {
   }
 
   def addGraph(grpFileText: String, jars: List[File], graphTimeOut: Long): Try[ExoGraph] = {
-    init(grpFileText).map {
-      case (graph: GraphRep, graphId: String) =>
-        new ExoGraph(jars, graph, graphId, graphTimeOut)
+    getGraphRep(grpFileText).map { graph: GraphRep =>
+      new ExoGraphTimeOut(jars, graph, UUID.randomUUID().toString, graphTimeOut)
     }
   }
 
-  def generateJar(graph: GraphRep): Unit = {
+  def generateJar(graph: GraphRep): Try[File] = {
     val checker = new ClassLoaderChecker()
 
     for (act <- graph.getAllActivityReps)
       checker.loadClass(act.name)
 
-    println(checker.getAllClassNames)
+    val sources = checker.getAllClassNames
+
+    // Create a buffer for reading the files
+    val buf = Array.ofDim[Byte](1024)
+
+    Try {
+      val jarFile = File.createTempFile("classes", ".jar")
+      val out: ZipOutputStream = new ZipOutputStream(new FileOutputStream(jarFile))
+
+      val loader = getClass.getClassLoader
+
+      // Compress the file
+      for {
+        source <- sources
+        if !source.startsWith("java") && source != "exocute.Activity"
+      } {
+        val path = source.replace(".", "/") + ".class"
+        val resourceStream: InputStream = loader.getResourceAsStream(path)
+        Option(resourceStream).foreach {
+          in =>
+            // Add ZIP entry to output stream.
+            out.putNextEntry(new ZipEntry(path))
+
+            // Transfer bytes from the file to the ZIP file
+            var len = 0
+            while ( {
+              len = in.read(buf)
+              len > 0
+            }) {
+              out.write(buf, 0, len)
+            }
+
+            // Complete the entry
+            out.closeEntry()
+            in.close()
+        }
+      }
+
+      // Complete the ZIP file
+      out.close()
+
+      jarFile
+    }
   }
 
-  private def getGraphRep(parser: ActivityParser): Try[GraphRep] = {
+  def getGraphRep(fileAsText: String): Try[GraphRep] = {
+    val plnClean = Utilities.clearCommnents(fileAsText)
+    val parser = new ActivityParser(plnClean)
     val res: Try[GraphRep] = parser.InputLine.run()
-
     res.flatMap(graph => {
       if (graph.checkValidGraph()) Success(graph)
       else Failure(new Exception("Graph is not valid"))
-    })
-  }
-
-  private def init(fileAsText: String): Try[(GraphRep, String)] = {
-    val plnClean = Utilities.clearCommnents(fileAsText)
-    val parser = new ActivityParser(plnClean)
-    getGraphRep(parser).map(graphRep => {
-      val graphId = UUID.randomUUID().toString
-      (graphRep, graphId)
     })
   }
 

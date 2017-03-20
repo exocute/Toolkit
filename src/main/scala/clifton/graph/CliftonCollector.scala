@@ -13,7 +13,7 @@ import exonode.clifton.signals.LoggingSignal
 import scala.collection.mutable.ListBuffer
 
 /**
-  * Created by #ScalaTeam on 21/12/2016.
+  * Created by #GrowinScala
   *
   * collects results from the space saved in dataEntries with a < marker
   */
@@ -71,7 +71,7 @@ class CliftonCollector(uuid: String, marker: String) extends Collector {
       val amount = math.min(MAX_COLLECT_EACH_CALL, numObjects - totalObjects)
       val results: Iterable[DataEntry] = dataSpace.takeMany(template, amount)
       if (results.nonEmpty) {
-        val newResults = results.map(_.data).filter(_.isDefined)
+        val newResults = results.map(_.data).filter(_.isDefined).map(_.get)
         buffer ++= newResults
         totalObjects += newResults.size
       } else {

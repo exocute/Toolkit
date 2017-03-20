@@ -3,10 +3,10 @@ package api
 import java.io.Serializable
 
 /**
+  * Created by #GrowinScala
+  *
   * Injector is a simple trait to be used by the CliftonInjector
   * Injector allows you to inject inputs into the space
-  *
-  * Created by #ScalaTeam on 20/01/2017.
   */
 trait Injector {
 

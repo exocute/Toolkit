@@ -3,7 +3,7 @@ package clifton.graph
 import exonode.clifton.node.SpaceCache
 
 /**
-  * Created by #ScalaTeam on 07-02-2017.
+  * Created by #GrowinScala
   */
 object ExocuteConfig {
 

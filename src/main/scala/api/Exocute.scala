@@ -5,12 +5,12 @@ import java.io.File
 import scala.util.Try
 
 /**
+  * Created by #GrowinScala
+  *
   * Exocute is designed to make the job of distributing, coordinating and executing computer
   * software over an arbitrary number of computing nodes simple. We call these processing elements
   * Activities. These can be written in either Java or a ‘host’ programming language such as C or
   * Fortran.
-  *
-  * Created by #ScalaTeam on 20/01/2017.
   */
 trait Exocute {
 

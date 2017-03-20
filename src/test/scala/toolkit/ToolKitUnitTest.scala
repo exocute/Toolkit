@@ -9,7 +9,7 @@ import exonode.distributer.{FlyClassEntry, FlyJarEntry}
 import org.scalatest.FlatSpec
 
 /**
-  * Created by #ScalaTeam on 19/01/2017.
+  * Created by #GrowinScala
   */
 class ToolKitUnitTest extends FlatSpec {
 

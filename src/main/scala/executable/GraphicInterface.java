@@ -22,8 +22,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 /**
- * Created by #ScalaTeam on 21/02/2017.
- */
+  * Created by #GrowinScala
+  */
 public class GraphicInterface extends JFrame {
 
     private static TimeSeries processingData = new TimeSeries("data", Millisecond.class);

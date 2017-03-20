@@ -1,29 +1,33 @@
 package toolkit.converters
 
-import java.io._
+import java.io.{InputStream, _}
 import java.util.UUID
 import java.util.zip.{ZipEntry, ZipOutputStream}
 
-import clifton.graph.ExoGraph
+import api.{Collector, Injector}
+import clifton.graph.{ExoGraph, ExoGraphTimeOut}
 import exonode.clifton.signals.{ActivityFilterType, ActivityMapType, ActivityType}
 import swave.core._
 import swave.core.graph.GlyphSet
+import toolkit.converters.SwaveToExoGraph.{ExoGraphWithResults, FunctionType}
 import toolkit.{ActivityRep, GraphRep}
 
 import scala.collection.mutable
 import scala.concurrent.Future
+import scala.io.Source
 import scala.language.implicitConversions
 import scala.util.Try
 
 /**
-  * Created by #ScalaTeam on 03-02-2017.
+  * Created by #GrowinScala
+  *
+  * @param swaveObj the spout object to be converted
   */
-object SwaveToExoGraph {
-
-  private type FunctionType = Serializable => Serializable
+private class SwaveToExoGraph(swaveObj: Spout[_]) {
 
   private var id: String = "A"
   private val activitiesMap = mutable.Map[String, Array[Byte]]()
+  private val functionsMap = mutable.Map[String, FunctionType]()
   private val swaveStagesMap = mutable.Map[String, String]()
 
   private def createNewId(): String = {
@@ -49,18 +53,19 @@ object SwaveToExoGraph {
     }
   }
 
-  private def getSwaveCompositionToGraph[T](startStage: Stage): GraphRep = {
+  private def getSwaveCompositionToGraph(startStage: Stage, uuid: String): GraphRep = {
     val graph = new GraphRep("SwaveConverter")
 
-    def toActivityRep(stage: Stage, functionData: (Array[Byte], ActivityType)): ActivityRep = {
+    def toActivityRep(stage: Stage, functionData: (FunctionType, Array[Byte], ActivityType)): ActivityRep = {
       val stageStr = stage.toString
 
       val newId = createNewId()
       swaveStagesMap.update(stageStr, newId)
-      val (functionBytes, functionType) = functionData
+      val (function, functionBytes, functionType) = functionData
       val functionInStr = new String(functionBytes.map(_.toChar))
       activitiesMap.update(newId, functionBytes)
-      val actRep = new ActivityRep(newId, "toolkit.converters.SwaveActivity", functionType, Vector(s"swave.$newId", functionInStr), Vector(), "")
+      functionsMap.update(newId, function)
+      val actRep = new ActivityRep(newId, "toolkit.converters.SwaveActivity", functionType, Vector(s"$uuid.$newId", functionInStr), Vector(), "")
       graph.addActivity(actRep)
       actRep
     }
@@ -104,7 +109,7 @@ object SwaveToExoGraph {
             stage <- stages
             activity <- stageToActivityRep(stage)
           } {
-            graph.addConnection(activity.id, act.id) // try ?
+            graph.addConnection(activity.id, act.id)
             otherStages(activity, stage.inputStages)
           }
       }
@@ -117,12 +122,14 @@ object SwaveToExoGraph {
 
   private var swaveInput: Stream[Any] = _
 
-  private def stageToActivity(stage: Stage): Option[(Array[Byte], ActivityType)] = {
+  private def stageToActivity(stage: Stage): Option[(FunctionType, Array[Byte], ActivityType)] = {
     (stage.kind.name, stage.params) match {
       case ("Map", it) =>
-        Some(ObjectToBytes(it.next().asInstanceOf[FunctionType]), ActivityMapType)
+        val f = it.next().asInstanceOf[FunctionType]
+        Some(f, ObjectToBytes(f), ActivityMapType)
       case ("Filter", it) =>
-        Some(ObjectToBytes(it.next().asInstanceOf[FunctionType]), ActivityFilterType)
+        val f = it.next().asInstanceOf[FunctionType]
+        Some(f, ObjectToBytes(f), ActivityFilterType)
       case ("Spout.FromFuture", it) =>
         swaveInput = swaveInput #::: Stream(it.next().asInstanceOf[Future[Any]].value.get.get)
         None
@@ -130,17 +137,17 @@ object SwaveToExoGraph {
         swaveInput = swaveInput #::: it.next().asInstanceOf[Iterator[Any]].toStream
         None
       case ("FanIn.ToTuple", _) =>
-        Some(ObjectToBytes(SwaveActivity.FanInToTuple), ActivityMapType)
+        val f = SwaveActivity.FanInToTuple
+        Some(f, ObjectToBytes(f), ActivityMapType)
       case ("FanOut.Broadcast", _) =>
         val n = stage.outputStages.size
-        Some(ObjectToBytes(SwaveActivity.FanOutBroadcast(n)), ActivityMapType)
+        val f = SwaveActivity.FanOutBroadcast(n)
+        Some(f, ObjectToBytes(f), ActivityMapType)
       case ("Nop", _) =>
         //ignore this stage
         None
       case other =>
-        println(s"Unknown swave stage (${
-          other._1
-        }, ignoring...")
+        println(s"Unknown swave stage: ${other._1}, ignoring...")
         None
     }
   }
@@ -148,10 +155,10 @@ object SwaveToExoGraph {
   def show(spout: Spout[_]): Unit =
     println(Graph.from(spout.stage).withGlyphSet(GlyphSet.`2x2 ASCII`).render)
 
-  private def getGraphRep(swaveObj: Spout[_]): Option[GraphRep] = {
+  private def getGraphRep(swaveObj: Spout[_], uuid: String): Option[GraphRep] = {
     val s = swaveObj.stage
 
-    val graphRep = getSwaveCompositionToGraph(s)
+    val graphRep = getSwaveCompositionToGraph(s, uuid)
     if (graphRep.checkValidGraph())
       Some(graphRep)
     else {
@@ -160,86 +167,151 @@ object SwaveToExoGraph {
     }
   }
 
-  private def runExoGraph(exoGraph: ExoGraph): Vector[Serializable] = {
-    val inj = exoGraph.injector
-    val col = exoGraph.collector
+  private def injectSwaveData(exoGraph: ExoGraph): Vector[Int] = {
+    val injector = exoGraph.injector
 
     val input = swaveInput.map(_.asInstanceOf[Serializable])
-    val injIds = inj.injectMany(input)
-    val elems = injIds.map(i => col.collectIndex(i, 60 * 60 * 1000))
-
-    exoGraph.closeGraph()
-
-    // filter all empty results (filtered)
-    elems.flatMap(_.get.toList)
+    val injIds = injector.injectMany(input)
+    injIds
   }
 
-  private def stringListToFile(strList: List[String]): String = {
-    strList.reduceLeft((acc, s) => acc + "/" + s) // always /
+  private val (necessarySwaveClassesBar, necessarySwaveClassesDot) = {
+    val list = List("toolkit.converters.SwaveActivity",
+      "toolkit.converters.SwaveActivity$",
+      "toolkit.converters.SwaveActivity$MyObjectInputStream$1",
+      "toolkit.converters.SwaveToExoGraph",
+      "toolkit.converters.SwaveToExoGraph$",
+      "toolkit.converters.SwaveToExoGraph$ExoGraphWithResults",
+      "toolkit.converters.SwaveToExoGraph$SpoutWithExocute"
+    )
+
+    (list.map(dotToBar), list)
   }
 
-  private val NECESSARY_SWAVE_CLASSES = List(stringListToFile(List("toolkit", "converters", "SwaveActivity.class")),
-    stringListToFile(List("toolkit", "converters", "SwaveActivity$.class")),
-    stringListToFile(List("toolkit", "converters", "SwaveActivity$MyObjectInputStream$1.class")))
+  private def dotToBar(className: String) = className.replace(".", "/") + ".class"
 
-  def loadSwaveObj(swaveObj: Spout[_], jars: Iterable[File], graphTimeOut: Long = 60 * 60 * 1000): Vector[Serializable] = {
+  def loadSwaveObj(userJars: Iterable[File], graphTimeOut: Long = 60 * 60 * 1000): ExoGraphWithResults = {
     catchExceptions {
-      getGraphRep(swaveObj) match {
+      val uuid = UUID.randomUUID().toString
+      getGraphRep(swaveObj, uuid) match {
         case Some(graphRep) =>
-          val sourceFiles = NECESSARY_SWAVE_CLASSES
-          val tempJarFile = new File("temp", "swaveClasses.jar")
-          tempJarFile.getParentFile.mkdir()
+          val sourceFiles = necessarySwaveClassesBar
+          val tempJarFile = File.createTempFile("swaveClasses", ".jar")
           createJar(tempJarFile, sourceFiles)
-          val jars = List(tempJarFile)
-          val uuid = UUID.randomUUID().toString
-          val exoGraph = new ExoGraph(jars, graphRep, uuid, graphTimeOut)
-          tempJarFile.delete()
+          val jars = List(tempJarFile) ++ userJars
+          val exoGraph = new ExoGraphTimeOut(jars, graphRep, uuid, graphTimeOut)
+          tempJarFile.deleteOnExit()
 
-          runExoGraph(exoGraph)
+          new ExoGraphWithResults(exoGraph, injectSwaveData(exoGraph))
         case None =>
-          Vector()
+          throw new NotAValidSwave
       }
     }
   }
 
-  def loadSwaveObj(swaveObj: Spout[_]): Vector[Serializable] = {
-    loadSwaveObj(swaveObj, 60 * 60 * 1000)
+  private def getNeededClasses(listOfClasses: List[String]): Set[String] = {
+    val rt: Runtime = Runtime.getRuntime
+    val batFile = File.createTempFile("command", ".bat")
+    val jdepsOutput = File.createTempFile("jdeps", ".txt")
+    val classFile = File.createTempFile("classCode", ".class")
+
+    val loader = getClass.getClassLoader
+
+    def getNeededClassesAux(classesToCheck: List[String], classesNeeded: Set[String]): Set[String] = {
+      classesToCheck match {
+        case Nil => classesNeeded
+        case className :: othersToCheck =>
+          //          print(s"checking class $className ")
+
+          val bytes = getClassBytes(loader.getResourceAsStream(className))
+          val bos = new BufferedOutputStream(new FileOutputStream(classFile))
+          Stream.continually(bos.write(bytes))
+          bos.close() // You may end up with 0 bytes file if not calling close.
+
+          // full command
+          val command = String.format("jdeps -v -P \"%s\" > \"%s\"",
+            classFile.getAbsolutePath, jdepsOutput.getAbsolutePath)
+          //          println(command)
+
+          // write command in at file
+          new PrintWriter(batFile) {
+            write(command)
+            close()
+          }
+
+          // execute the bat file
+          val pr: Process = rt.exec(batFile.getPath)
+          pr.waitFor()
+
+          val fileContents = Source.fromFile(jdepsOutput.getAbsolutePath).getLines.toList
+          val neededClasses = parseJdeps(fileContents).filterNot(knownClasses).map(dotToBar)
+
+          val allNeededToCheck = (neededClasses.toSet -- classesNeeded).toList ++ othersToCheck
+          //          println(s"[$allNeededToCheck]")
+          getNeededClassesAux(allNeededToCheck, classesNeeded ++ neededClasses)
+      }
+    }
+
+    val list = listOfClasses.filterNot(knownClasses)
+    val classes = getNeededClassesAux(list, list.toSet)
+
+    batFile.deleteOnExit()
+    jdepsOutput.deleteOnExit()
+    classFile.deleteOnExit()
+
+    classes
+  }
+
+  private def parseJdeps(text: List[String]): List[String] = {
+    text.dropWhile(_.head != ' ').map(line => {
+      val line2 = line.drop(line.indexOf(">") + 2)
+      val className = line2.takeWhile(_ != ' ')
+      val jarExists = line2.drop(className.length).trim
+      (className, jarExists)
+    }).filter(_._2 == "not found").map(_._1)
+  }
+
+  private def knownClasses(className: String): Boolean = {
+    className.startsWith("java") || className.startsWith("scala") ||
+      className.startsWith("shapeless") || className.startsWith("swave") ||
+      necessarySwaveClassesDot.contains(className)
   }
 
   /**
     * Converts a spout representation in an ExoGraph and runs it in the default space
     * Tries to create a jar with all the necessary classes needed
     *
-    * @param swaveObj the spout object to be converted
     * @return the r
     */
-  def loadSwaveObj(swaveObj: Spout[_], graphTimeOut: Long): Vector[Serializable] = {
+  def loadSwaveObj(graphTimeOut: Long): ExoGraphWithResults = {
     catchExceptions {
-      getGraphRep(swaveObj) match {
+      val uuid = UUID.randomUUID().toString
+      getGraphRep(swaveObj, uuid) match {
         case Some(graphRep) =>
           val swaveSourcesSets = for {
             (_, bytes) <- activitiesMap
             classPath <- {
               val checker = new ObjectInputStreamChecker(new ByteArrayInputStream(bytes))
               val _ = checker.readObject()
-              checker.getClassesNeeded.filterNot(_.startsWith("[L")).map(path => (path.replace(".", " ") + ".class").split(" "))
+              checker.getClassesNeeded.filterNot(_.startsWith("[L"))
             }
           } yield classPath
-          val swaveSources = swaveSourcesSets.toSet.map((path: Array[String]) => stringListToFile(path.toList))
+          val swaveSources = swaveSourcesSets.toSet.map(dotToBar)
 
-          val sourceFiles: Set[String] = swaveSources ++ NECESSARY_SWAVE_CLASSES
+          val all = getNeededClasses((swaveSources -- necessarySwaveClassesBar).toList)
+
+          val sourceFiles: Set[String] = all ++ necessarySwaveClassesBar
           val tempJarFile = File.createTempFile("swaveClasses", ".jar")
           createJar(tempJarFile, sourceFiles)
           val jars = List(tempJarFile)
-          val uuid = UUID.randomUUID().toString
-          val exoGraph = new ExoGraph(jars, graphRep, uuid, graphTimeOut)
-          tempJarFile.delete()
+          val exoGraph = new ExoGraphTimeOut(jars, graphRep, uuid, graphTimeOut)
+          tempJarFile.deleteOnExit()
 
-          show(swaveObj)
+          //          show(swaveObj)
 
-          runExoGraph(exoGraph)
+          new ExoGraphWithResults(exoGraph, injectSwaveData(exoGraph))
         case None =>
-          Vector()
+          throw new NotAValidSwave
       }
     }
   }
@@ -258,13 +330,12 @@ object SwaveToExoGraph {
     val buf = Array.ofDim[Byte](1024)
 
     try {
-      jarFile.getParentFile.mkdirs()
       val out: ZipOutputStream = new ZipOutputStream(new FileOutputStream(jarFile))
 
       val loader = getClass.getClassLoader
 
       // Compress the file
-      for (source <- sources if !source.startsWith("java/lang")) {
+      for (source <- sources) {
         try {
           val resourceStream: InputStream = loader.getResourceAsStream(source)
           Option(resourceStream).foreach {
@@ -298,6 +369,24 @@ object SwaveToExoGraph {
     }
   }
 
+  private def getClassBytes(in: InputStream): Array[Byte] = {
+    val buffer: ByteArrayOutputStream = new ByteArrayOutputStream()
+
+    var nRead = 0
+    val data = Array.ofDim[Byte](16384)
+
+    while ( {
+      nRead = in.read(data, 0, data.length)
+      nRead != -1
+    }) {
+      buffer.write(data, 0, nRead)
+    }
+
+    buffer.flush()
+
+    buffer.toByteArray
+  }
+
   private class ObjectInputStreamChecker(in: InputStream) extends ObjectInputStream(in) {
     private val loader = new ClassLoaderChecker()
     private val classNames = mutable.Set[String]()
@@ -318,5 +407,48 @@ object SwaveToExoGraph {
   }
 
   class NotAValidSwave extends Exception("This swave object can't be converted to an ExoGraph")
+
+}
+
+object SwaveToExoGraph {
+
+  private type FunctionType = Serializable => Serializable
+
+  class ExoGraphWithResults(exoGraph: ExoGraph, injectIds: Vector[Int]) extends ExoGraph {
+
+    override val graph: GraphRep = exoGraph.graph
+
+    override val injector: Injector = exoGraph.injector
+    override val collector: Collector = exoGraph.collector
+
+    override def closeGraph(): Unit = exoGraph.closeGraph()
+
+    def result: Vector[Serializable] = {
+      val elems = injectIds.map(i => collector.collectIndex(i, 60 * 60 * 1000))
+
+      closeGraph()
+
+      // filter all empty results (filtered)
+      elems.flatMap(_.get.toList)
+    }
+  }
+
+  def loadSwaveObj(swaveObj: Spout[_], userJars: Iterable[File], graphTimeOut: Long = 60 * 60 * 1000): ExoGraphWithResults = {
+    new SwaveToExoGraph(swaveObj).loadSwaveObj(userJars, graphTimeOut)
+  }
+
+  def loadSwaveObj(swaveObj: Spout[_]): ExoGraphWithResults = {
+    loadSwaveObj(swaveObj, 60 * 60 * 1000)
+  }
+
+  def loadSwaveObj(swaveObj: Spout[_], graphTimeOut: Long): ExoGraphWithResults = {
+    new SwaveToExoGraph(swaveObj).loadSwaveObj(graphTimeOut)
+  }
+
+  implicit class SpoutWithExocute(swave: Spout[_]) {
+    def toExoGraph: ExoGraphWithResults = {
+      SwaveToExoGraph.loadSwaveObj(swave)
+    }
+  }
 
 }

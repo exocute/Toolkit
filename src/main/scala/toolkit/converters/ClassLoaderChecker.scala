@@ -4,6 +4,9 @@ import java.io.{File, InputStream}
 
 import scala.collection.mutable
 
+/**
+  * Created by #GrowinScala
+  */
 class ClassLoaderChecker extends ClassLoader(getClass.getClassLoader) {
 
   private val CLASS_EXTENSION = ".class"

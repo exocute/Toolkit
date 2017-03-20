@@ -9,7 +9,7 @@ import toolkit.converters.SwaveActivity.FunctionType
 import scala.collection.mutable
 
 /**
-  * Created by #ScalaTeam on 06-03-2017.
+  * Created by #GrowinScala
   */
 class SwaveActivity extends Activity {
 

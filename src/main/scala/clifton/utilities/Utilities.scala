@@ -3,7 +3,7 @@ package clifton.utilities
 import java.io.File
 
 /**
-  * Created by #ScalaTeam on 20-12-2016.
+  * Created by #GrowinScala
   */
 
 object Utilities {

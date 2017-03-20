@@ -3,7 +3,7 @@ package toolkit
 import toolkit.exceptions.{ActivitiesWithDuplicateId, InvalidConnection, UnknownActivityId}
 
 /**
-  * Created by #ScalaTeam on 12/12/2016.
+  * Created by #GrowinScala
   *
   * Representation of the graph
   */

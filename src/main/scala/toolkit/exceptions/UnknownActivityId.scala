@@ -1,7 +1,7 @@
 package toolkit.exceptions
 
 /**
-  * Created by #ScalaTeam on 15/12/2016.
+  * Created by #GrowinScala
   *
   * Activity identifier is not defined
   */
