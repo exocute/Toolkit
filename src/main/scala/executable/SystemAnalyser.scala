@@ -222,7 +222,15 @@ class SystemAnalyser(updateTime: Int = 2, logs: LinkedBlockingDeque[LoggingSigna
     val top5Activites = getTop5Activites(database.actDB)
     val listTop5 = top5Activites.map(x => x._1)
     val toRemove = graphics.top5.diff(listTop5)
-    toRemove.foreach(elem => GraphicInterfaceScala.removeTopActivity(elem))
+    for( actName <- toRemove){
+      if (actName.length > 1) {
+        val separated = actName.split(':')
+        val graphID = separated.head
+        val actID = separated.last
+        val fullName = actID + ':' + database.graphUID.filter(_._1 == graphID).head._2
+        GraphicInterfaceScala.removeTopActivity(fullName)
+      } else GraphicInterfaceScala.removeTopActivity(actName)
+    }
     for ((actName, value) <- top5Activites) {
       if (actName.length > 1) {
         val separated = actName.split(':')
