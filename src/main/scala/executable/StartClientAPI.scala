@@ -20,7 +20,7 @@ object StartClientAPI {
   private val getHelpString: String = {
     """
       |Usage:
-      |  toolkit [options] file_name[.grp]
+      |  toolkit -jarfile file_name[.jar] [options] file_name[.grp]
       |
       |options:
       |-j, -jar ip

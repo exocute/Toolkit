@@ -2,7 +2,7 @@ name := "Toolkit"
 
 organization := "growin"
 
-version := "1.1-SNAPSHOT"
+version := "1.1"
 
 scalaVersion := "2.12.1"
 
@@ -16,9 +16,8 @@ resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repos
 
 libraryDependencies += "com.flyobjectspace" %% "flyscala" % "2.2.0-SNAPSHOT"
 
-libraryDependencies += "growin" %% "exonode" % "1.1-SNAPSHOT"
+libraryDependencies += "growin" %% "exonode" % "1.1"
 
 libraryDependencies += "io.swave" %% "swave-core" % "0.7.0"
 
 libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.24"
-

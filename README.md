@@ -1,6 +1,6 @@
 # Toolkit
 
-Scala Version of Exocute Plataform 
+Scala Version of Exocute Platform
 
 -------------------------------------------------------------------------------
 Building highly concurrent software systems such as those on, grids, clusters, and groups of multicore processing systems, is difficult. As systems tend towards lower clock speeds and greater parallelism, the need to distribute and coordinate work on these systems becomes more of a pressing need.<br />
@@ -10,29 +10,32 @@ We assume only a level of Java skill required to implement your particular appli
 
 For more information about the Toolkit: http://bit.ly/2mitGuG
 
-## Releases 
+## Releases
+
+10/04/2017 <br />
+--> **Toolkit v1.1** <br />
 
 07/03/2017 <br />
---> ***Toolkit v1.0*** <br />
+--> **Toolkit v1.0** <br />
 
 How to use? <br />
 To launch the Toolkit app run StartClientAPI.jar
   ```
-java -jar StartClientAPI.jar [options] file_name[.grp]
+java -jar StartClientAPI.jar -jarfile file_name[.jar] [options] file_name[.grp]
 ```
 Options available: <br />
 
 
 
-| Option                           | Meaning                                |
-| ---                              | ---                                    |
-| `-s`                             | sets signal space                      |
-| `-d  `                           | sets data space                        |
-| `-j `                            | sets jar space                         |
-| `-jarfile fileName[.jar] `       | Sets the jar file containing all classes that will be used in the grp         |
-| `-cleanspaces`                   | cleans all the entries for every space | 
-| `--help    `                     | display help and exit                  | 
-| `--version`                      | ouput version information and exit     | 
+| Option                           | Meaning                                 |
+| ---                              | ---                                     |
+| `-s`                             | sets signal space                       |
+| `-d  `                           | sets data space                         |
+| `-j `                            | sets jar space                          |
+| `-jarfile file_name[.jar] `       | Sets the jar file containing all classes that will be used in the grp         |
+| `-cleanspaces`                   | cleans all the entries form every space |
+| `--help    `                     | display help and exit                   |
+| `--version`                      | ouput version information and exit      |
 
 
 After started:<br />
@@ -84,12 +87,12 @@ Notes: <br />
 ###Versions and Programs used 
 
  
-| Software       | Version       | Link  /sbt                                 |
-| ---------------|:-------------:| --------------------------------------:|
-| Scala          | 12.0.2        |                                        |
-| Java           | 1.8           | http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html   |
-| FlyObjectSpace | 2.0.2         |  https://github.com/fly-object-space   |
-| Parboiled      | 2.1.3         |  libraryDependencies += "org.parboiled" %% "parboiled" % "2.1.3"   |
-| ScalaTest      | 3.0.1         |  libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test"   |
-| Exonode        | 1.0           |  https://github.com/exocute/ExoNode   |
-
+| Software       | Version        | Link /sbt                              |
+| ---------------|:--------------:| --------------------------------------:|
+| Scala          | 2.12.1         |                                        |
+| Java           | 1.8            | http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html   |
+| FlyObjectSpace | 2.2.0-SNAPSHOT | https://github.com/fly-object-space/fly-scala   |
+| Parboiled      | 2.1.4          | libraryDependencies += "org.parboiled" %% "parboiled" % "2.1.3"   |
+| ScalaTest      | 3.0.1          | libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test"   |
+| Swave          | 0.7.0          | https://github.com/sirthias/swave
+| ExoNode        | 1.1            | https://github.com/exocute/ExoNode   |
