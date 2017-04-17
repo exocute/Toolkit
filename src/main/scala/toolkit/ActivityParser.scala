@@ -75,10 +75,10 @@ class ActivityParser(val input: ParserInput) extends Parser {
     zeroOrMore(ignoreCase("import") ~ WS1 ~ (Type + (WS0 ~ ',' ~ WS0)) ~ NLS ~>
       ((initialAct: ActivityRep, importNames: Seq[String]) =>
         importNames.foldLeft(initialAct)((act, importName) => act.addImport(importName)))
-      | ignoreCase("export") ~ WS1 ~ (Type + (WS0 ~ ',' ~ WS0)) ~ NLS ~>
-      ((initialAct: ActivityRep, exportNames: Seq[String]) =>
-        exportNames.foldLeft(initialAct)((act, exportName) => act.addExport(exportName))
-        ))
+      | ignoreCase("export") ~ WS1 ~ Type ~ NLS ~>
+      ((act: ActivityRep, exportName: String) =>
+        act.setExport(exportName))
+    )
   }
 
   /**
@@ -125,8 +125,9 @@ class ActivityParser(val input: ParserInput) extends Parser {
       "activityflatmap" -> ActivityFlatMapType)
 
   private def ActType: Rule1[ActivityType] = rule {
-    capture(ignoreCase("activity") | ignoreCase("activityfilter") | ignoreCase("activityflatmap")) ~> {
-      (actType: String) => mapStrToTypes(actType.toLowerCase)
+    capture(ignoreCase("activityfilter") | ignoreCase("activityflatmap") | ignoreCase("activity")) ~> {
+      (actType: String) =>
+        mapStrToTypes(actType.toLowerCase)
     }
   }
 

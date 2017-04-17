@@ -10,6 +10,8 @@ import java.io.Serializable
   */
 trait Collector {
 
+  def canCollect: () => Boolean
+
   /**
     * Will take from the space the first result that has already finished
     * all the processing.
@@ -28,16 +30,6 @@ trait Collector {
     *         return Some(result)
     */
   def collect(waitTime: Long): Option[Option[Serializable]]
-
-  /**
-    * Returns the result with a specific inject index if it is available in the first waitTime ms.
-    *
-    * @param injectIndex the inject index of the result
-    * @param waitTime    wait time in milliseconds
-    * @return if there is nothing to collect it will return None, otherwise it will
-    *         return Some(result)
-    */
-  def collectIndex(injectIndex: Int, waitTime: Long = 0): Option[Option[Serializable]]
 
   /**
     * Returns at most numObjects from the space that are available
@@ -71,5 +63,14 @@ trait Collector {
     * @return the list of objects returned
     */
   def collectManyOrdered(numObjects: Int, waitTime: Long): List[Serializable]
+
+  /**
+    * Returns all the results with a specific inject id.
+    *
+    * @param injectIndex the inject index of the result
+    * @return if there is nothing to collect it will return None, otherwise it will
+    *         return Some(result)
+    */
+  def collectAllByIndex(injectIndex: Int): List[Serializable]
 
 }

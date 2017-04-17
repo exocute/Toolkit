@@ -3,15 +3,15 @@ Import Int
 Export Int
 	Activity A com.classes.IntToString:10
 	Import Int
-	Export String, Float
+	Export String
 	Activity B com.classes.StringToFloat
 	Import String
-	Export Int
+	Export Float
 	Activity C com.classes.Floor:60:1:134
-	Import Float
+	Import String
 	Export Int
 	Activity D com.classes.Sum
-	Import Int, Int
+	Import Float, Int
 	Export Int
 	
 Connection A -> B,C -> D

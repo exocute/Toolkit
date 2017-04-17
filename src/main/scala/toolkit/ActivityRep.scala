@@ -8,18 +8,18 @@ import exonode.clifton.signals.ActivityType
   * Representation of an activity
   */
 case class ActivityRep(id: String, className: String, actType: ActivityType,
-                       parameters: Vector[String], importNames: Vector[String], exportNames: Vector[String]) {
+                       parameters: Vector[String], importNames: Vector[String], exportName: String) {
 
   def addParameter(newParameter: String): ActivityRep = {
-    ActivityRep(id, className, actType, parameters :+ newParameter, importNames, exportNames)
+    ActivityRep(id, className, actType, parameters :+ newParameter, importNames, exportName)
   }
 
   def addImport(newImport: String): ActivityRep = {
-    ActivityRep(id, className, actType, parameters, importNames :+ newImport, exportNames)
+    ActivityRep(id, className, actType, parameters, importNames :+ newImport, exportName)
   }
 
-  def addExport(newExport: String): ActivityRep = {
-    ActivityRep(id, className, actType, parameters, importNames, exportNames :+ newExport)
+  def setExport(newExport: String): ActivityRep = {
+    ActivityRep(id, className, actType, parameters, importNames, newExport)
   }
 
   /**
@@ -38,7 +38,7 @@ case class ActivityRep(id: String, className: String, actType: ActivityType,
   override def toString: String = {
     s"$actType $id $className${showIf(parameters.nonEmpty, ":" + parameters.mkString(":"))}" +
       s"${showIf(importNames.nonEmpty, s"\nImport ${importNames.mkString(", ")}")}" +
-      s"${showIf(exportNames.nonEmpty, s"\nExport ${exportNames.mkString(", ")}")}"
+      s"${showIf(exportName, s"\nExport $exportName")}"
   }
 
   private def showIf(test: Boolean, exp: => Any): String =
@@ -51,6 +51,6 @@ case class ActivityRep(id: String, className: String, actType: ActivityType,
 
 object ActivityRep {
   def apply(id: String, name: String, actType: ActivityType): ActivityRep = {
-    ActivityRep(id, name, actType, Vector(), Vector(), Vector())
+    ActivityRep(id, name, actType, Vector(), Vector(), "")
   }
 }

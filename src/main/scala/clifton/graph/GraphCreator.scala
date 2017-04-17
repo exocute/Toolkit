@@ -4,7 +4,7 @@ import exonode.clifton.config.Protocol._
 import exonode.clifton.node.SpaceCache
 import exonode.clifton.node.entries.ExoEntry
 import exonode.clifton.signals.ActivitySignal
-import toolkit.{ActivityRep, GraphRep}
+import toolkit.{ActivityRep, GraphRep, ValidGraphRep}
 
 import scala.collection.mutable
 
@@ -15,7 +15,7 @@ import scala.collection.mutable
   */
 object GraphCreator {
 
-  def injectGraph(graph: GraphRep, graphId: String, leaseTime: Long): Unit = {
+  def injectGraph(graph: ValidGraphRep, graphId: String, leaseTime: Long): Unit = {
     val seenActivities = mutable.HashSet[String]()
     val signalSpace = SpaceCache.getSignalSpace
 
@@ -58,13 +58,13 @@ object GraphCreator {
       }
     }
 
-    addSignal(graph.getRoot.get)
+    addSignal(graph.root)
   }
 
-  def removeGraph(graph: GraphRep, graphId: String): Unit = {
+  def removeGraph(graph: ValidGraphRep, graphId: String): Unit = {
     val signalSpace = SpaceCache.getSignalSpace
-    for (actId <- graph.getActivities) {
-      signalSpace.take(ExoEntry(graphId + ":" + actId, null), 0)
+    for (activity <- graph.getActivities) {
+      signalSpace.take(ExoEntry(graphId + ":" + activity.id, null), 0)
     }
   }
 

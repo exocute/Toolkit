@@ -6,11 +6,11 @@ import java.util.zip.{ZipEntry, ZipOutputStream}
 
 import api.{Collector, Injector}
 import clifton.graph.{ExoGraph, ExoGraphTimeOut}
-import exonode.clifton.signals.{ActivityFilterType, ActivityMapType, ActivityType}
+import exonode.clifton.signals.{ActivityFilterType, ActivityFlatMapType, ActivityMapType, ActivityType}
 import swave.core._
 import swave.core.graph.GlyphSet
 import toolkit.converters.SwaveToExoGraph.{ExoGraphWithResults, FunctionType}
-import toolkit.{ActivityRep, GraphRep}
+import toolkit.{ActivityRep, GraphRep, ValidGraphRep}
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -55,9 +55,8 @@ private class SwaveToExoGraph(swaveObj: Spout[_]) {
   }
 
   private def getSwaveCompositionToGraph(startStage: Stage, uuid: String): GraphRep = {
-    val graph = new GraphRep("SwaveConverter")
-
-    def toActivityRep(stage: Stage, functionData: (FunctionType, Array[Byte], ActivityType)): ActivityRep = {
+    def toActivityRep(graph: GraphRep, stage: Stage,
+                      functionData: (FunctionType, Array[Byte], ActivityType)): (GraphRep, ActivityRep) = {
       val stageStr = stage.toString
 
       val newId = createNewId()
@@ -66,58 +65,68 @@ private class SwaveToExoGraph(swaveObj: Spout[_]) {
       val functionInStr = new String(functionBytes.map(_.toChar))
       activitiesMap.update(newId, functionBytes)
       functionsMap.update(newId, function)
-      val actRep = new ActivityRep(newId, "toolkit.converters.SwaveActivity", functionType, Vector(s"$uuid.$newId", functionInStr), Vector(), Vector())
-      graph.addActivity(actRep)
-      actRep
+      val actRep = ActivityRep(newId, "toolkit.converters.SwaveActivity", functionType, Vector(s"$uuid.$newId", functionInStr), Vector(), "")
+      (graph.addActivity(actRep), actRep)
     }
 
-    def stageToActivityRep(stage: Stage): Option[ActivityRep] = {
+    def stageToActivityRep(graph: GraphRep, stage: Stage): (GraphRep, Option[ActivityRep]) = {
       val stageStr = stage.toString
       swaveStagesMap.get(stageStr) match {
-        case Some(activityId) => Some(graph.getActivity(activityId))
-        case None => stageToActivity(stage).map(rep => toActivityRep(stage, rep))
+        case Some(activityId) => (graph, Some(graph.getActivity(activityId)))
+        case None => stageToActivity(stage).map(rep => toActivityRep(graph, stage, rep)) match {
+          case Some((updatedGraph, act)) => (updatedGraph, Some(act))
+          case None => (graph, None)
+        }
       }
     }
 
-    def firstStage(stages: List[Stage]): Unit = {
+    def firstStage(graph: GraphRep, stages: List[Stage]): GraphRep = {
       stages match {
         case Nil =>
+          graph
         case List(stage) =>
-          stageToActivityRep(stage) match {
-            case None =>
-              firstStage(stage.inputStages)
-            case Some(actRep) =>
-              otherStages(actRep, stage.inputStages)
+          stageToActivityRep(graph, stage) match {
+            case (updatedGraph, None) =>
+              firstStage(updatedGraph, stage.inputStages)
+            case (updatedGraph, Some(actRep)) =>
+              otherStages(updatedGraph, actRep, stage.inputStages)
           }
         case _ =>
           throw new NotAValidSwave(new Exception("The first swave stage can only have one source"))
       }
     }
 
-    def otherStages(act: ActivityRep, stages: List[Stage]): Unit = {
+    def otherStages(graph: GraphRep, act: ActivityRep, stages: List[Stage]): GraphRep = {
       stages match {
         case Nil =>
+          graph
         case List(stage) =>
-          stageToActivityRep(stage) match {
-            case None =>
-              otherStages(act, stage.inputStages)
-            case Some(actRep) =>
-              Try(graph.addConnection(actRep.id, act.id))
-              otherStages(actRep, stage.inputStages)
+          stageToActivityRep(graph, stage) match {
+            case (updatedGraph, None) =>
+              otherStages(updatedGraph, act, stage.inputStages)
+            case (updatedGraph, Some(actRep)) =>
+              Try(updatedGraph.addConnection(actRep.id, act.id)) match {
+                case Success(updatedGraph2) =>
+                  otherStages(updatedGraph2, actRep, stage.inputStages)
+                case Failure(_) =>
+                  updatedGraph
+              }
           }
-        case _ =>
-          for {
-            stage <- stages
-            activity <- stageToActivityRep(stage)
-          } {
-            graph.addConnection(activity.id, act.id)
-            otherStages(activity, stage.inputStages)
-          }
+        case list =>
+          list.foldLeft(graph)((updatedGraph, stage) => {
+            stageToActivityRep(updatedGraph, stage) match {
+              case (updatedGraph2, Some(activity)) =>
+                val updatedGraph3 = updatedGraph2.addConnection(activity.id, act.id)
+                otherStages(updatedGraph3, activity, stage.inputStages)
+              case (updatedGraph2, None) =>
+                updatedGraph2
+            }
+          })
       }
     }
 
     swaveInput = Stream.empty
-    firstStage(List(startStage))
+    val graph = firstStage(new GraphRep("SwaveConverter"), List(startStage))
     graph
   }
 
@@ -137,12 +146,14 @@ private class SwaveToExoGraph(swaveObj: Spout[_]) {
       case ("Spout.FromIterator", it) =>
         swaveInput = swaveInput #::: it.next().asInstanceOf[Iterator[Any]].toStream
         None
+      case ("Flatten.Concat", _) =>
+        val f = SwaveActivity.Identity
+        Some(f, ObjectToBytes(f), ActivityFlatMapType)
       case ("FanIn.ToTuple", _) =>
         val f = SwaveActivity.FanInToTuple
         Some(f, ObjectToBytes(f), ActivityMapType)
       case ("FanOut.Broadcast", _) =>
-        val n = stage.outputStages.size
-        val f = SwaveActivity.FanOutBroadcast(n)
+        val f = SwaveActivity.Identity
         Some(f, ObjectToBytes(f), ActivityMapType)
       case ("Nop", _) =>
         //ignore this stage
@@ -156,7 +167,7 @@ private class SwaveToExoGraph(swaveObj: Spout[_]) {
   def show(spout: Spout[_]): Unit =
     println(Graph.from(spout.stage).withGlyphSet(GlyphSet.`2x2 ASCII`).render)
 
-  private def getGraphRep(swaveObj: Spout[_], uuid: String): Try[GraphRep] = {
+  private def getGraphRep(swaveObj: Spout[_], uuid: String): Try[ValidGraphRep] = {
     val s = swaveObj.stage
 
     val graphRep = getSwaveCompositionToGraph(s, uuid)
@@ -412,7 +423,7 @@ object SwaveToExoGraph {
 
   class ExoGraphWithResults(exoGraph: ExoGraph, injectIds: Vector[Int]) extends ExoGraph {
 
-    override val graph: GraphRep = exoGraph.graph
+    override val graph: ValidGraphRep = exoGraph.graph
 
     override val injector: Injector = exoGraph.injector
     override val collector: Collector = exoGraph.collector
@@ -420,12 +431,12 @@ object SwaveToExoGraph {
     override def closeGraph(): Unit = exoGraph.closeGraph()
 
     def result: Vector[Serializable] = {
-      val elems = injectIds.map(i => collector.collectIndex(i, 60 * 60 * 1000))
+      val elems = injectIds.map(i => collector.collectAllByIndex(i))
 
       closeGraph()
 
-      // filter all empty results (elements that didn't pass in filter transformations)
-      elems.flatMap(_.get.toList)
+      // flatten all results (from possible flatMap transformations)
+      elems.flatten
     }
   }
 

@@ -8,7 +8,7 @@ import exonode.clifton.node._
 import exonode.clifton.node.entries.ExoEntry
 import exonode.clifton.signals.KillSignal
 
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 /**
   * Created by #GrowinScala
@@ -138,7 +138,7 @@ object StartClientAPI {
             }
             command.trim.toLowerCase match {
               case "i" | "inject" => println(s"Injected input with id: ${inj.inject(cmdData.trim)}.")
-              case "n" => println(s"Injected integer input with id: ${inj.inject(cmdData.toLong)}.")
+              case "n" => println(s"Injected integer input with id: ${inj.inject(cmdData.trim.toLong)}.")
               case "im" if cmdData.contains(" ") =>
                 val (a, input) = cmdData.splitAt(cmdData.indexOf(" "))
                 if (isValidNatNumber(a)) {
@@ -198,10 +198,10 @@ object StartClientAPI {
   }
 
   private def isValidNatNumber(str: String): Boolean = {
-    str.forall(Character.isDigit) && {
+    str.forall(Character.isDigit) && Try {
       val long: Long = str.toLong
       long >= 0 && long <= Int.MaxValue
-    }
+    }.fold(_ => false, identity)
   }
 
 }

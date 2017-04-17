@@ -1,14 +1,14 @@
 package clifton.graph
 
 import api.{Collector, Injector}
-import toolkit.GraphRep
+import toolkit.ValidGraphRep
 
 /**
   * Created by #GrowinScala
   */
 trait ExoGraph {
 
-  val graph: GraphRep
+  val graph: ValidGraphRep
 
   val injector: Injector
 

@@ -1,5 +1,6 @@
 package toolkit
 
+import exonode.clifton.signals.ActivityFlatMapType
 import toolkit.exceptions._
 
 import scala.language.implicitConversions
@@ -88,17 +89,15 @@ class GraphRep(val name: String, importName: String, exportName: String) extends
     */
   def addConnection(activityFrom: ActivityRep, activityTo: ActivityRep): GraphRep = {
     def connectionHasValidTypes(activityFrom: ActivityRep, activityTo: ActivityRep): Boolean = {
-      val from = activityFrom.exportNames
+      val from = activityFrom.exportName
       val to = activityTo.importNames
 
       from.isEmpty || to.isEmpty || {
-        if (from.size <= adj(activityFrom).size)
-          throw new InvalidConnection(activityFrom.id, activityTo.id, s"${activityFrom.id} doesn't have the expected type")
         if (to.size <= adjInverse(activityTo).size)
           throw new InvalidConnection(activityFrom.id, activityTo.id, s"${activityTo.id} doesn't have the expected type")
-        val result = from(adj(activityFrom).size) == to(adjInverse(activityTo).size)
+        val result = from == to(adjInverse(activityTo).size)
         if (!result)
-          throw new InvalidConnectionType(activityFrom.id, from(adj(activityFrom).size),
+          throw new InvalidConnectionType(activityFrom.id, from,
             activityTo.id, to(adjInverse(activityTo).size))
         result
       }
@@ -170,8 +169,7 @@ class GraphRep(val name: String, importName: String, exportName: String) extends
     * @return
     */
   private def validCollector(activity: ActivityRep): Boolean =
-    exportName.isEmpty || activity.exportNames.isEmpty ||
-      activity.exportNames.size == 1 && activity.exportNames.head == exportName
+    exportName.isEmpty || activity.exportName.isEmpty || activity.exportName == exportName
 
   /**
     * Checks if the parameter's value to import it's the same has the import parameter of the Root
@@ -186,9 +184,9 @@ class GraphRep(val name: String, importName: String, exportName: String) extends
   /**
     * Checks if a graph has a sink, a root and do not have cycles or subgraphs
     *
-    * @return the graph if it passes all checks
+    * @return a valid graph if it passes all checks
     */
-  def checkValidGraph(): Try[GraphRep] = {
+  def checkValidGraph(): Try[ValidGraphRep] = {
     Try {
       if (numberOfNodes == 0)
         throw new GraphHasNoActivities
@@ -202,7 +200,7 @@ class GraphRep(val name: String, importName: String, exportName: String) extends
         throw new GraphRootHasInvalidTypes
       if (!validCollector(getSink.get))
         throw new GraphSinkHasInvalidTypes
-      this
+      new ValidGraphRep(name, activities, adj, adjInverse)
     }
   }
 
@@ -292,4 +290,60 @@ class GraphRep(val name: String, importName: String, exportName: String) extends
 
     actsStr + showIf(adjStr, "\n" + adjStr)
   }
+}
+
+class ValidGraphRep private[toolkit](val name: String,
+                                     activities: Map[String, ActivityRep],
+                                     adj: Map[ActivityRep, Vector[ActivityRep]],
+                                     adjInverse: Map[ActivityRep, Vector[ActivityRep]]) extends Serializable {
+
+  def connectionExists(activityFromId: String, activityToId: String): Boolean = {
+    adj(getActivity(activityFromId)).contains(getActivity(activityToId))
+  }
+
+  def connectionExists(activityFrom: ActivityRep, activityTo: ActivityRep): Boolean = {
+    adj.contains(activityFrom) && adj.contains(activityTo) &&
+      adj(activityFrom).contains(activityTo)
+  }
+
+  val root: ActivityRep = adjInverse.filter { case (_, list) => list.isEmpty }.head._1
+  val sink: ActivityRep = adj.filter { case (_, list) => list.isEmpty }.head._1
+
+  val depthOfFlatMaps: Int = {
+    activities.count(_._2.actType == ActivityFlatMapType)
+  }
+
+  /**
+    * returns the activity with a specific id
+    *
+    * @param id the id the of the activity
+    * @return the ActivityRep with id
+    */
+  def getActivity(id: String): ActivityRep = {
+    activities.get(id) match {
+      case None => throw new UnknownActivityId(id)
+      case Some(act) => act
+    }
+  }
+
+  def numberOfNodes: Int = activities.size
+
+  /**
+    * gets the next activities from a single activity
+    *
+    * @param activity
+    * @return next activities
+    */
+  def getConnections(activity: ActivityRep): Vector[ActivityRep] = adj(activity)
+
+  /**
+    * gets the previous activities from a single activity
+    *
+    * @param activity
+    * @return next activities
+    */
+  def getReverseConnections(activity: ActivityRep): Vector[ActivityRep] = adjInverse(activity)
+
+  def getActivities: Iterable[ActivityRep] = adj.keys
+
 }

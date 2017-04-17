@@ -18,8 +18,7 @@ import scala.util.{Failure, Success}
   */
 class IntegrationTest extends FlatSpec with BeforeAndAfter {
 
-  private val DEFAULT_GRP_FILE = "examples\\abc.grp"
-  private val jarFile = new File("examples\\classes.jar")
+  private val jarFile = new File("tests\\classes.jar")
 
   private val KILL_TIME = 60 * 1000
   private val MAX_TIME_FOR_EACH_TEST = 60 * 60 * 1000
@@ -27,7 +26,7 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
 
   private val signalSpace = SpaceCache.getSignalSpace
 
-  private def startGraph(grpFile: String = DEFAULT_GRP_FILE): ExoGraph = {
+  private def startGraph(grpFile: String): ExoGraph = {
     ExocuteConfig.setHosts().addGraph(new File(grpFile), List(jarFile), MAX_TIME_FOR_EACH_TEST) match {
       case Success(exoGraph) => exoGraph
       case Failure(e) => throw new Exception
@@ -44,13 +43,12 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
   private var allNodes = List[CliftonNode]()
 
   private def launchNNodes(nodes: Int, conf: BackupConfig = BackupConfigDefault): List[CliftonNode] = {
-    val nodesList = for {
-      _ <- 1 to nodes
-    } yield {
-      val node = new CliftonNode()(conf)
-      allNodes = node :: allNodes
-      node
-    }
+    val nodesList =
+      for (_ <- 1 to nodes) yield {
+        val node = new CliftonNode()(conf)
+        allNodes = node :: allNodes
+        node
+      }
     nodesList.foreach(node => node.start())
     nodesList.toList
   }
@@ -77,7 +75,12 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
   }
 
   "Stabilize distribution at boot" should "follow an equal distribution in few cycles after boot" in {
-    startGraph("examples\\abc.grp")
+    startGraphManual(
+      """Graph graph
+        |Activity A exocute.classes.DoubleString
+        |Activity B exocute.classes.Reverse
+        |Activity C exocute.classes.UpperCase
+        |Connection A->B->C""")
 
     val expectedDistribution = 5
     val nNodes = expectedDistribution * 3 + 1
@@ -98,7 +101,12 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
   }
 
   "Stabilize distribution after long work" should "follow a normal distribution after a few seconds" in {
-    val exoGraph = startGraph("examples\\ab3c.grp")
+    val exoGraph = startGraphManual(
+      """Graph graph
+        |Activity A exocute.classes.DoubleString
+        |Activity B exocute.classes.Reverse:120
+        |Activity C exocute.classes.UpperCase
+        |Connection A->B->C""")
 
     val expectedDistribution = 5
     val nNodes = expectedDistribution * 3 + 1
@@ -125,7 +133,12 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
   }
 
   "Inject and collect results" should "collect the results of several inputs after a few seconds" in {
-    val exoGraph = startGraph("examples\\abc.grp")
+    val exoGraph = startGraphManual(
+      """Graph graph
+        |Activity A exocute.classes.DoubleString
+        |Activity B exocute.classes.Reverse
+        |Activity C exocute.classes.UpperCase
+        |Connection A->B->C""")
     val inj = exoGraph.injector
     val coll = exoGraph.collector
 
@@ -135,17 +148,15 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
     val someStrings = randomAlphaNumericString(10).take(amountOfInputs)
 
     //inject input
-    val injects = inj.injectMany(someStrings)
+    inj.injectMany(someStrings)
 
     //wait a few seconds
     Thread.sleep(NODE_CHECK_TABLE_TIME * 3)
 
-    injects.foldRight(List[String]())((s, list) => coll.collectIndex(s).get.get.toString :: list) match {
-      case vec if vec.length == amountOfInputs =>
+    coll.collectManyOrdered(someStrings.size, someStrings.size * 1000) match {
+      case list =>
         val expected = someStrings.map(s => (s + s).reverse.map(_.toUpper)).toList
-        assert(vec == expected)
-      case _ =>
-        assert(false)
+        assert(list == expected)
     }
   }
 

@@ -3,12 +3,12 @@ Import Int
 Export Double
 Activity A com.classes.A:10
 Import Int
-Export String, Int, Float, Float
+Export Float
 Activity B com.classes.B
-Import String
+Import Float
 Export Int
 Activity C com.classes.C:60:1:134
-Import Int
+Import Float
 Export String
 Activity D com.classes.D
 Import Float

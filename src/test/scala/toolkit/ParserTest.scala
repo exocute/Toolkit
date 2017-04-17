@@ -137,7 +137,7 @@ class ParserTest extends FlatSpec {
     val parser = new ActivityParser(plnClean)
     val res: Try[GraphRep] = parser.InputLine.run()
     res.flatMap(_.checkValidGraph()) match {
-      case Success(graph: GraphRep) =>
+      case Success(_) =>
         if (expectedException.isSuccess) {
           println(path + s": should have failed with ${expectedException.get} exception")
         } else {

@@ -10,6 +10,8 @@ import java.io.Serializable
   */
 trait Injector {
 
+  def canInject: () => Boolean
+
   /**
     * Inserts into the space the input to be processed by the exocute platform
     *

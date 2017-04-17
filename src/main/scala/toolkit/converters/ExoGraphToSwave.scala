@@ -10,9 +10,9 @@ import shapeless.{HNil, :: => @::}
 import swave.core.StreamOps.SubStreamOps
 import swave.core._
 import swave.core.graph.GlyphSet
-import toolkit.{ActivityRep, GraphRep}
+import toolkit.{ActivityRep, ValidGraphRep}
 
-import scala.collection.mutable
+import scala.collection.{immutable, mutable}
 import scala.language.existentials
 
 /**
@@ -73,7 +73,7 @@ object ExoGraphToSwave {
     }
   }
 
-  private def convertToExoTree(loader: CliftonClassLoader, graphRep: GraphRep): ExoTree = {
+  private def convertToExoTree(loader: CliftonClassLoader, graphRep: ValidGraphRep): ExoTree = {
     val seen = mutable.Map[String, ExoTree]()
 
     def convertToSwaveAux(activityRep: ActivityRep): ExoTree = {
@@ -122,11 +122,11 @@ object ExoGraphToSwave {
       }
     }
 
-    val start = graphRep.getRoot.get
+    val start = graphRep.root
     ExoStart(convertToSwaveAux(start))
   }
 
-  private def convertTreeToSwave(graph: GraphRep, start: ExoTree, initial: Spout[_]): Spout[_] = {
+  private def convertTreeToSwave(graph: ValidGraphRep, start: ExoTree, initial: Spout[_]): Spout[_] = {
     val seen = mutable.Set[String]()
 
     def addSwaveStage(initialSpout: Spout[_], activity: ParameterLessActivity, actType: ActivityType): Spout[_] = {
@@ -135,7 +135,8 @@ object ExoGraphToSwave {
           initialSpout.map(input => activity.process(input.asInstanceOf[Serializable]))
         case ActivityFilterType =>
           initialSpout.filter(input => activity.process(input.asInstanceOf[Serializable]).asInstanceOf[Boolean])
-        case ActivityFlatMapType => ???
+        case ActivityFlatMapType =>
+          initialSpout.flatMap(input => activity.process(input.asInstanceOf[Serializable]).asInstanceOf[immutable.Iterable[Serializable]])
       }
     }
 
@@ -194,7 +195,8 @@ object ExoGraphToSwave {
           initialSpout.map(input => activity.process(input.asInstanceOf[Serializable]))
         case ActivityFilterType =>
           initialSpout.filter(input => activity.process(input.asInstanceOf[Serializable]).asInstanceOf[Boolean])
-        case ActivityFlatMapType => ???
+        case ActivityFlatMapType =>
+          initialSpout.flatMap(input => activity.process(input.asInstanceOf[Serializable]).asInstanceOf[immutable.Iterable[Serializable]])
       }
     }
 
@@ -252,7 +254,7 @@ object ExoGraphToSwave {
     convertToSwaveAux(start, initial).get
   }
 
-  def convertExoGraphToSwave(jarList: List[File], graph: GraphRep, initialSpout: Spout[_]): Spout[_] = {
+  def convertExoGraphToSwave(jarList: List[File], graph: ValidGraphRep, initialSpout: Spout[_]): Spout[_] = {
     val jarsInBytes = jarList.map(jarFile => CliftonClassLoader.getJarAsBytes(jarFile).get)
     val loader = new CliftonClassLoader()
     for (bytes <- jarsInBytes)

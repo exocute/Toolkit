@@ -51,15 +51,13 @@ object SwaveActivity {
 
   private val functions = mutable.Map[String, FunctionType]()
 
-  def FanOutBroadcast(n: Int): FunctionType = {
-    input => (1 to n).map(_ => input).toVector
-  }
-
   val FanInToTuple: FunctionType = {
     case Vector(a, b) => (a, b)
     case Vector(a, b, c) => (a, b, c)
     case Vector(a, b, c, d) => (a, b, c, d)
     case Vector(a, b, c, d, e) => (a, b, c, d, e)
   }
+
+  val Identity: FunctionType = identity
 
 }

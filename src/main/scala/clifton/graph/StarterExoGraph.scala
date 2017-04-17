@@ -6,7 +6,7 @@ import java.util.zip.{ZipEntry, ZipOutputStream}
 
 import clifton.utilities.Utilities
 import toolkit.converters.ClassLoaderChecker
-import toolkit.{ActivityParser, GraphRep}
+import toolkit.{ActivityParser, GraphRep, ValidGraphRep}
 
 import scala.util.Try
 
@@ -30,12 +30,12 @@ class StarterExoGraph {
   }
 
   def addGraph(grpFileText: String, jars: List[File], graphTimeOut: Long): Try[ExoGraph] = {
-    getGraphRep(grpFileText).map { graph: GraphRep =>
+    getGraphRep(grpFileText).map { graph: ValidGraphRep =>
       new ExoGraphTimeOut(jars, graph, UUID.randomUUID().toString, graphTimeOut)
     }
   }
 
-  def generateJar(graph: GraphRep): Try[File] = {
+  def generateJar(graph: ValidGraphRep): Try[File] = {
     val checker = new ClassLoaderChecker()
 
     for (act <- graph.getActivities)
@@ -86,7 +86,7 @@ class StarterExoGraph {
     }
   }
 
-  def getGraphRep(fileAsText: String): Try[GraphRep] = {
+  def getGraphRep(fileAsText: String): Try[ValidGraphRep] = {
     val plnClean = Utilities.clearCommnents(fileAsText)
     val parser = new ActivityParser(plnClean)
     val res: Try[GraphRep] = parser.InputLine.run()
