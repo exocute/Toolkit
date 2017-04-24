@@ -1,12 +1,11 @@
 package executable
 
-import java.util.Date
 import java.text.{DateFormat, SimpleDateFormat}
+import java.util.Date
 import java.util.concurrent.LinkedBlockingDeque
 
+import exonode.clifton.config.ProtocolConfig
 import exonode.clifton.signals.LoggingSignal
-import exonode.clifton.config.Protocol._
-import org.jfree.ui.RefineryUtilities
 
 import scala.annotation.tailrec
 import scala.collection.immutable.HashMap
@@ -126,7 +125,7 @@ class SystemAnalyser(updateTime: Int = 2, logs: LinkedBlockingDeque[LoggingSigna
   def processLog(data: DataBase, log: LoggingSignal, graphics: Graphics): DataBase = {
     GraphicInterfaceScala.addLogLine(dateFormat.format(new Date) + " - " + log)
     log.code match {
-      case LOGCODE_STARTED_NODE =>
+      case ProtocolConfig.LOGCODE_STARTED_NODE =>
         val nDB = data.nodesDB + (log.nodeID -> InfoNode(log.graphID, log.actIDfrom, log.actIDto, log.injID, false))
         val levelCount = processLevel(log.level, data)
         val newActDB = if (data.actDB.contains(log.actIDto)) data.actDB + (log.actIDto -> data.actDB(log.actIDto).incNodeCount)
@@ -135,11 +134,11 @@ class SystemAnalyser(updateTime: Int = 2, logs: LinkedBlockingDeque[LoggingSigna
         GraphicInterfaceScala.addNode(log.nodeID)
         data.setNodesActandCount(nDB, newActDB, levelCount)
 
-      case LOGCODE_STARTED_GRAPH =>
+      case ProtocolConfig.LOGCODE_STARTED_GRAPH =>
         GraphicInterfaceScala.addErrorEvents(dateFormat.format(new Date), log.message)
         val graphUID = (log.graphID.split(':').head, log.graphID.split(':').last)
         data.addUID(graphUID)
-      case LOGCODE_CHANGED_ACT =>
+      case ProtocolConfig.LOGCODE_CHANGED_ACT =>
         val oldNodeInfo = data.nodesDB(log.nodeID)
         val newNDB = data.nodesDB.updated(log.nodeID, oldNodeInfo.setChangeAct(log.actIDfrom, log.actIDto))
         //update actDB
@@ -154,14 +153,14 @@ class SystemAnalyser(updateTime: Int = 2, logs: LinkedBlockingDeque[LoggingSigna
         val levelCount = processLevel(log.level, data)
         if (log.actIDto.equals("@")) GraphicInterfaceScala.addErrorEvents(dateFormat.format(new Date), "Analyser Started : " + log.nodeID)
         data.setNodesActandCount(newNDB, newActDB, levelCount)
-      case LOGCODE_PROCESSING_INPUT =>
+      case ProtocolConfig.LOGCODE_PROCESSING_INPUT =>
         //update nodeDB
         val oldNodeInfo = data.nodesDB(log.nodeID)
         val newNDB = data.nodesDB.updated(log.nodeID, oldNodeInfo.setMessage(true))
         val levelCount = processLevel(log.level, data)
         val otherCount = data.otherCounters.incProcessing
         data.setNodesCountandOthers(newNDB, levelCount, otherCount)
-      case LOGCODE_FINISHED_PROCESSING =>
+      case ProtocolConfig.LOGCODE_FINISHED_PROCESSING =>
         val oldNodeInfo = data.nodesDB(log.nodeID)
         val newNDB = data.nodesDB.updated(log.nodeID, oldNodeInfo.setMessage(false))
         val nActDB = {
@@ -171,23 +170,23 @@ class SystemAnalyser(updateTime: Int = 2, logs: LinkedBlockingDeque[LoggingSigna
         val levelCount = processLevel(log.level, data)
         val otherCount = if (log.actIDto.equals("<")) data.otherCounters.decProcessingFinal else data.otherCounters.decProcessing
         DataBase(newNDB, nActDB, levelCount, otherCount, data.graphUID)
-      case LOGCODE_FAILED =>
+      case ProtocolConfig.LOGCODE_FAILED =>
         val levelCount = processLevel(log.level, data)
         data.setCountLev(levelCount)
-      case LOGCODE_DATA_RECOVERED =>
+      case ProtocolConfig.LOGCODE_DATA_RECOVERED =>
         val levelCount = processLevel(log.level, data)
         val otherCount = levelCount.incRecovered
         data.setCountLev(otherCount)
-      case LOGCODE_INJECTED =>
+      case ProtocolConfig.LOGCODE_INJECTED =>
         val otherCount = data.otherCounters.incInjected
         data.setOtherCounters(otherCount)
-      case LOGCODE_COLLECTED =>
+      case ProtocolConfig.LOGCODE_COLLECTED =>
         val otherCount = data.otherCounters.incCollected
         data.setOtherCounters(otherCount)
-      case LOGCODE_ERROR_PROCESSING =>
+      case ProtocolConfig.LOGCODE_ERROR_PROCESSING =>
         //TODO should be updated on the next version
         data.setCountLev(data.countLevels.incError)
-      case LOGCODE_NODE_SHUTDOWN =>
+      case ProtocolConfig.LOGCODE_NODE_SHUTDOWN =>
         val newNDB = data.nodesDB - log.nodeID
         val actProcessing = data.nodesDB(log.nodeID).actIDFrom
         val newACTDB = {
@@ -197,16 +196,16 @@ class SystemAnalyser(updateTime: Int = 2, logs: LinkedBlockingDeque[LoggingSigna
         GraphicInterfaceScala.removeNode(log.nodeID)
         GraphicInterfaceScala.addErrorEvents(dateFormat.format(new Date), log.message + " : " + log.nodeID)
         data.setNodesAndAct(newNDB, newACTDB)
-      case LOGCODE_VALUES_LOST =>
+      case ProtocolConfig.LOGCODE_VALUES_LOST =>
         //TODO should be updated on the next version
         data.setCountLev(data.countLevels.incWarn)
-      case LOGCODE_ACTIVITY_NOT_FOUND =>
+      case ProtocolConfig.LOGCODE_ACTIVITY_NOT_FOUND =>
         //TODO should be updated on the next version
         data.setCountLev(data.countLevels.incError)
-      case LOGCODE_CLASS_NOT_LOADED =>
+      case ProtocolConfig.LOGCODE_CLASS_NOT_LOADED =>
         //TODO should be updated on the next version
         data.setCountLev(data.countLevels.incWarn)
-      case LOGCODE_INFORMATION_LOST =>
+      case ProtocolConfig.LOGCODE_INFORMATION_LOST =>
         //TODO should be updated on the next version
         data.setCountLev(data.countLevels.incWarn)
     }

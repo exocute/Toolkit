@@ -26,7 +26,7 @@ import java.awt.event.ActionListener;
   */
 public class GraphicInterface extends JFrame {
 
-    private static TimeSeries processingData = new TimeSeries("data", Millisecond.class);
+    private static TimeSeries processingData = new TimeSeries("data");
     private static DefaultCategoryDataset priorityEvents = new DefaultCategoryDataset();
     private static DefaultCategoryDataset processedEvents = new DefaultCategoryDataset();
     private static DefaultPieDataset topActivities = new DefaultPieDataset();
@@ -56,8 +56,7 @@ public class GraphicInterface extends JFrame {
         ValueAxis axis = plot.getDomainAxis();
         axis.setAutoRange(true);
         axis.setFixedAutoRange(60000.0);
-        ChartPanel label = new ChartPanel(chart);
-        return label;
+        return new ChartPanel(chart);
     }
 
     private static ChartPanel createPieChart(DefaultPieDataset dataset, String title) {
@@ -75,9 +74,8 @@ public class GraphicInterface extends JFrame {
         plot.setDirection(Rotation.CLOCKWISE);
         plot.setForegroundAlpha(0.5f);
         plot.setNoDataMessage("No data to display");
-        ChartPanel chartPanel = new ChartPanel(chart);
         //chartPanel.setPreferredSize(new java.awt.Dimension(550, 400));
-        return chartPanel;
+        return new ChartPanel(chart);
 
     }
 
@@ -92,9 +90,8 @@ public class GraphicInterface extends JFrame {
                 PlotOrientation.VERTICAL,
                 true, true, false);
 
-        ChartPanel chartPanel = new ChartPanel(barChart);
         //chartPanel.setPreferredSize(new java.awt.Dimension(550, 400));
-        return chartPanel;
+        return new ChartPanel(barChart);
     }
 
     private static JScrollPane createTable(DefaultTableModel dt, JTable t) {
@@ -127,7 +124,6 @@ public class GraphicInterface extends JFrame {
         p2.add(createBarChart("Processed/Injected Inputs", "Parameters", "Quantity", processedEvents), BorderLayout.CENTER);
         p3.add(createTable(activityRank, actRank), BorderLayout.CENTER);
         p3.add(createTable(errorEvents, errorData), BorderLayout.CENTER);
-
 
         p1.setLayout(new BoxLayout(p1, BoxLayout.Y_AXIS));
         p2.setLayout(new BoxLayout(p2, BoxLayout.Y_AXIS));
@@ -171,9 +167,7 @@ public class GraphicInterface extends JFrame {
         jf.add(jp, BorderLayout.CENTER);
         jf.setSize(new Dimension(1600, 800));
         jf.setVisible(true);
-        jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-
+        jf.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
     }
 
     public void addLogLine(String line) {

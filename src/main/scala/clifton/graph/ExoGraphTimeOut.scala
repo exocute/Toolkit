@@ -6,7 +6,7 @@ import java.util.UUID
 import api.{Collector, Injector}
 import clifton.graph.exceptions.{InjectorTimeOutException, MissingActivitiesException}
 import distributer.JarSpaceUpdater
-import exonode.clifton.config.Protocol._
+import exonode.clifton.config.ProtocolConfig
 import exonode.clifton.node.Log.{INFO, ND}
 import exonode.clifton.node.entries._
 import exonode.clifton.node.{Log, SpaceCache}
@@ -16,7 +16,8 @@ import toolkit.ValidGraphRep
 /**
   * Created by #GrowinScala
   */
-class ExoGraphTimeOut(jars: List[File], val graph: ValidGraphRep, graphId: String, graphTimeOut: Long) extends ExoGraph {
+class ExoGraphTimeOut(jars: List[File], val graph: ValidGraphRep, graphId: String, graphTimeOut: Long,
+                     config: ProtocolConfig = ProtocolConfig.DEFAULT) extends ExoGraph {
 
   private val REMOVE_DATA_LIMIT = 50
 
@@ -29,8 +30,8 @@ class ExoGraphTimeOut(jars: List[File], val graph: ValidGraphRep, graphId: Strin
   val (injector: Injector, collector: Collector) = {
     val injCollUUID = UUID.randomUUID().toString
     val cliftonInjector = new TimeOutInjector(new CliftonInjector(
-      injCollUUID, graphId + ":" + INJECT_SIGNAL_MARKER, graphId + ":" + graph.root.id, () => graphReady))
-    val cliftonCollector = new CliftonCollector(injCollUUID, graphId + ":" + COLLECT_SIGNAL_MARKER,
+      injCollUUID, graphId + ":" + ProtocolConfig.INJECT_SIGNAL_MARKER, graphId + ":" + graph.root.id, () => graphReady, config))
+    val cliftonCollector = new CliftonCollector(injCollUUID, graphId + ":" + ProtocolConfig.COLLECT_SIGNAL_MARKER,
       graph.depthOfFlatMaps, () => graphReady)
 
     (cliftonInjector, cliftonCollector)
@@ -39,7 +40,7 @@ class ExoGraphTimeOut(jars: List[File], val graph: ValidGraphRep, graphId: Strin
   {
     val startMsg = s"Graph <${graph.name}> is ready to receive injects"
     println(graphId + ";" + startMsg)
-    Log.receiveLog(LoggingSignal(LOGCODE_STARTED_GRAPH, INFO, ND, graphId + ":" + graph.name, ND, ND, ND, "Graph Started - " + graph.name, 0))
+    Log.writeLog(LoggingSignal(ProtocolConfig.LOGCODE_STARTED_GRAPH, INFO, ND, graphId + ":" + graph.name, ND, ND, ND, "Graph Started - " + graph.name, 0))
   }
 
   private var lastTime = System.currentTimeMillis()
@@ -118,7 +119,7 @@ class ExoGraphTimeOut(jars: List[File], val graph: ValidGraphRep, graphId: Strin
       while (signalSpace.takeMany(FlatMapEntry(graphId, null, null), REMOVE_DATA_LIMIT).nonEmpty) {}
     }
 
-    remove(COLLECT_SIGNAL_MARKER)
+    remove(ProtocolConfig.COLLECT_SIGNAL_MARKER)
     for (actId <- graph.getActivities.map(_.id))
       remove(actId)
   }

@@ -1,10 +1,10 @@
 package clifton.graph
 
-import exonode.clifton.config.Protocol._
+import exonode.clifton.config.ProtocolConfig
 import exonode.clifton.node.SpaceCache
 import exonode.clifton.node.entries.ExoEntry
 import exonode.clifton.signals.ActivitySignal
-import toolkit.{ActivityRep, GraphRep, ValidGraphRep}
+import toolkit.{ActivityRep, ValidGraphRep}
 
 import scala.collection.mutable
 
@@ -27,7 +27,7 @@ object GraphCreator {
 
       val inMarkers =
         if (inActivities.isEmpty) {
-          Vector(graphId + ":" + INJECT_SIGNAL_MARKER)
+          Vector(graphId + ":" + ProtocolConfig.INJECT_SIGNAL_MARKER)
         } else {
           inActivities.foldLeft(Vector[String]())((vector, nextAct) => {
             val inMarker = graphId + ":" + nextAct.id
@@ -38,7 +38,7 @@ object GraphCreator {
       val outActivities = graph.getConnections(act)
       val outMarkers =
         if (outActivities.isEmpty) {
-          Vector(graphId + ":" + COLLECT_SIGNAL_MARKER)
+          Vector(graphId + ":" + ProtocolConfig.COLLECT_SIGNAL_MARKER)
         } else {
           outActivities.foldLeft(Vector[String]())((vector, prevAct) => {
             val outMarker = graphId + ":" + prevAct.id

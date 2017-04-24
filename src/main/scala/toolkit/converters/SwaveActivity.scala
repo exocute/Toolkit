@@ -60,4 +60,7 @@ object SwaveActivity {
 
   val Identity: FunctionType = identity
 
+  def negateBool(negated: Boolean, fBool: Serializable => Boolean): FunctionType =
+    (if (negated) fBool.andThen(!_) else fBool).asInstanceOf[FunctionType]
+
 }

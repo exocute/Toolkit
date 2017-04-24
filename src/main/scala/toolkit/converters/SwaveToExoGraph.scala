@@ -13,7 +13,6 @@ import toolkit.converters.SwaveToExoGraph.{ExoGraphWithResults, FunctionType}
 import toolkit.{ActivityRep, GraphRep, ValidGraphRep}
 
 import scala.collection.mutable
-import scala.concurrent.Future
 import scala.io.Source
 import scala.language.implicitConversions
 import scala.util.control.NonFatal
@@ -43,7 +42,8 @@ private class SwaveToExoGraph(swaveObj: Spout[_]) {
       val out = new ObjectOutputStream(bos)
       out.writeObject(obj)
       out.flush()
-      bos.toByteArray
+      val bytes = bos.toByteArray
+      bytes
     } finally {
       try {
         bos.close()
@@ -130,42 +130,71 @@ private class SwaveToExoGraph(swaveObj: Spout[_]) {
     graph
   }
 
-  private var swaveInput: Stream[Any] = _
+  private var swaveInput: Stream[Serializable] = _
 
   private def stageToActivity(stage: Stage): Option[(FunctionType, Array[Byte], ActivityType)] = {
-    (stage.kind.name, stage.params) match {
-      case ("Map", it) =>
-        val f = it.next().asInstanceOf[FunctionType]
-        Some(f, ObjectToBytes(f), ActivityMapType)
-      case ("Filter", it) =>
-        val f = it.next().asInstanceOf[FunctionType]
-        Some(f, ObjectToBytes(f), ActivityFilterType)
-      case ("Spout.FromFuture", it) =>
-        swaveInput = swaveInput #::: Stream(it.next().asInstanceOf[Future[Any]].value.get.get)
+    stage.kind match {
+      case inOut: Stage.Kind.InOut =>
+        import Stage.Kind.InOut
+        inOut match {
+          case InOut.Nop =>
+            None
+          case InOut.Map(fAny) =>
+            val f = fAny.asInstanceOf[FunctionType]
+            Some(f, ObjectToBytes(f), ActivityMapType)
+          case InOut.Filter(fBool, negated) =>
+            val f: FunctionType = SwaveActivity.negateBool(negated, fBool)
+            Some(f, ObjectToBytes(f), ActivityFilterType)
+          case others =>
+            throw new NotAValidSwave(new Exception(s"Swave method not supported: ${others.name}"))
+        }
+      case input: Stage.Kind.Spout =>
+        import Stage.Kind.Spout
+        input match {
+          case Spout.FromFuture(future) =>
+            swaveInput = swaveInput #::: Stream(future.value.get.get.asInstanceOf[Serializable])
+          case Spout.FromIterator(it) =>
+            swaveInput = swaveInput #::: it.toStream.map(_.asInstanceOf[Serializable])
+          case others =>
+            throw new NotAValidSwave(new Exception(s"Swave method not supported: ${others.name}"))
+        }
         None
-      case ("Spout.FromIterator", it) =>
-        swaveInput = swaveInput #::: it.next().asInstanceOf[Iterator[Any]].toStream
-        None
-      case ("Flatten.Concat", _) =>
-        val f = SwaveActivity.Identity
-        Some(f, ObjectToBytes(f), ActivityFlatMapType)
-      case ("FanIn.ToTuple", _) =>
-        val f = SwaveActivity.FanInToTuple
-        Some(f, ObjectToBytes(f), ActivityMapType)
-      case ("FanOut.Broadcast", _) =>
-        val f = SwaveActivity.Identity
-        Some(f, ObjectToBytes(f), ActivityMapType)
-      case ("Nop", _) =>
-        //ignore this stage
-        None
-      case other =>
-        println(s"Unknown swave stage: ${other._1}, ignoring...")
-        None
+      case fanOut: Stage.Kind.FanOut =>
+        import Stage.Kind.FanOut
+        fanOut match {
+          case FanOut.Broadcast(_) =>
+            // the previous function should have this one connections (and be a flatMap)
+            val f = SwaveActivity.Identity
+            Some(f, ObjectToBytes(f), ActivityMapType)
+          case others =>
+            throw new NotAValidSwave(new Exception(s"Swave method not supported: ${others.name}"))
+        }
+      case fanIn: Stage.Kind.FanIn =>
+        import Stage.Kind.FanIn
+        fanIn match {
+          case FanIn.ToTuple =>
+            val f = SwaveActivity.FanInToTuple
+            Some(f, ObjectToBytes(f), ActivityMapType)
+          case others =>
+            throw new NotAValidSwave(new Exception(s"Swave method not supported: ${others.name}"))
+        }
+      case flatten: Stage.Kind.Flatten =>
+        import Stage.Kind.Flatten
+        flatten match {
+          case Flatten.Concat(_) =>
+            // the previous function should be FlatMap
+            val f = SwaveActivity.Identity
+            Some(f, ObjectToBytes(f), ActivityFlatMapType)
+          case others =>
+            throw new NotAValidSwave(new Exception(s"Swave method not supported: ${others.name}"))
+        }
+      case others =>
+        throw new NotAValidSwave(new Exception(s"Swave method not supported: ${others.name}"))
     }
+
   }
 
-  def show(spout: Spout[_]): Unit =
-    println(Graph.from(spout.stage).withGlyphSet(GlyphSet.`2x2 ASCII`).render)
+  def show(): Unit = SwaveToExoGraph.show(swaveObj)
 
   private def getGraphRep(swaveObj: Spout[_], uuid: String): Try[ValidGraphRep] = {
     val s = swaveObj.stage
@@ -177,8 +206,7 @@ private class SwaveToExoGraph(swaveObj: Spout[_]) {
   private def injectSwaveData(exoGraph: ExoGraph): Vector[Int] = {
     val injector = exoGraph.injector
 
-    val input = swaveInput.map(_.asInstanceOf[Serializable])
-    val injIds = injector.injectMany(input)
+    val injIds = injector.injectMany(swaveInput)
     injIds
   }
 
@@ -431,12 +459,11 @@ object SwaveToExoGraph {
     override def closeGraph(): Unit = exoGraph.closeGraph()
 
     def result: Vector[Serializable] = {
-      val elems = injectIds.map(i => collector.collectAllByIndex(i))
+      val elems = injectIds.flatMap(i => collector.collectAllByIndex(i))
 
       closeGraph()
 
-      // flatten all results (from possible flatMap transformations)
-      elems.flatten
+      elems
     }
   }
 
@@ -456,6 +483,11 @@ object SwaveToExoGraph {
     def toExoGraph: ExoGraphWithResults = {
       SwaveToExoGraph.loadSwaveObj(swave)
     }
+
+    def show(): Unit = SwaveToExoGraph.show(swave)
   }
+
+  def show(spout: Spout[_]): Unit =
+    println(Graph.from(spout.stage).withGlyphSet(GlyphSet.`2x2 ASCII`).render)
 
 }

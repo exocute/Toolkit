@@ -73,7 +73,10 @@ object ExoGraphToSwave {
     }
   }
 
+  private type NormalOp = SubStreamOps[_, HNil, Nothing, StreamOps[_]#FanOut[HNil, Nothing]]
+
   private def convertToExoTree(loader: CliftonClassLoader, graphRep: ValidGraphRep): ExoTree = {
+
     val seen = mutable.Map[String, ExoTree]()
 
     def convertToSwaveAux(activityRep: ActivityRep): ExoTree = {
@@ -166,7 +169,7 @@ object ExoGraphToSwave {
                 }
               }
               val elemConverted = convertToSwaveAux2(elem.setActivity(activityWrapper), spout.sub)
-                .asInstanceOf[SubStreamOps[_, HNil, Nothing, StreamOps[_]#FanOut[HNil, Nothing]]].end
+                .asInstanceOf[NormalOp].end
               addSubStages(elemConverted, others)
           }
 
@@ -189,7 +192,7 @@ object ExoGraphToSwave {
     }
 
     def addSwaveStage2(_initialSpout: AnyRef, activity: ParameterLessActivity, actType: ActivityType): AnyRef = {
-      val initialSpout = _initialSpout.asInstanceOf[SubStreamOps[_, HNil, Nothing, StreamOps[_]#FanOut[HNil, Nothing]]]
+      val initialSpout = _initialSpout.asInstanceOf[NormalOp]
       actType match {
         case ActivityMapType =>
           initialSpout.map(input => activity.process(input.asInstanceOf[Serializable]))
@@ -201,7 +204,7 @@ object ExoGraphToSwave {
     }
 
     def convertToSwaveAux2(exoTree: ExoTree, _initialSpout: AnyRef): AnyRef = {
-      val initialSpout = _initialSpout.asInstanceOf[SubStreamOps[_, HNil, Nothing, StreamOps[_]#FanOut[HNil, Nothing]]]
+      val initialSpout = _initialSpout.asInstanceOf[NormalOp]
 
       exoTree match {
         case ExoFinish =>
@@ -228,12 +231,12 @@ object ExoGraphToSwave {
                 }
               }
               val elemConverted = convertToSwaveAux2(elem.setActivity(activityWrapper), spout.sub)
-                .asInstanceOf[SubStreamOps[_, HNil, Nothing, StreamOps[_]#FanOut[HNil, Nothing]]].end
+                .asInstanceOf[NormalOp].end
               startLoop(elemConverted, others)
           }
 
           val forkSpout = convertToSwaveAux2(ExoSimple(id, activity, actType, ExoFinish), initialSpout)
-            .asInstanceOf[SubStreamOps[_, HNil, Nothing, StreamOps[_]#FanOut[HNil, Nothing]]]
+            .asInstanceOf[NormalOp]
           val forkBody = startLoop(forkSpout.fanOutBroadcast(), next.zipWithIndex)
           val forkResult = forkBody.asInstanceOf[initialSpout.FanOut[Any @:: Any @:: HNil, Nothing]]
             .fanInMerge()

@@ -5,7 +5,7 @@ import java.io.Serializable
 import api.Collector
 import clifton.graph.CliftonCollector.MAX_NEXT_LEAF_CALLS
 import clifton.graph.exceptions.CollectException
-import exonode.clifton.config.Protocol.LOGCODE_COLLECTED
+import exonode.clifton.config.ProtocolConfig.LOGCODE_COLLECTED
 import exonode.clifton.node.Log.{INFO, ND}
 import exonode.clifton.node.entries.{DataEntry, FlatMapEntry}
 import exonode.clifton.node.{Log, SpaceCache}
@@ -29,7 +29,7 @@ class CliftonCollector(uuid: String, marker: String, nFlatMaps: Int, val canColl
   private var indexTree: Tree = OrderTree(uuid, 0, "", 0, Int.MaxValue, 0, None)
 
   private def sendLog() = {
-    Log.receiveLog(LoggingSignal(LOGCODE_COLLECTED, INFO, ND, ND, ND, ND, ND, "Result Collected", 0))
+    Log.writeLog(LoggingSignal(LOGCODE_COLLECTED, INFO, ND, ND, ND, ND, ND, "Result Collected", 0))
   }
 
   def collect(): Option[Option[Serializable]] = {
@@ -95,9 +95,11 @@ class CliftonCollector(uuid: String, marker: String, nFlatMaps: Int, val canColl
     }
 
     tree.nextLeaf(0) match {
-      case newTree: OrderTree =>
+      case None =>
+        (None, None)
+      case Some(newTree: OrderTree) =>
         (Some(newTree), None)
-      case leaf@OrderLeaf(injectId, orderId, parent) =>
+      case Some(leaf@OrderLeaf(injectId, orderId, parent)) =>
         val result = aux(injectId, orderId)
         if (result.isDefined) {
           (parent, result)
@@ -171,22 +173,22 @@ class CliftonCollector(uuid: String, marker: String, nFlatMaps: Int, val canColl
   }
 
   private sealed trait Tree {
-    def nextLeaf(calls: Int): Tree
+    def nextLeaf(calls: Int): Option[Tree]
   }
 
   private case class OrderTree(uuid: String, injectId: Int, prefixOrderId: String, orderId: Int,
                                size: Int, depth: Int, parent: Option[OrderTree]) extends Tree {
     private def joinOrderId: String = if (prefixOrderId.isEmpty) orderId.toString else s"$prefixOrderId:$orderId"
 
-    def nextLeaf(calls: Int): Tree = {
+    def nextLeaf(calls: Int): Option[Tree] = {
       //prevents infinite loops and stack overflows
       if (calls > MAX_NEXT_LEAF_CALLS)
-        this
+        Some(this)
       else {
-        val someTree: Option[OrderTree] =
+        val someTree: Option[Option[OrderTree]] =
           if (depth < nFlatMaps) {
             val fullOrderId = joinOrderId
-            dataSpace.take(FlatMapEntry(uuid, fullOrderId, null), 0).flatMap {
+            dataSpace.take(FlatMapEntry(uuid, fullOrderId, null), 0).map {
               case FlatMapEntry(_, _, newLevelSize) =>
                 if (newLevelSize == 0)
                   nextOrderId
@@ -194,16 +196,18 @@ class CliftonCollector(uuid: String, marker: String, nFlatMaps: Int, val canColl
                   Some(OrderTree(uuid, injectId, fullOrderId, 0, newLevelSize, depth + 1, Some(this)))
             }
           } else {
-            Some(this)
+            Some(Some(this))
           }
         someTree match {
-          case Some(tree) =>
+          case None =>
+            Some(this)
+          case Some(None) =>
+            None
+          case Some(Some(tree)) =>
             if (tree.depth < nFlatMaps)
               tree.nextLeaf(calls + 1)
             else
-              OrderLeaf(s"$uuid:$injectId", tree.joinOrderId, tree.nextOrderId)
-          case None =>
-            this
+              Some(OrderLeaf(s"$uuid:$injectId", tree.joinOrderId, tree.nextOrderId))
         }
       }
     }
@@ -223,7 +227,7 @@ class CliftonCollector(uuid: String, marker: String, nFlatMaps: Int, val canColl
   }
 
   private case class OrderLeaf(injectId: String, orderId: String, parent: Option[OrderTree]) extends Tree {
-    def nextLeaf(calls: Int): Tree = this
+    def nextLeaf(calls: Int): Option[Tree] = Some(this)
   }
 
 }

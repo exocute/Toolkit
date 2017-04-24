@@ -20,8 +20,7 @@ import scala.collection.mutable
   */
 object GraphicInterfaceScala {
 
-
-  private val processingData = new TimeSeries("data", classOf[Millisecond])
+  private val processingData = new TimeSeries("data")
   private val priorityEvents = new DefaultCategoryDataset
   private val processedEvents = new DefaultCategoryDataset
   private val topActivities = new DefaultPieDataset

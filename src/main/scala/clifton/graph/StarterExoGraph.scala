@@ -5,10 +5,13 @@ import java.util.UUID
 import java.util.zip.{ZipEntry, ZipOutputStream}
 
 import clifton.utilities.Utilities
+import exonode.clifton.config.ProtocolConfig
+import org.parboiled2.ParseError
 import toolkit.converters.ClassLoaderChecker
+import toolkit.exceptions.ExocuteParseError
 import toolkit.{ActivityParser, GraphRep, ValidGraphRep}
 
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 /**
   * Created by #GrowinScala
@@ -23,18 +26,33 @@ class StarterExoGraph {
     *
     * @param grpFile the file in grp format
     * @param jars    the jar files to be loaded
-    * @return A pair with the injector and the collector
+    * @return the ExoGraph, ready to inject and collect results
     */
-  def addGraph(grpFile: File, jars: List[File], graphTimeOut: Long): Try[ExoGraph] = {
-    addGraph(Utilities.readFile(grpFile), jars, graphTimeOut)
+  def addGraphFile(grpFile: File, jars: List[File], graphTimeOut: Long,
+                   config: ProtocolConfig = ProtocolConfig.DEFAULT): Try[ExoGraph] = {
+    addGraphText(Utilities.readFile(grpFile), jars, graphTimeOut, config)
   }
 
-  def addGraph(grpFileText: String, jars: List[File], graphTimeOut: Long): Try[ExoGraph] = {
+  /**
+    * Loads the jar files into the jar space and the grp file representation into the signal space.
+    *
+    * @param grpFileText a string in grp format
+    * @param jars        the jar files to be loaded
+    * @return the ExoGraph, ready to inject and collect results
+    */
+  def addGraphText(grpFileText: String, jars: List[File], graphTimeOut: Long,
+                   config: ProtocolConfig = ProtocolConfig.DEFAULT): Try[ExoGraph] = {
     getGraphRep(grpFileText).map { graph: ValidGraphRep =>
       new ExoGraphTimeOut(jars, graph, UUID.randomUUID().toString, graphTimeOut)
     }
   }
 
+  /**
+    * Tries to generate a jar with all the necessary classes used by the GraphRep.
+    *
+    * @param graph a valid GraphRep
+    * @return the jar file
+    */
   def generateJar(graph: ValidGraphRep): Try[File] = {
     val checker = new ClassLoaderChecker()
 
@@ -90,7 +108,11 @@ class StarterExoGraph {
     val plnClean = Utilities.clearCommnents(fileAsText)
     val parser = new ActivityParser(plnClean)
     val res: Try[GraphRep] = parser.InputLine.run()
-    res.flatMap(graph => graph.checkValidGraph())
+    res match {
+      case Success(graph) => graph.checkValidGraph()
+      case Failure(e: ParseError) => Failure(new ExocuteParseError(parser.formatError(e)))
+      case Failure(e) => Failure(e)
+    }
   }
 
 }
