@@ -12,6 +12,9 @@ For more information about the Toolkit: http://bit.ly/2mitGuG
 
 ## Releases
 
+28/04/2017 <br />
+--> **Toolkit v1.2** <br />
+
 10/04/2017 <br />
 --> **Toolkit v1.1** <br />
 
@@ -95,4 +98,4 @@ Notes: <br />
 | Parboiled      | 2.1.4          | libraryDependencies += "org.parboiled" %% "parboiled" % "2.1.3"   |
 | ScalaTest      | 3.0.1          | libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test"   |
 | Swave          | 0.7.0          | https://github.com/sirthias/swave
-| ExoNode        | 1.1            | https://github.com/exocute/ExoNode   |
+| ExoNode        | 1.2            | https://github.com/exocute/ExoNode   |
