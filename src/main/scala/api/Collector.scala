@@ -68,8 +68,8 @@ trait Collector {
     * Returns all the results with a specific inject id.
     *
     * @param injectIndex the inject index of the result
-    * @return if there is nothing to collect it will return None, otherwise it will
-    *         return Some(result)
+    * @return if there is nothing to collect it will return an empty list, otherwise it will
+    *         return the list of elements
     */
   def collectAllByIndex(injectIndex: Int): List[Serializable]
 

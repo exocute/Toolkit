@@ -3,6 +3,7 @@ package toolkit
 import exonode.clifton.signals.{ActivityType, _}
 import org.parboiled2.{Rule1, _}
 import shapeless.{::, HNil}
+import toolkit.exceptions.InvalidType
 
 /**
   * Created by #GrowinScala
@@ -76,8 +77,12 @@ class ActivityParser(val input: ParserInput) extends Parser {
       ((initialAct: ActivityRep, importNames: Seq[String]) =>
         importNames.foldLeft(initialAct)((act, importName) => act.addImport(importName)))
       | ignoreCase("export") ~ WS1 ~ Type ~ NLS ~>
-      ((act: ActivityRep, exportName: String) =>
-        act.setExport(exportName))
+      ((act: ActivityRep, exportName: String) => {
+        if (act.actType == ActivityFlatMapType && exportName != "Boolean")
+          throw new InvalidType(exportName, "Boolean")
+        else
+          act.setExport(exportName)
+      })
     )
   }
 

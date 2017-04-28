@@ -3,8 +3,8 @@ package executable
 import java.io.File
 import java.nio.file.{Files, Paths}
 
-import clifton.graph.ExocuteConfig
-import exonode.clifton.node._
+import clifton.graph.{ExocuteConfig, StarterExoGraph}
+import exonode.clifton.node.SpaceCache
 import exonode.clifton.node.entries.ExoEntry
 import exonode.clifton.signals.KillSignal
 
@@ -87,7 +87,7 @@ object StartClientAPI {
             printlnExit(getHelpString)
           case "--version" =>
             //FIXME get version dynamically ?
-            printlnExit("Exocute version: 1.1")
+            printlnExit("Exocute version: 1.2")
           case _ =>
             if (cmd.startsWith("-")) {
               println("Unknown command: " + cmd)
@@ -115,8 +115,8 @@ object StartClientAPI {
 
     println("  ______                      _       \n |  ____|                    | |      \n | |__  __  _____   ___ _   _| |_ ___ \n |  __| \\ \\/ / _ \\ / __| | | | __/ _ \\\n | |____ >  < (_) | (__| |_| | ||  __/\n |______/_/\\_\\___/ \\___|\\__,_|\\__\\___|\n                                      \n                                      ")
 
-    val starterExoGraph = ExocuteConfig.setHosts(SpaceCache.signalHost, SpaceCache.dataHost, SpaceCache.jarHost)
-    starterExoGraph.addGraphFile(file, jars, 60 * 60 * 1000) match {
+    ExocuteConfig.setHosts(SpaceCache.signalHost, SpaceCache.dataHost, SpaceCache.jarHost)
+    StarterExoGraph.addGraphFile(file, jars, 60 * 60 * 1000) match {
       case Failure(e) =>
         val msg = e.getMessage
         printlnExit(s"Error loading grp file:\n${if (msg == null) e else msg}")

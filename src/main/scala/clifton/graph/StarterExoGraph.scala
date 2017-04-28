@@ -19,14 +19,16 @@ import scala.util.{Failure, Success, Try}
   * Receives a graph and loads the jar, inserts the representation of every activity of the graph in space and returns
   * an Injector and Collector to interact with the graph and the API
   */
-class StarterExoGraph {
+object StarterExoGraph {
 
   /**
+    * Allows you to start a graph in the space.
+    * Make sure you that all the spaces are correcty set before using this method.
     * Loads the jar files into the jar space and the grp file representation into the signal space.
     *
     * @param grpFile the file in grp format
-    * @param jars    the jar files to be loaded
-    * @return the ExoGraph, ready to inject and collect results
+    * @param jars    a list of jar files that must contain all the necessary classes used by the graph
+    * @return the ExoGraph, ready to inject inputs and collect results
     */
   def addGraphFile(grpFile: File, jars: List[File], graphTimeOut: Long,
                    config: ProtocolConfig = ProtocolConfig.DEFAULT): Try[ExoGraph] = {
@@ -34,15 +36,17 @@ class StarterExoGraph {
   }
 
   /**
+    * Allows you to start a graph in the space.
+    * Make sure you that all the spaces are correcty set before using this method.
     * Loads the jar files into the jar space and the grp file representation into the signal space.
     *
-    * @param grpFileText a string in grp format
-    * @param jars        the jar files to be loaded
-    * @return the ExoGraph, ready to inject and collect results
+    * @param grpText a string in grp format
+    * @param jars    a list of jar files that must contain all the necessary classes used by the graph
+    * @return the ExoGraph, ready to inject inputs and collect results
     */
-  def addGraphText(grpFileText: String, jars: List[File], graphTimeOut: Long,
+  def addGraphText(grpText: String, jars: List[File], graphTimeOut: Long,
                    config: ProtocolConfig = ProtocolConfig.DEFAULT): Try[ExoGraph] = {
-    getGraphRep(grpFileText).map { graph: ValidGraphRep =>
+    getGraphRep(grpText).map { graph: ValidGraphRep =>
       new ExoGraphTimeOut(jars, graph, UUID.randomUUID().toString, graphTimeOut)
     }
   }

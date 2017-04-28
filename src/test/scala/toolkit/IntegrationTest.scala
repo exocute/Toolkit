@@ -2,10 +2,10 @@ package toolkit
 
 import java.io.{File, Serializable}
 
-import clifton.graph.{ExoGraph, ExocuteConfig}
-import exonode.clifton.config.BackupConfig._
+import clifton.graph.{ExoGraph, ExocuteConfig, StarterExoGraph}
+import exonode.clifton.config.ConfigLoader.ProtocolConfigDefault
+import exonode.clifton.config.ProtocolConfig
 import exonode.clifton.config.ProtocolConfig.{AnalyserTable, TableType}
-import exonode.clifton.config.{BackupConfig, ProtocolConfig}
 import exonode.clifton.node._
 import exonode.clifton.node.entries.ExoEntry
 import exonode.clifton.signals.KillSignal
@@ -20,7 +20,7 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
 
   private val jarFile = new File("tests\\classes.jar")
 
-  private val config = ProtocolConfig.DEFAULT
+  private var config = ProtocolConfig.DEFAULT
   private val KILL_TIME = 60 * 1000
   private val MAX_TIME_FOR_EACH_TEST = 60 * 60 * 1000
   private val EXPECTED_TIME_TO_CONSENSUS = 10 * 1000 +
@@ -29,14 +29,16 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
   private val signalSpace = SpaceCache.getSignalSpace
 
   private def startGraph(grpFile: String): ExoGraph = {
-    ExocuteConfig.setHosts().addGraphFile(new File(grpFile), List(jarFile), MAX_TIME_FOR_EACH_TEST) match {
+    ExocuteConfig.setDefaultHosts()
+    StarterExoGraph.addGraphFile(new File(grpFile), List(jarFile), MAX_TIME_FOR_EACH_TEST) match {
       case Success(exoGraph) => exoGraph
       case Failure(e) => throw e
     }
   }
 
   private def startGraphManual(grpText: String): ExoGraph = {
-    ExocuteConfig.setHosts().addGraphText(grpText, List(jarFile), MAX_TIME_FOR_EACH_TEST) match {
+    ExocuteConfig.setDefaultHosts()
+    StarterExoGraph.addGraphText(grpText, List(jarFile), MAX_TIME_FOR_EACH_TEST) match {
       case Success(exoGraph) => exoGraph
       case Failure(e) => throw e
     }
@@ -44,10 +46,10 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
 
   private var allNodes = List[CliftonNode]()
 
-  private def launchNNodes(nodes: Int, conf: BackupConfig = BackupConfigDefault): List[CliftonNode] = {
+  private def launchNNodes(nodes: Int): List[CliftonNode] = {
     val nodesList =
       for (_ <- 1 to nodes) yield {
-        val node = new CliftonNode()(conf)
+        val node = new CliftonNode()
         allNodes = node :: allNodes
         node
       }
@@ -195,14 +197,15 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
     val nNodesToKill = 2
     val nInputs = nNodes
 
-    val fastConf = new BackupConfig {
-      override def BACKUP_TIMEOUT_TIME: Long = 60 * 1000
+    config = new ProtocolConfigDefault {
+      override val BACKUP_TIMEOUT_TIME: Long = 60 * 1000
     }
+    signalSpace.write(ExoEntry[ProtocolConfig](ProtocolConfig.CONFIG_MARKER, config), MAX_TIME_FOR_EACH_TEST)
 
     // analyser
-    launchNNodes(1, fastConf)
+    launchNNodes(1)
     Thread.sleep(EXPECTED_TIME_TO_CONSENSUS)
-    val nodes = launchNNodes(nNodes, fastConf)
+    val nodes = launchNNodes(nNodes)
 
     // wait for all nodes to get the activity
     Thread.sleep(30 * 1000)
@@ -219,6 +222,7 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
     val nodesToKill = scala.util.Random.shuffle(nodes).take(nNodesToKill)
     killNodes(nodesToKill)
 
+    // finally collect the results like there was no crash
     val results = coll.collectMany(nInputs, 6 * 60 * 1000)
     assert(results.size == nInputs)
     assert(results.map(_.toString).sorted == inputs.map(i => i + i).sorted)
