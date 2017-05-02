@@ -58,7 +58,7 @@ object GraphCreator {
       }
     }
 
-    addSignal(graph.root)
+    graph.roots.foreach(addSignal)
   }
 
   def removeGraph(graph: ValidGraphRep, graphId: String): Unit = {

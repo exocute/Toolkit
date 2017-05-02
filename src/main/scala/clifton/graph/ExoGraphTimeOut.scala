@@ -17,7 +17,7 @@ import toolkit.ValidGraphRep
   * Created by #GrowinScala
   */
 class ExoGraphTimeOut(jars: List[File], val graph: ValidGraphRep, graphId: String, graphTimeOut: Long,
-                     config: ProtocolConfig = ProtocolConfig.DEFAULT) extends ExoGraph {
+                      config: ProtocolConfig = ProtocolConfig.DEFAULT) extends ExoGraph {
 
   private val REMOVE_DATA_LIMIT = 50
 
@@ -29,8 +29,9 @@ class ExoGraphTimeOut(jars: List[File], val graph: ValidGraphRep, graphId: Strin
 
   val (injector: Injector, collector: Collector) = {
     val injCollUUID = UUID.randomUUID().toString
+    val rootActivities = graph.roots.map(rootActivity => graphId + ":" + rootActivity.id)
     val cliftonInjector = new TimeOutInjector(new CliftonInjector(
-      injCollUUID, graphId + ":" + ProtocolConfig.INJECT_SIGNAL_MARKER, graphId + ":" + graph.root.id, () => graphReady, config))
+      injCollUUID, graphId + ":" + ProtocolConfig.INJECT_SIGNAL_MARKER, rootActivities, () => graphReady, config))
     val cliftonCollector = new CliftonCollector(injCollUUID, graphId + ":" + ProtocolConfig.COLLECT_SIGNAL_MARKER,
       graph.depthOfFlatMaps, () => graphReady)
 

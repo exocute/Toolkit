@@ -1,6 +1,6 @@
-// graph doesn't have a single root
+// graph has a a dual root
 
-Graph no_single_root_sink2
+Graph dual_root
 	Import imp1
 	Export exp2
 	Activity act1 act.ex

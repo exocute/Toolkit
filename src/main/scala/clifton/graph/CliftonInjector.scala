@@ -17,11 +17,12 @@ import exonode.clifton.signals.LoggingSignal
   * Standard Injector <br>
   * Injects input into the data space
   */
-class CliftonInjector(uuid: String, marker: String, rootActivity: String, val canInject: () => Boolean,
+class CliftonInjector(uuid: String, marker: String, rootActivities: List[String], val canInject: () => Boolean,
                       config: ProtocolConfig = ProtocolConfig.DEFAULT) extends Injector {
 
   private val dataSpace = SpaceCache.getDataSpace
-  private val templateData: DataEntry = DataEntry(rootActivity, marker, null, null, null)
+  private val dataTemplates: List[DataEntry] =
+    rootActivities.map(rootActivity => DataEntry(rootActivity, marker, null, null, null))
   private val nextIndex = new AtomicInteger(0)
 
   def inject(input: Serializable): Int = {
@@ -30,9 +31,10 @@ class CliftonInjector(uuid: String, marker: String, rootActivity: String, val ca
 
     val currentIndex = nextIndex.getAndIncrement()
     val injectId = s"$uuid:$currentIndex"
-    val dataEntry = templateData.setInjectId(injectId).setOrderId(s"$currentIndex").setData(Some(input))
+    val dataEntries = dataTemplates.map(_.setInjectId(injectId).setOrderId(s"$currentIndex").setData(Some(input)))
     try {
-      dataSpace.write(dataEntry, config.DATA_LEASE_TIME)
+      for (dataEntry <- dataEntries)
+        dataSpace.write(dataEntry, config.DATA_LEASE_TIME)
       Log.writeLog(LoggingSignal(ProtocolConfig.LOGCODE_INJECTED, INFO, ND, ND, ND, ND, ND, "Injected Input " + injectId, 0))
     } catch {
       case _: Exception => throw new InjectException("Internal Inject Error")

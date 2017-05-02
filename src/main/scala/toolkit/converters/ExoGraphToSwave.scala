@@ -79,6 +79,12 @@ object ExoGraphToSwave {
 
     val seen = mutable.Map[String, ExoTree]()
 
+    def getJoinActivity(treeList: List[ExoTree]): ExoTree = {
+      val actsMap = treeList.map(act => getAll(act).flatMap(_.getId))
+      val act1 :: act2 :: _ = actsMap
+      seen(act1.view.filter(s => act2.contains(s)).head)
+    }
+
     def convertToSwaveAux(activityRep: ActivityRep): ExoTree = {
       val id = activityRep.id
       val activity = try {
@@ -114,10 +120,8 @@ object ExoGraphToSwave {
           seen.getOrElse(id, {
             val tree = {
               val acts = list.map(actRep => convertToSwaveAux(actRep))
-              val actsMap = acts.map(act => getAll(act).flatMap(_.getId))
-              val act1 :: act2 :: _ = actsMap
-              val joinAct = act1.toStream.filter(s => act2.contains(s)).head
-              ExoFork(id, activity, activityRep.actType, acts, seen(joinAct))
+              val joinAct = getJoinActivity(acts)
+              ExoFork(id, activity, activityRep.actType, acts, joinAct)
             }
             seen.update(id, tree)
             tree
@@ -125,8 +129,17 @@ object ExoGraphToSwave {
       }
     }
 
-    val start = graphRep.root
-    ExoStart(convertToSwaveAux(start))
+    graphRep.roots match {
+      case List(singleRoot) =>
+        ExoStart(convertToSwaveAux(singleRoot))
+      case listOfRoots =>
+        val identityActivity = new Activity {
+          override def process(input: Serializable, params: Vector[String]): Serializable = input
+        }
+        val treeList = listOfRoots.map(convertToSwaveAux)
+        val joinTree = getJoinActivity(treeList)
+        ExoStart(ExoFork("#FORK", new SimpleActivity(identityActivity, Vector.empty), ActivityMapType, treeList, joinTree))
+    }
   }
 
   private def convertTreeToSwave(graph: ValidGraphRep, start: ExoTree, initial: Spout[_]): Spout[_] = {

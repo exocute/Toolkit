@@ -71,20 +71,21 @@ class GraphRep(val name: String, importName: String, exportName: String) extends
   }
 
   /**
-    * Adds a single connection between two activities
+    * Adds a single directed connection between two activities: A -> B
     *
-    * @param activityFrom
-    * @param activityTo
+    * @param activityFrom activity A
+    * @param activityTo   activity B
+    * @return true if all activities are presents in graph and are as excepted, false otherwise
     */
   def addConnection(activityFrom: String, activityTo: String): GraphRep = {
     addConnection(getActivity(activityFrom), getActivity(activityTo))
   }
 
   /**
-    * Adds a single connection between two activities
+    * Adds a single directed connection between two activities: A -> B
     *
-    * @param activityFrom
-    * @param activityTo
+    * @param activityFrom activity A
+    * @param activityTo   activity B
     * @return true if all activities are presents in graph and are as excepted, false otherwise
     */
   def addConnection(activityFrom: ActivityRep, activityTo: ActivityRep): GraphRep = {
@@ -126,20 +127,17 @@ class GraphRep(val name: String, importName: String, exportName: String) extends
     *
     * @return true if it has a root, false otherwise
     */
-  def hasRoot: Boolean = {
-    adjInverse.count { case (_, list) => list.isEmpty } == 1
+  def hasRoots: Boolean = {
+    adjInverse.exists { case (_, list) => list.isEmpty }
   }
 
   /**
-    * Returns the root activity if it exists
+    * Returns a list of all root activities
     *
     * @return
     */
-  def getRoot: Option[ActivityRep] =
-    if (hasRoot)
-      Some(adjInverse.filter { case (_, list) => list.isEmpty }.head._1)
-    else
-      None
+  def getRoots: List[ActivityRep] =
+    adjInverse.filter { case (_, list) => list.isEmpty }.keys.toList
 
   /**
     * Checks if the graph has a sink activity
@@ -164,22 +162,17 @@ class GraphRep(val name: String, importName: String, exportName: String) extends
 
   /**
     * Checks if the parameter's value to export it's the same has the export parameter of the Sink
-    *
-    * @param activity
-    * @return
     */
   private def validCollector(activity: ActivityRep): Boolean =
     exportName.isEmpty || activity.exportName.isEmpty || activity.exportName == exportName
 
   /**
     * Checks if the parameter's value to import it's the same has the import parameter of the Root
-    *
-    * @param activity
-    * @return
     */
-  private def validInjector(activity: ActivityRep): Boolean =
-    importName.isEmpty || activity.importNames.isEmpty ||
-      activity.importNames.size == 1 && activity.importNames.head == importName
+  private def validInjector(activities: List[ActivityRep]): Boolean =
+    importName.isEmpty || activities.forall(activity =>
+      activity.importNames.isEmpty ||
+        activity.importNames.size == 1 && activity.importNames.head == importName)
 
   /**
     * Checks if a graph has a sink, a root and do not have cycles or subgraphs
@@ -190,13 +183,13 @@ class GraphRep(val name: String, importName: String, exportName: String) extends
     Try {
       if (numberOfNodes == 0)
         throw new GraphHasNoActivities
-      if (!hasRoot)
+      if (!hasRoots)
         throw new GraphHasNoRoot
       if (!hasSink)
         throw new GraphHasNoSink
-      if (hasCyclesOrSubGraphs)
+      if (hasCycles)
         throw new GraphHasCycles
-      if (!validInjector(getRoot.get))
+      if (!validInjector(getRoots))
         throw new GraphRootHasInvalidTypes
       if (!validCollector(getSink.get))
         throw new GraphSinkHasInvalidTypes
@@ -218,36 +211,46 @@ class GraphRep(val name: String, importName: String, exportName: String) extends
   }
 
   /**
-    * checks if a graph has cycles or subgraphs in a DFS style implementation
+    * checks if a graph has cycles in a DFS style implementation
     *
-    * @return true if has cycless, false otherwise
+    * @return true if there are no cycles, false otherwise
     */
-  private def hasCyclesOrSubGraphs: Boolean = {
+  private def hasCycles: Boolean = {
     var marked = Set[ActivityRep]()
     var onStack = List[ActivityRep]()
-    var cycleFound = false
-    findCycle(getRoot.get)
 
     //DFS running
-    def findCycle(init: ActivityRep): Unit = {
-      marked = marked + init
-      onStack = init :: onStack
-      for (act <- adj(init)) {
-        if (!marked.contains(act))
-          findCycle(act)
-        else if (onStack.contains(act)) {
-          cycleFound = true
-          return
-        }
+    def findCycle(initActivities: List[ActivityRep]): Boolean = {
+      initActivities match {
+        case Nil => false
+        case init :: others =>
+          marked = marked + init
+          onStack = init :: onStack
+
+          val vec = adj(init)
+
+          def testActivity(index: Int): Boolean = {
+            if (index >= vec.length)
+              false
+            else {
+              val act = vec(index)
+              if (!marked.contains(act))
+                findCycle(List(act)) || testActivity(index + 1)
+              else if (onStack.contains(act)) {
+                true
+              } else {
+                testActivity(index + 1)
+              }
+            }
+          }
+
+          val result = testActivity(0)
+          onStack = onStack.filter(_ != init)
+          result || findCycle(others)
       }
-      onStack = onStack.filter(_ != init)
     }
 
-    if (marked.size != numberOfNodes)
-      throw new GraphIsNotConnected
-
-    //has subgraphs if not all nodes were visited
-    cycleFound
+    findCycle(getRoots)
   }
 
   def numberOfNodes: Int = activities.size
@@ -306,7 +309,7 @@ class ValidGraphRep private[toolkit](val name: String,
       adj(activityFrom).contains(activityTo)
   }
 
-  val root: ActivityRep = adjInverse.filter { case (_, list) => list.isEmpty }.head._1
+  val roots: List[ActivityRep] = adjInverse.filter { case (_, list) => list.isEmpty }.keys.toList
   val sink: ActivityRep = adj.filter { case (_, list) => list.isEmpty }.head._1
 
   val depthOfFlatMaps: Int = {
