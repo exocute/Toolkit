@@ -19,7 +19,7 @@ Export String
 Activity F com.classes.F
 Import Int, String, Int, String
 Export Double
-Connection A -> B, C, D, E
+Connection A -> (B, C, D, E)
 Connection B -> F
 Connection C -> F
 Connection D -> F

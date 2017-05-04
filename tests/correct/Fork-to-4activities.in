@@ -22,4 +22,4 @@ Export Double
 	Import Int, String, Int, String
 	Export Double
 	
-Connection A -> B,C,D,E -> F
+Connection A -> (B,C,D,E) -> F

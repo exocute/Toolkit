@@ -1,0 +1,6 @@
+Graph Type_Args2
+Import List[Vector[Int]]
+Export java.util.Map[String,Vector[Int]]
+Activity A com.classes.T
+Import List[Vector[Int]]
+Export java.util.Map[String,Vector[Int]]

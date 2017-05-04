@@ -1,0 +1,43 @@
+program = 'Graph', ws, identifier, nls,
+          {('Import' | 'Export'), ws, type, nls},
+          activity,
+          {activity | connection-start} ;
+
+activity = activityType, ws, identifier, ws,
+           path-identifier, optionalParameters, nls,
+           {('Import', ws, types | 'Export', ws, type), nls} ;
+
+activityType = 'Activity'
+             | 'ActivityType'
+             | 'ActivityFlatMap' ;
+
+optionalParameters = {':', string-parameter} ;
+
+connection-start = connection-main, {':', connection-main}, nls ;
+
+connection-main = connections, '->', connections, {'->', connections} ;
+
+connection = connections, {'->', connections} ;
+
+connections = identifier
+            | '(', connection, {',', connection}, ')' ;
+
+types = type, {',', type} ;
+
+type = path-identifier, type-args ;
+
+type-args = ['[', types, ']'] ;
+
+identifiers = identifier, {',', identifier} ;
+
+identifier = letter, {letter, digit, '_'} ;
+
+path-identifier = identifier, {'.', identifier} ;
+
+string-parameter = ? any sequence of caracters that doesn't contain ':' or '\n' ? ;
+
+ws = ? at least one white space or tab character ? ;
+
+nl = ? at least one new line ? ;
+
+nls = [ws], nl, {nl, ws} ;

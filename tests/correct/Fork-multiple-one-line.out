@@ -1,9 +1,9 @@
-Graph Fork_to_4Activities
+Graph Fork_multiple_one_line
 Import Int
-Export Double
+Export Float
 Activity A com.classes.A:10
 Import Int
-Export String, Int, Float, Float
+Export String
 Activity B com.classes.B
 Import String
 Export Int
@@ -11,16 +11,16 @@ Activity C com.classes.C:60:1:134
 Import Int
 Export String
 Activity D com.classes.D
-Import Float
+Import String
 Export Int
 Activity E com.classes.E:param1:param2:param3
-Import Float
+Import Int
 Export String
 Activity F com.classes.F
-Import Int, String, Int, String
-Export Double
-Connection A -> B, C, D, E
-Connection B -> F
+Import String, String
+Export Float
+Connection A -> (B, D)
+Connection B -> C
 Connection C -> F
-Connection D -> F
+Connection D -> E
 Connection E -> F

@@ -1,4 +1,4 @@
-// graph has a a dual root
+// graph has a two root activities
 
 Graph dual_root
 	Import imp1
@@ -6,4 +6,4 @@ Graph dual_root
 	Activity act1 act.ex
 	Activity act2 act.ex.other
 	Activity act3 act.ex.other.other
-	connection act1, act2 -> act3
+	connection (act1, act2) -> act3

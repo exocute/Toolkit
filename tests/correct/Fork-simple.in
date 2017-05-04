@@ -14,4 +14,4 @@ Export Int
 	Import Float, Int
 	Export Int
 	
-Connection A -> B,C -> D
+Connection A -> (B,C) -> D

@@ -19,7 +19,7 @@ Export String
 Activity F com.classes.F
 Import String, String
 Export Float
-Connection A -> B, D
+Connection A -> (B, D)
 Connection B -> C
 Connection C -> F
 Connection D -> E

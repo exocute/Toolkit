@@ -104,22 +104,24 @@ class GraphRep(val name: String, importName: String, exportName: String) extends
       }
     }
 
-    if (activityFrom != activityTo && adj.contains(activityFrom) &&
-      adj.contains(activityTo) && !adj(activityFrom).contains(activityTo) &&
-      connectionHasValidTypes(activityFrom, activityTo)) {
-      new GraphRep(name, importName, exportName) {
-        override val activities: Map[String, ActivityRep] =
-          self.activities
+    if (activityFrom != activityTo && adj.contains(activityFrom) && adj.contains(activityTo)) {
+      if (adj(activityFrom).contains(activityTo))
+        this
+      else if (connectionHasValidTypes(activityFrom, activityTo)) {
+        new GraphRep(name, importName, exportName) {
+          override val activities: Map[String, ActivityRep] =
+            self.activities
 
-        override val adj: Map[ActivityRep, Vector[ActivityRep]] =
-          self.adj.updated(activityFrom, self.adj(activityFrom) :+ activityTo)
+          override val adj: Map[ActivityRep, Vector[ActivityRep]] =
+            self.adj.updated(activityFrom, self.adj(activityFrom) :+ activityTo)
 
-        override val adjInverse: Map[ActivityRep, Vector[ActivityRep]] =
-          self.adjInverse.updated(activityTo, self.adjInverse(activityTo) :+ activityFrom)
-      }
-    } else {
+          override val adjInverse: Map[ActivityRep, Vector[ActivityRep]] =
+            self.adjInverse.updated(activityTo, self.adjInverse(activityTo) :+ activityFrom)
+        }
+      } else
+        throw new InvalidConnection(activityFrom.id, activityTo.id, "")
+    } else
       throw new InvalidConnection(activityFrom.id, activityTo.id, "")
-    }
   }
 
   /**
@@ -288,7 +290,10 @@ class GraphRep(val name: String, importName: String, exportName: String) extends
 
     val adjStr: String = adj.toList.sortBy(_._1.id).flatMap { case (act, connections) =>
       if (connections.isEmpty) Nil
-      else List(s"Connection ${act.id} -> ${connections.map(_.id).mkString(", ")}")
+      else List(s"Connection ${act.id} -> ${
+        val m = connections.map(_.id)
+        if (m.size == 1) m.mkString(", ") else m.mkString("(", ", ", ")")
+      }")
     }.mkString("\n")
 
     actsStr + showIf(adjStr, "\n" + adjStr)

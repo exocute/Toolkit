@@ -13,6 +13,6 @@ Export Int
 Activity D com.classes.Sum
 Import Float, Int
 Export Int
-Connection A -> B, C
+Connection A -> (B, C)
 Connection B -> D
 Connection C -> D

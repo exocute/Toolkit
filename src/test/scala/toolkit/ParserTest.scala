@@ -2,7 +2,9 @@ package toolkit
 
 import java.io.{File, FileNotFoundException}
 
+import org.parboiled2.ParseError
 import org.scalatest._
+import toolkit.exceptions.ExocuteParseError
 
 import scala.util.{Failure, Success, Try}
 
@@ -59,7 +61,7 @@ class ParserTest extends FlatSpec {
     * @param path
     * @return file in string
     */
-  def readFile(path: String) = scala.io.Source.fromFile(path).mkString
+  def readFile(path: String): String = scala.io.Source.fromFile(path).mkString
 
   /**
     * takes a path with the in file of a test and returns the out file of the same test
@@ -69,19 +71,7 @@ class ParserTest extends FlatSpec {
     * @return string with the path of the out file
     */
   def getResultFile(path: String): String = {
-    path.substring(0, path.size - 2) + "out"
-  }
-
-  /**
-    * takes two strings with the context of the result and the path of the expected file
-    * removes all '\r' from the out files
-    * compares the two strings
-    *
-    * @param result
-    * @return true if the strings are equals, false otherwise
-    */
-  def validateFiles(result: String, expected: String): Boolean = {
-    result == expected.filterNot(_ == '\r')
+    path.substring(0, path.length - 2) + "out"
   }
 
   /**
@@ -101,11 +91,39 @@ class ParserTest extends FlatSpec {
 
         {
           try {
-            val expected: String = readFile(getResultFile(path))
-            val validOut = validateFiles(graph.toString, expected)
-            if (!validOut)
-              println(s"---\n${graph.toString}\n---\n$expected\n---\n")
-            validOut
+            val expected: String = clearComments(readFile(getResultFile(path)))
+            val validOut = graph.toString == expected
+            if (!validOut) {
+              println(
+                s"""---
+                   |${graph.toString}
+                   |---
+                   |$expected
+                   |---
+                   |""".stripMargin)
+              false
+            } else {
+              new ActivityParser(expected).InputLine.run() match {
+                case Success(expectedOutIntoGraph) =>
+                  if (expectedOutIntoGraph.toString != expected) {
+                    println(
+                      s"""Out file is not consistent with GraphRep.toString representation:
+                         |---
+                         |${expectedOutIntoGraph.toString}
+                         |---
+                         |$expected
+                         |---
+                         |""".stripMargin)
+                    false
+                  } else
+                    true
+                case Failure(e: ParseError) =>
+                  println("Out file is not consistent with GraphRep.toString representation")
+                  throw new ExocuteParseError(parser.formatError(e))
+                case Failure(e) =>
+                  throw e
+              }
+            }
           } catch {
             case _: FileNotFoundException =>
               println("Out file should be:")
@@ -118,8 +136,10 @@ class ParserTest extends FlatSpec {
             case Failure(e) => throw e
           }
         }
-      case Failure(exp) =>
-        throw exp
+      case Failure(e: ParseError) =>
+        throw new ExocuteParseError(parser.formatError(e))
+      case Failure(e) =>
+        throw e
     }
   }
 
@@ -144,15 +164,21 @@ class ParserTest extends FlatSpec {
           println(path + ": should have failed")
         }
         false
-      case Failure(e) =>
+      case Failure(originalException) =>
+        val err = originalException match {
+          case parseError: ParseError =>
+            new ExocuteParseError(parser.formatError(parseError))
+          case e => e
+        }
+
         if (expectedException.isSuccess) {
           val expected = expectedException.get
-          val same = e.toString startsWith expected
+          val same = originalException.toString startsWith expected
           if (!same)
-            println(s"Exception expected: $expected, found: ${e.toString}")
+            println(s"Exception expected: $expected, found: ${err.toString}")
           same
         } else {
-          println(s"Exception caught: $e")
+          println(s"Exception caught: ${err.toString.replace("\t", " ")}")
           false
         }
     }
@@ -166,7 +192,7 @@ class ParserTest extends FlatSpec {
       file.getName should "succeed" in {
         assert({
           val v = testFile(file.getAbsolutePath)
-          if (!v) Thread.sleep(200)
+          if (!v) Thread.sleep(500)
           v
         })
       }
@@ -180,7 +206,7 @@ class ParserTest extends FlatSpec {
       file.getName should "Not Succeed" in {
         assert({
           val v = testFileShouldFail(file.getAbsolutePath)
-          if (!v) Thread.sleep(200)
+          if (!v) Thread.sleep(500)
           v
         })
       }
