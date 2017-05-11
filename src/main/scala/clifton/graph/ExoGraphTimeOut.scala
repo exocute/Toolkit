@@ -7,23 +7,22 @@ import api.{Collector, Injector}
 import clifton.graph.exceptions.{InjectorTimeOutException, MissingActivitiesException}
 import distributer.JarSpaceUpdater
 import exonode.clifton.config.ProtocolConfig
-import exonode.clifton.node.Log.{INFO, ND}
+import exonode.clifton.node.SpaceCache
 import exonode.clifton.node.entries._
-import exonode.clifton.node.{Log, SpaceCache}
-import exonode.clifton.signals.LoggingSignal
+import exonode.clifton.signals.Log.{Log, LogStartedGraph}
 import toolkit.ValidGraphRep
 
 /**
   * Created by #GrowinScala
   */
 class ExoGraphTimeOut(jars: List[File], val graph: ValidGraphRep, graphId: String, graphTimeOut: Long,
-                      config: ProtocolConfig = ProtocolConfig.DEFAULT) extends ExoGraph {
+                      config: ProtocolConfig = ProtocolConfig.Default) extends ExoGraph {
 
-  private val REMOVE_DATA_LIMIT = 50
+  private val RemoveDataLimit = 50
 
   private val jarUpdater = new JarSpaceUpdater()
-  private val MIN_TIME_TO_RESET_TIMEOUT = math.min(60 * 1000, graphTimeOut)
-  private val TIMEOUT = MIN_TIME_TO_RESET_TIMEOUT + graphTimeOut
+  private val MinTimeToResetTimeout = math.min(60 * 1000, graphTimeOut)
+  private val Timeout = MinTimeToResetTimeout + graphTimeOut
 
   updateAllEntries()
 
@@ -31,8 +30,8 @@ class ExoGraphTimeOut(jars: List[File], val graph: ValidGraphRep, graphId: Strin
     val injCollUUID = UUID.randomUUID().toString
     val rootActivities = graph.roots.map(rootActivity => graphId + ":" + rootActivity.id)
     val cliftonInjector = new TimeOutInjector(new CliftonInjector(
-      injCollUUID, graphId + ":" + ProtocolConfig.INJECT_SIGNAL_MARKER, rootActivities, () => graphReady, config))
-    val cliftonCollector = new CliftonCollector(injCollUUID, graphId + ":" + ProtocolConfig.COLLECT_SIGNAL_MARKER,
+      injCollUUID, graphId + ":" + ProtocolConfig.InjectSignalMarker, rootActivities, () => graphReady, config))
+    val cliftonCollector = new CliftonCollector(injCollUUID, graphId + ":" + ProtocolConfig.CollectSignalMarker,
       graph.depthOfFlatMaps, () => graphReady)
 
     (cliftonInjector, cliftonCollector)
@@ -41,7 +40,7 @@ class ExoGraphTimeOut(jars: List[File], val graph: ValidGraphRep, graphId: Strin
   {
     val startMsg = s"Graph <${graph.name}> is ready to receive injects"
     println(graphId + ";" + startMsg)
-    Log.writeLog(LoggingSignal(ProtocolConfig.LOGCODE_STARTED_GRAPH, INFO, ND, graphId + ":" + graph.name, ND, ND, ND, "Graph Started - " + graph.name, 0))
+    Log.writeLog(LogStartedGraph(graphId, graph.name))
   }
 
   private var lastTime = System.currentTimeMillis()
@@ -62,7 +61,7 @@ class ExoGraphTimeOut(jars: List[File], val graph: ValidGraphRep, graphId: Strin
   private def updateAllEntries(): Unit = {
     verifyJarsAndGraphActivities()
     updateJars(jars)
-    GraphCreator.injectGraph(graph, graphId, TIMEOUT)
+    GraphCreator.injectGraph(graph, graphId, Timeout)
     updateGraphInSpace(graph, graphId)
   }
 
@@ -80,8 +79,8 @@ class ExoGraphTimeOut(jars: List[File], val graph: ValidGraphRep, graphId: Strin
 
   private def tryResetTimeOut(): Boolean = {
     val currentTime = System.currentTimeMillis()
-    if (currentTime - lastTime > MIN_TIME_TO_RESET_TIMEOUT) {
-      if (currentTime - lastTime > TIMEOUT) {
+    if (currentTime - lastTime > MinTimeToResetTimeout) {
+      if (currentTime - lastTime > Timeout) {
         // Graph is invalid (has timed out)
         false
       } else {
@@ -94,7 +93,7 @@ class ExoGraphTimeOut(jars: List[File], val graph: ValidGraphRep, graphId: Strin
   }
 
   private def updateJars(jars: List[File]): Unit = {
-    jars.foreach(file => jarUpdater.update(file, TIMEOUT))
+    jars.foreach(file => jarUpdater.update(file, Timeout))
   }
 
   private def removeJars(jars: List[File]): Unit = {
@@ -106,7 +105,7 @@ class ExoGraphTimeOut(jars: List[File], val graph: ValidGraphRep, graphId: Strin
     val graphEntry = GraphEntry(graphId, activities)
     val signalSpace = SpaceCache.getSignalSpace
     signalSpace.take(graphEntry, 0)
-    signalSpace.write(graphEntry, TIMEOUT)
+    signalSpace.write(graphEntry, Timeout)
   }
 
   private def removeData(graph: ValidGraphRep, graphId: String): Unit = {
@@ -114,13 +113,13 @@ class ExoGraphTimeOut(jars: List[File], val graph: ValidGraphRep, graphId: Strin
 
     def remove(actId: String) = {
       val fullId = graphId + ":" + actId
-      while (signalSpace.takeMany(DataEntry(fullId, null, null, null, null), REMOVE_DATA_LIMIT).nonEmpty) {}
-      while (signalSpace.takeMany(BackupEntry(fullId, null, null, null, null), REMOVE_DATA_LIMIT).nonEmpty) {}
-      while (signalSpace.takeMany(BackupInfoEntry(fullId, null, null, null), REMOVE_DATA_LIMIT).nonEmpty) {}
-      while (signalSpace.takeMany(FlatMapEntry(graphId, null, null), REMOVE_DATA_LIMIT).nonEmpty) {}
+      while (signalSpace.takeMany(DataEntry(fullId, null, null, null, null), RemoveDataLimit).nonEmpty) {}
+      while (signalSpace.takeMany(BackupEntry(fullId, null, null, null, null), RemoveDataLimit).nonEmpty) {}
+      while (signalSpace.takeMany(BackupInfoEntry(fullId, null, null, null), RemoveDataLimit).nonEmpty) {}
+      while (signalSpace.takeMany(FlatMapEntry(graphId, null, null), RemoveDataLimit).nonEmpty) {}
     }
 
-    remove(ProtocolConfig.COLLECT_SIGNAL_MARKER)
+    remove(ProtocolConfig.CollectSignalMarker)
     for (actId <- graph.getActivities.map(_.id))
       remove(actId)
   }
@@ -134,7 +133,7 @@ class ExoGraphTimeOut(jars: List[File], val graph: ValidGraphRep, graphId: Strin
     override def canInject: () => Boolean = { () =>
       injector.canInject() && {
         val currentTime = System.currentTimeMillis()
-        currentTime - lastTime > TIMEOUT
+        currentTime - lastTime > Timeout
       }
     }
 

@@ -1,43 +1,43 @@
-program = 'Graph', ws, identifier, nls,
-          {('Import' | 'Export'), ws, type, nls},
-          activity,
-          {activity | connection-start} ;
+program          ::= 'Graph', ws, identifier, nls,
+                     {('Import' | 'Export'), ws, type, nls},
+                     activity,
+                     {activity | connection-start} ;
+                 
+activity         ::= activity-type, ws, identifier, ws,
+                     path-identifier, op-parameters, nls,
+                     {('Import', ws, types | 'Export', ws, type), nls} ;
+                 
+activity-type    ::= 'Activity'
+                   | 'ActivityType'
+                   | 'ActivityFlatMap' ;
 
-activity = activityType, ws, identifier, ws,
-           path-identifier, optionalParameters, nls,
-           {('Import', ws, types | 'Export', ws, type), nls} ;
+op-parameters    ::= {':', str-parameter} ;
 
-activityType = 'Activity'
-             | 'ActivityType'
-             | 'ActivityFlatMap' ;
+connection-start ::= connection-main, {':', connection-main}, nls ;
 
-optionalParameters = {':', string-parameter} ;
+connection-main  ::= connections, '->', connections, {'->', connections} ;
 
-connection-start = connection-main, {':', connection-main}, nls ;
+connection       ::= connections, {'->', connections} ;
 
-connection-main = connections, '->', connections, {'->', connections} ;
+connections      ::= identifier
+                   | '(', connection, {',', connection}, ')' ;
 
-connection = connections, {'->', connections} ;
+types            ::= type, {',', type} ;
+                
+type             ::= path-identifier, type-args ;
 
-connections = identifier
-            | '(', connection, {',', connection}, ')' ;
+type-args        ::= ['[', types, ']'] ;
+               
+identifiers      ::= identifier, {',', identifier} ;
+               
+identifier       ::= letter, {letter, digit, '_'} ;
 
-types = type, {',', type} ;
+path-identifier  ::= identifier, {'.', identifier} ;
 
-type = path-identifier, type-args ;
+str-parameter    ::= ? any sequence of characters that doesn't contain ':' or '\n' ? ;
 
-type-args = ['[', types, ']'] ;
+ws               ::= ? at least one white space or tab character ? ;
+                
+nl               ::= ? one new line ? ;
 
-identifiers = identifier, {',', identifier} ;
-
-identifier = letter, {letter, digit, '_'} ;
-
-path-identifier = identifier, {'.', identifier} ;
-
-string-parameter = ? any sequence of caracters that doesn't contain ':' or '\n' ? ;
-
-ws = ? at least one white space or tab character ? ;
-
-nl = ? at least one new line ? ;
-
-nls = [ws], nl, {nl, ws} ;
+nls              ::= [ws], nl, {nl, ws} ;

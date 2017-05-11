@@ -20,17 +20,17 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
 
   private val jarFile = new File("tests\\classes.jar")
 
-  private var config = ProtocolConfig.DEFAULT
-  private val KILL_TIME = 60 * 1000
-  private val MAX_TIME_FOR_EACH_TEST = 60 * 60 * 1000
-  private val EXPECTED_TIME_TO_CONSENSUS = 10 * 1000 +
-    config.CONSENSUS_MAX_SLEEP_TIME * (1 + config.CONSENSUS_LOOPS_TO_FINISH)
+  private var config = ProtocolConfig.Default
+  private val KillTime = 60 * 1000
+  private val MaxTimeForEachTest = 60 * 60 * 1000
+  private val ExpectedTimeToConsensus =
+    10 * 1000 + config.ConsensusMaxSleepTime * (1 + config.ConsensusLoopsToFinish)
 
   private val signalSpace = SpaceCache.getSignalSpace
 
   private def startGraph(grpFile: String): ExoGraph = {
     ExocuteConfig.setDefaultHosts()
-    StarterExoGraph.addGraphFile(new File(grpFile), List(jarFile), MAX_TIME_FOR_EACH_TEST) match {
+    StarterExoGraph.addGraphFile(new File(grpFile), List(jarFile), MaxTimeForEachTest) match {
       case Success(exoGraph) => exoGraph
       case Failure(e) => throw e
     }
@@ -38,7 +38,7 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
 
   private def startGraphManual(grpText: String): ExoGraph = {
     ExocuteConfig.setDefaultHosts()
-    StarterExoGraph.addGraphText(grpText, List(jarFile), MAX_TIME_FOR_EACH_TEST) match {
+    StarterExoGraph.addGraphText(grpText, List(jarFile), MaxTimeForEachTest) match {
       case Success(exoGraph) => exoGraph
       case Failure(e) => throw e
     }
@@ -58,12 +58,12 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
   }
 
   private def killNodes(nodes: List[CliftonNode]) = {
-    nodes.foreach(node => signalSpace.write(ExoEntry(node.nodeId, KillSignal), KILL_TIME))
+    nodes.foreach(node => signalSpace.write(ExoEntry(node.nodeId, KillSignal), KillTime))
     nodes.foreach(node => node.join())
   }
 
   private def getTable: Option[TableType] = {
-    signalSpace.read(ExoEntry[AnalyserTable](ProtocolConfig.TABLE_MARKER, null), 0L).map(_.payload.table)
+    signalSpace.read(ExoEntry[AnalyserTable](ProtocolConfig.TableMarker, null), 0L).map(_.payload.table)
   }
 
   before {
@@ -73,7 +73,7 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
   }
 
   after {
-    allNodes.foreach(node => signalSpace.write(ExoEntry(node.nodeId, KillSignal), KILL_TIME))
+    allNodes.foreach(node => signalSpace.write(ExoEntry(node.nodeId, KillSignal), KillTime))
     allNodes.foreach(node => node.join())
     allNodes = Nil
   }
@@ -92,10 +92,10 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
     //Launch nodes to process activities
     launchNNodes(nNodes)
 
-    Thread.sleep(EXPECTED_TIME_TO_CONSENSUS)
+    Thread.sleep(ExpectedTimeToConsensus)
 
     //Wait a few seconds for the nodes to stabilize between the activities
-    Thread.sleep(config.NODE_CHECK_TABLE_TIME * 4)
+    Thread.sleep(config.NodeCheckTableTime * 4)
 
     val table = getTable
     assert(table.isDefined)
@@ -118,7 +118,7 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
     //Launch nodes to process activities
     launchNNodes(nNodes)
 
-    Thread.sleep(EXPECTED_TIME_TO_CONSENSUS)
+    Thread.sleep(ExpectedTimeToConsensus)
 
     exoGraph.injector.inject(5, "")
 
@@ -127,7 +127,7 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
     Thread.sleep(a + b + c)
 
     //Wait a few seconds for the nodes to stabilize between the activities
-    Thread.sleep(config.NODE_CHECK_TABLE_TIME * 3)
+    Thread.sleep(config.NodeCheckTableTime * 3)
 
     val table = getTable
     assert(table.isDefined)
@@ -155,7 +155,7 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
     val injIndex = inj.injectMany(someStrings)
 
     //wait a few seconds
-    Thread.sleep(config.NODE_CHECK_TABLE_TIME * 3)
+    Thread.sleep(config.NodeCheckTableTime * 3)
 
     injIndex.flatMap(coll.collectAllByIndex) match {
       case list =>
@@ -189,7 +189,7 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
   "Inject, stop nodes, collect" should "collect results even if some nodes fail while processing" in {
     val exoGraph = startGraphManual(
       s"""Graph test
-         |Activity a exocute.classes.DoubleString:60""".stripMargin)
+         |Activity A exocute.classes.DoubleString:60""".stripMargin)
     val inj = exoGraph.injector
     val coll = exoGraph.collector
 
@@ -198,13 +198,13 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
     val nInputs = nNodes
 
     config = new ProtocolConfigDefault {
-      override val BACKUP_TIMEOUT_TIME: Long = 60 * 1000
+      override val BackupTimeoutTime: Long = 60 * 1000
     }
-    signalSpace.write(ExoEntry[ProtocolConfig](ProtocolConfig.CONFIG_MARKER, config), MAX_TIME_FOR_EACH_TEST)
+    signalSpace.write(ExoEntry[ProtocolConfig](ProtocolConfig.ConfigMarker, config), MaxTimeForEachTest)
 
     // analyser
     launchNNodes(1)
-    Thread.sleep(EXPECTED_TIME_TO_CONSENSUS)
+    Thread.sleep(ExpectedTimeToConsensus)
     val nodes = launchNNodes(nNodes)
 
     // wait for all nodes to get the activity
@@ -249,7 +249,7 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
     val injIndex = inj.injectMany(someInput.map(_.asInstanceOf[Serializable]))
 
     //wait a few seconds
-    Thread.sleep(config.NODE_CHECK_TABLE_TIME * 3)
+    Thread.sleep(config.NodeCheckTableTime * 3)
 
     injIndex.flatMap(coll.collectAllByIndex) match {
       case list =>
@@ -278,7 +278,7 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
     val injIndex = inj.injectMany(someInput.map(_.asInstanceOf[Serializable]))
 
     //wait a few seconds
-    Thread.sleep(config.NODE_CHECK_TABLE_TIME * 3)
+    Thread.sleep(config.NodeCheckTableTime * 3)
 
     injIndex.flatMap(coll.collectAllByIndex) match {
       case list =>

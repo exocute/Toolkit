@@ -8,7 +8,7 @@ import toolkit.exceptions.InvalidType
 /**
   * Created by #GrowinScala
   *
-  * This parser receives a .pln file containing a graph structure and parse it.
+  * This parser receives a .pln file content containing a graph structure and parse it.
   *
   * @param input ParserInput
   */
@@ -45,9 +45,9 @@ class ActivityParser(val input: ParserInput) extends Parser {
     * @return
     */
   private def GraphImportExport: Rule[GraphRep :: HNil, GraphRep :: HNil] = rule {
-    zeroOrMore((ignoreCase("import") ~!~ WS1 ~ Type ~ NL ~>
+    zeroOrMore((ignoreCase("import") ~ WS1 ~ Type ~ NL ~>
       ((graph: GraphRep, importName: String) => graph.setImport(importName)))
-      | (ignoreCase("export") ~!~ WS1 ~ Type ~ NL ~>
+      | (ignoreCase("export") ~ WS1 ~ Type ~ NL ~>
       ((graph: GraphRep, exportName: String) => graph.setExport(exportName))))
   }
 
@@ -112,7 +112,7 @@ class ActivityParser(val input: ParserInput) extends Parser {
     }
 
     rule {
-      ignoreCase("connection") ~ WS1 ~ ReadConnectionAux + (WS0 ~ ":" | NLS) ~ ANY_WS
+      ignoreCase("connection") ~ WS1 ~ (ReadConnectionAux + (WS0 ~ ':' ~ WS0 | NLS)) ~ ANY_WS
     }
   }
 

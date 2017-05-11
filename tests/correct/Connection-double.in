@@ -1,0 +1,7 @@
+Graph graph
+Activity B exocute.classes.AddParam:1
+Activity C exocute.classes.AddParam:1
+Activity D exocute.classes.AddParam:1
+Activity E exocute.classes.AddParam:1
+Activity F exocute.classes.Sum
+Connection C->(D,E) : (B,D,E)->F

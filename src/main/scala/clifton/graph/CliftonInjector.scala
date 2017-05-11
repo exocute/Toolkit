@@ -6,10 +6,9 @@ import java.util.concurrent.atomic.AtomicInteger
 import api.Injector
 import clifton.graph.exceptions.InjectException
 import exonode.clifton.config.ProtocolConfig
-import exonode.clifton.node.Log.{INFO, ND}
+import exonode.clifton.node.SpaceCache
 import exonode.clifton.node.entries.DataEntry
-import exonode.clifton.node.{Log, SpaceCache}
-import exonode.clifton.signals.LoggingSignal
+import exonode.clifton.signals.Log.{Log, LogInjected}
 
 /**
   * Created by #GrowinScala
@@ -18,7 +17,7 @@ import exonode.clifton.signals.LoggingSignal
   * Injects input into the data space
   */
 class CliftonInjector(uuid: String, marker: String, rootActivities: List[String], val canInject: () => Boolean,
-                      config: ProtocolConfig = ProtocolConfig.DEFAULT) extends Injector {
+                      config: ProtocolConfig = ProtocolConfig.Default) extends Injector {
 
   private val dataSpace = SpaceCache.getDataSpace
   private val dataTemplates: List[DataEntry] =
@@ -34,8 +33,8 @@ class CliftonInjector(uuid: String, marker: String, rootActivities: List[String]
     val dataEntries = dataTemplates.map(_.setInjectId(injectId).setOrderId(s"$currentIndex").setData(Some(input)))
     try {
       for (dataEntry <- dataEntries)
-        dataSpace.write(dataEntry, config.DATA_LEASE_TIME)
-      Log.writeLog(LoggingSignal(ProtocolConfig.LOGCODE_INJECTED, INFO, ND, ND, ND, ND, ND, "Injected Input " + injectId, 0))
+        dataSpace.write(dataEntry, config.DataLeaseTime)
+      Log.writeLog(LogInjected(injectId))
     } catch {
       case _: Exception => throw new InjectException("Internal Inject Error")
     }

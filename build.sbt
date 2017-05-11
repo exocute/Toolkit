@@ -16,7 +16,7 @@ resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repos
 
 libraryDependencies += "com.flyobjectspace" %% "flyscala" % "2.2.0-SNAPSHOT"
 
-libraryDependencies += "growin" %% "exonode" % "1.2"
+libraryDependencies += "growin" %% "exonode" % "1.3-SNAPSHOT"
 
 libraryDependencies += "io.swave" %% "swave-core" % "0.7.0"
 

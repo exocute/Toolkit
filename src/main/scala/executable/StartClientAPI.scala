@@ -118,8 +118,8 @@ object StartClientAPI {
     ExocuteConfig.setHosts(SpaceCache.signalHost, SpaceCache.dataHost, SpaceCache.jarHost)
     StarterExoGraph.addGraphFile(file, jars, 60 * 60 * 1000) match {
       case Failure(e) =>
-        val msg = e.getMessage
-        printlnExit(s"Error loading grp file:\n${if (msg == null) e else msg}")
+        val msg = Option(e.getMessage).getOrElse(e.toString)
+        printlnExit(s"Error loading grp file (${file.getName}):\n$msg")
       case Success(exoGraph) =>
         val inj = exoGraph.injector
         val col = exoGraph.collector

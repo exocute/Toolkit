@@ -6,9 +6,9 @@ import java.util.Date
 import java.util.concurrent.LinkedBlockingDeque
 
 import exonode.clifton.config.ProtocolConfig
+import exonode.clifton.signals.Log.{Log, LogType}
 import exonode.clifton.node.SpaceCache
 import exonode.clifton.node.entries.ExoEntry
-import exonode.clifton.signals.LoggingSignal
 
 /**
   * Created by #GrowinScala
@@ -17,15 +17,16 @@ import exonode.clifton.signals.LoggingSignal
   */
 object LogProcessor extends Thread {
 
-  val LOG_FILE: String = "log.cfv"
+  val LogFile: String = "log.cfv"
 
   setDaemon(true)
 
-  private val logTemplate = ExoEntry[LoggingSignal](ProtocolConfig.LOG_MARKER, null)
-  private val INTERVAL_TIME = 1000
+  private val IntervalTime = 1000
+  private val MaxLogsCalls = 20
+
+  private val logTemplate = ExoEntry[LogType](ProtocolConfig.LogMarker, null)
   private val dateFormat: DateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
-  private val MAX_LOGS_CALL = 20
-  private val logs = new LinkedBlockingDeque[LoggingSignal]()
+  private val logs = new LinkedBlockingDeque[LogType]()
   private val analyseFile = new SystemAnalyser(2, logs)
 
   override def run(): Unit = {
@@ -34,18 +35,18 @@ object LogProcessor extends Thread {
 
     analyseFile.start()
     while (true) {
-      val res: Iterable[ExoEntry[LoggingSignal]] = space.takeMany(logTemplate, MAX_LOGS_CALL)
+      val res: Iterable[ExoEntry[LogType]] = space.takeMany(logTemplate, MaxLogsCalls)
       if (res.nonEmpty) {
-        val file: FileWriter = new FileWriter(LOG_FILE, true)
+        val file: FileWriter = new FileWriter(LogFile, true)
         val date: Date = new Date()
         for (exoEntry <- res) {
           val log = exoEntry.payload
           logs.push(log)
-          file.write(dateFormat.format(date) + ProtocolConfig.LOG_SEPARATOR + log.level + ProtocolConfig.LOG_SEPARATOR + log.message + "\n")
+          file.write(dateFormat.format(date) + ProtocolConfig.LogSeparator + log.logType + ProtocolConfig.LogSeparator + log.message + "\n")
         }
         file.close()
       } else
-        Thread.sleep(INTERVAL_TIME)
+        Thread.sleep(IntervalTime)
     }
   }
 

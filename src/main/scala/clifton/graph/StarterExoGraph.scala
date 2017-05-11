@@ -31,7 +31,7 @@ object StarterExoGraph {
     * @return the ExoGraph, ready to inject inputs and collect results
     */
   def addGraphFile(grpFile: File, jars: List[File], graphTimeOut: Long,
-                   config: ProtocolConfig = ProtocolConfig.DEFAULT): Try[ExoGraph] = {
+                   config: ProtocolConfig = ProtocolConfig.Default): Try[ExoGraph] = {
     addGraphText(Utilities.readFile(grpFile), jars, graphTimeOut, config)
   }
 
@@ -45,7 +45,7 @@ object StarterExoGraph {
     * @return the ExoGraph, ready to inject inputs and collect results
     */
   def addGraphText(grpText: String, jars: List[File], graphTimeOut: Long,
-                   config: ProtocolConfig = ProtocolConfig.DEFAULT): Try[ExoGraph] = {
+                   config: ProtocolConfig = ProtocolConfig.Default): Try[ExoGraph] = {
     getGraphRep(grpText).map { graph: ValidGraphRep =>
       new ExoGraphTimeOut(jars, graph, UUID.randomUUID().toString, graphTimeOut)
     }

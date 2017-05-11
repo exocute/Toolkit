@@ -13,7 +13,7 @@ import scala.collection.mutable
   */
 object SpaceWatcher {
 
-  private val DEFAULT_LIMIT = 500
+  private val DefaultLimit = 500
 
   private case class Watcher(space: ScalaFly, name: String, matchTemplate: AnyRef)
 
@@ -23,13 +23,13 @@ object SpaceWatcher {
 
     def count(watcher: Watcher): Unit = {
       import watcher._
-      val size = space.readMany(matchTemplate, DEFAULT_LIMIT).size
-      println(s"$name: $size${if (size == DEFAULT_LIMIT) "+" else ""} in the space.")
+      val size = space.readMany(matchTemplate, DefaultLimit).size
+      println(s"$name: $size${if (size == DefaultLimit) "+" else ""} in the space.")
     }
 
     def show(watcher: Watcher): Unit = {
       import watcher._
-      space.readMany(matchTemplate, DEFAULT_LIMIT).foreach {
+      space.readMany(matchTemplate, DefaultLimit).foreach {
         case entry: exonode.distributer.FlyJarEntry => println(s"Filename ${entry.fileName} (size ${entry.bytes.toVector.size})")
         case elem =>
           val str = elem.toString
