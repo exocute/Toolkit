@@ -1,0 +1,6 @@
+Graph Flatmap_simple_typed1
+Import Int
+Export String
+	ActivityFlatMap A com.classes.StringToFloat
+	Import Int
+	Export String

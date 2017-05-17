@@ -87,13 +87,15 @@ object StarterExoGraph {
             out.putNextEntry(new ZipEntry(path))
 
             // Transfer bytes from the file to the ZIP file
-            var len = 0
-            while ( {
-              len = in.read(buf)
-              len > 0
-            }) {
-              out.write(buf, 0, len)
+            def writeBuffer(): Unit = {
+              val len = in.read(buf, 0, buf.length)
+              if (len > 0) {
+                out.write(buf, 0, len)
+                writeBuffer()
+              }
             }
+
+            writeBuffer()
 
             // Complete the entry
             out.closeEntry()

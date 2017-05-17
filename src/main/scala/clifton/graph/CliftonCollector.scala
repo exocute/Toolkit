@@ -3,7 +3,6 @@ package clifton.graph
 import java.io.Serializable
 
 import api.Collector
-import clifton.graph.CliftonCollector.MaxNextLeafCalls
 import clifton.graph.exceptions.CollectException
 import exonode.clifton.node.SpaceCache
 import exonode.clifton.node.entries.{DataEntry, FlatMapEntry}
@@ -175,6 +174,8 @@ class CliftonCollector(uuid: String, marker: String, nFlatMaps: Int, val canColl
     def nextLeaf(calls: Int): Option[Tree]
   }
 
+  private val MaxNextLeafCalls = 100
+
   private case class OrderTree(uuid: String, injectIndex: Int, prefixOrderId: String, orderId: Int,
                                size: Int, depth: Int, parent: Option[OrderTree]) extends Tree {
     private def joinOrderId: String = if (prefixOrderId.isEmpty) orderId.toString else s"$prefixOrderId:$orderId"
@@ -228,11 +229,5 @@ class CliftonCollector(uuid: String, marker: String, nFlatMaps: Int, val canColl
   private case class OrderLeaf(injectId: String, orderId: String, parent: Option[OrderTree]) extends Tree {
     def nextLeaf(calls: Int): Option[Tree] = Some(this)
   }
-
-}
-
-object CliftonCollector {
-
-  val MaxNextLeafCalls = 100
 
 }

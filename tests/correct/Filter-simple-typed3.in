@@ -1,0 +1,6 @@
+Graph Filter_simple_typed3
+Import Int
+Export Int
+	ActivityFilter F com.classes.StringToFloat
+	Import Int
+	Export Boolean

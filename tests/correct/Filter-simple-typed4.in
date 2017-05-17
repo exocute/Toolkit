@@ -1,0 +1,5 @@
+Graph Filter_simple_typed4
+Export Double
+	ActivityFilter F com.classes.StringToFloat
+	Import Double
+	Export Boolean

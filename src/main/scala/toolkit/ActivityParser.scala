@@ -173,12 +173,14 @@ class ActivityParser(val input: ParserInput) extends Parser {
   }
 
   private val mapStrToTypes: Map[String, ActivityType] =
-    Map("activity" -> ActivityMapType,
+    Map(
       "activityfilter" -> ActivityFilterType,
-      "activityflatmap" -> ActivityFlatMapType)
+      "activityflatmap" -> ActivityFlatMapType,
+      "activity" -> ActivityMapType,
+    )
 
   private def ActType: Rule1[ActivityType] = rule {
-    capture(ignoreCase("activity") | ignoreCase("activityfilter") | ignoreCase("activityflatmap")) ~> {
+    capture(ignoreCase("activityfilter") | ignoreCase("activityflatmap") | ignoreCase("activity")) ~> {
       (actType: String) =>
         mapStrToTypes(actType.toLowerCase)
     }

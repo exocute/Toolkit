@@ -379,13 +379,15 @@ private class SwaveToExoGraph(swaveObj: Spout[_]) {
               out.putNextEntry(new ZipEntry(source))
 
               // Transfer bytes from the file to the ZIP file
-              var len = 0
-              while ( {
-                len = in.read(buf)
-                len > 0
-              }) {
-                out.write(buf, 0, len)
+              def writeBuffer(): Unit = {
+                val len = in.read(buf)
+                if (len > 0) {
+                  out.write(buf, 0, len)
+                  writeBuffer()
+                }
               }
+
+              writeBuffer()
 
               // Complete the entry
               out.closeEntry()
@@ -410,12 +412,15 @@ private class SwaveToExoGraph(swaveObj: Spout[_]) {
     var nRead = 0
     val data = Array.ofDim[Byte](16384)
 
-    while ( {
-      nRead = in.read(data, 0, data.length)
-      nRead != -1
-    }) {
-      buffer.write(data, 0, nRead)
+    def writeBuffer(): Unit = {
+      val len = in.read(data, 0, data.length)
+      if (len > 0) {
+        buffer.write(data, 0, len)
+        writeBuffer()
+      }
     }
+
+    writeBuffer()
 
     buffer.flush()
 
@@ -467,7 +472,9 @@ object SwaveToExoGraph {
     }
   }
 
-  def loadSwaveObj(swaveObj: Spout[_], userJars: Iterable[File], graphTimeOut: Long = 60 * 60 * 1000): ExoGraphWithResults = {
+  def loadSwaveObj(swaveObj: Spout[_],
+                   userJars: Iterable[File],
+                   graphTimeOut: Long = 60 * 60 * 1000): ExoGraphWithResults = {
     new SwaveToExoGraph(swaveObj).loadSwaveObj(userJars, graphTimeOut)
   }
 

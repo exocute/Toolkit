@@ -1,0 +1,11 @@
+Graph Filter_simple
+Import Int
+Export Float
+	Activity A com.classes.IntToString:10
+	Import Int
+	Export String
+	ActivityFilter B com.classes.StringToFloat
+	Import String
+	Export Float
+	
+Connection A -> B

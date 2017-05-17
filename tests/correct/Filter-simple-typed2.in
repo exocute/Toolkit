@@ -1,0 +1,14 @@
+Graph Filter_simple_typed2
+Import Int
+Export Double
+	Activity A com.classes.IntToString:10
+	Import Int
+	Export String
+	ActivityFilter B com.classes.StringToFloat
+	Import String
+	Export Boolean
+	Activity C com.classes.IntToString:10
+	Import String
+	Export Double
+	
+Connection A -> B -> C

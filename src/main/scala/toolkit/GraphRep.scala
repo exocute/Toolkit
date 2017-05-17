@@ -1,8 +1,9 @@
 package toolkit
 
-import exonode.clifton.signals.ActivityFlatMapType
+import exonode.clifton.signals.{ActivityFilterType, ActivityFlatMapType, ActivityMapType}
 import toolkit.exceptions._
 
+import scala.annotation.tailrec
 import scala.language.implicitConversions
 import scala.util.Try
 
@@ -30,13 +31,13 @@ class GraphRep(val name: String, importName: String, exportName: String) extends
   }
 
   /**
-    * key: id of the activity
+    * key: identifier of the activity
     */
-  protected val activities: Map[String, ActivityRep] = Map[String, ActivityRep]()
+  protected val activities: Map[String, ActivityRep] = Map()
 
-  protected val adj: Map[ActivityRep, Vector[ActivityRep]] = Map[ActivityRep, Vector[ActivityRep]]()
+  protected val adj: Map[ActivityRep, Vector[ActivityRep]] = Map()
 
-  protected val adjInverse: Map[ActivityRep, Vector[ActivityRep]] = Map[ActivityRep, Vector[ActivityRep]]()
+  protected val adjInverse: Map[ActivityRep, Vector[ActivityRep]] = Map()
 
   /**
     * Adds a new activity to graph
@@ -90,12 +91,13 @@ class GraphRep(val name: String, importName: String, exportName: String) extends
     */
   def addConnection(activityFrom: ActivityRep, activityTo: ActivityRep): GraphRep = {
     def connectionHasValidTypes(activityFrom: ActivityRep, activityTo: ActivityRep): Boolean = {
-      val from = activityFrom.exportName
+      val Some(from) = getOutputType(activityFrom)
       val to = activityTo.importNames
 
       from.isEmpty || to.isEmpty || {
         if (to.size <= adjInverse(activityTo).size)
-          throw new InvalidConnection(activityFrom.id, activityTo.id, s"${activityTo.id} doesn't have the expected type")
+          throw new InvalidConnection(activityFrom.id, activityTo.id,
+            s"${activityTo.id} doesn't have the expected type")
         val result = from == to(adjInverse(activityTo).size)
         if (!result)
           throw new InvalidConnectionType(activityFrom.id, from,
@@ -162,16 +164,42 @@ class GraphRep(val name: String, importName: String, exportName: String) extends
       None
   }
 
-  /**
-    * Checks if the parameter's value to export it's the same has the export parameter of the Sink
-    */
-  private def validCollector(activity: ActivityRep): Boolean =
-    exportName.isEmpty || activity.exportName.isEmpty || activity.exportName == exportName
+  @tailrec
+  private def getOutputType(activity: ActivityRep): Option[String] = activity.actType match {
+    case ActivityMapType | ActivityFlatMapType => Some(activity.exportName)
+    case ActivityFilterType =>
+      if (activity.importNames.nonEmpty) {
+        if (activity.importNames.size == 1)
+          Some(activity.importNames.head)
+        else
+          None
+      } else {
+        val nextActs = adjInverse(activity)
+        nextActs.size match {
+          case 0 => Some(importName)
+          case 1 => getOutputType(nextActs.head)
+          case _ => None
+        }
+      }
+  }
 
   /**
-    * Checks if the parameter's value to import it's the same has the import parameter of the Root
+    * Checks if the graph export type is the same has the sink activity export type
     */
-  private def validInjector(activities: List[ActivityRep]): Boolean =
+  private def validCollector(activity: ActivityRep): Boolean = {
+    exportName.isEmpty || {
+      getOutputType(activity) match {
+        case None => false
+        case Some(activityOutputType) =>
+          activityOutputType.isEmpty || activityOutputType == exportName
+      }
+    }
+  }
+
+  /**
+    * Checks if the graph import type is the same has the root activity import type
+    */
+  private def validInjectors(activities: List[ActivityRep]): Boolean =
     importName.isEmpty || activities.forall(activity =>
       activity.importNames.isEmpty ||
         activity.importNames.size == 1 && activity.importNames.head == importName)
@@ -191,7 +219,7 @@ class GraphRep(val name: String, importName: String, exportName: String) extends
         throw new GraphHasNoSink
       if (hasCycles)
         throw new GraphHasCycles
-      if (!validInjector(getRoots))
+      if (!validInjectors(getRoots))
         throw new GraphRootHasInvalidTypes
       if (!validCollector(getSink.get))
         throw new GraphSinkHasInvalidTypes
@@ -260,7 +288,6 @@ class GraphRep(val name: String, importName: String, exportName: String) extends
   /**
     * gets the next activities from a single activity
     *
-    * @param activity
     * @return next activities
     */
   def getConnections(activity: ActivityRep): Vector[ActivityRep] = adj(activity)
@@ -268,8 +295,7 @@ class GraphRep(val name: String, importName: String, exportName: String) extends
   /**
     * gets the previous activities from a single activity
     *
-    * @param activity
-    * @return next activities
+    * @return previous activities
     */
   def getReverseConnections(activity: ActivityRep): Vector[ActivityRep] = adjInverse(activity)
 
@@ -339,7 +365,6 @@ class ValidGraphRep private[toolkit](val name: String,
   /**
     * gets the next activities from a single activity
     *
-    * @param activity
     * @return next activities
     */
   def getConnections(activity: ActivityRep): Vector[ActivityRep] = adj(activity)
@@ -347,8 +372,7 @@ class ValidGraphRep private[toolkit](val name: String,
   /**
     * gets the previous activities from a single activity
     *
-    * @param activity
-    * @return next activities
+    * @return previous activities
     */
   def getReverseConnections(activity: ActivityRep): Vector[ActivityRep] = adjInverse(activity)
 
