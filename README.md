@@ -8,7 +8,7 @@ Exocute is designed to make the job of distributing, coordinating and executing 
 If you have a program written in a ‘host’ language and you don’t know Java/Scala, then a better place to start would be the host bindings information, or talking to the team about the specific host requirements. <br />
 We assume only a level of Java skill required to implement your particular application and not any knowledge of distributed Java/Scala programming, or distributed programming in general.<br />
 
-For more information about the Toolkit: http://bit.ly/2mitGuG
+For more information about the Toolkit: https://goo.gl/t98vJW
 
 ## Releases
 
@@ -90,12 +90,12 @@ Notes: <br />
 ###Versions and Programs used 
 
  
-| Software       | Version        | Link /sbt                              |
+| Software       | Version        | Link / sbt                             |
 | ---------------|:--------------:| --------------------------------------:|
 | Scala          | 2.12.1         |                                        |
 | Java           | 1.8            | http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html   |
 | FlyObjectSpace | 2.2.0-SNAPSHOT | https://github.com/fly-object-space/fly-scala   |
-| Parboiled      | 2.1.4          | libraryDependencies += "org.parboiled" %% "parboiled" % "2.1.3"   |
+| Parboiled      | 2.1.4          | https://github.com/sirthias/parboiled2   |
 | ScalaTest      | 3.0.1          | libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test"   |
 | Swave          | 0.7.0          | https://github.com/sirthias/swave
 | ExoNode        | 1.2            | https://github.com/exocute/ExoNode   |
