@@ -32,7 +32,6 @@ object GraphicInterfaceScala {
   private val actRank = new JTable()
   private val errorData = new JTable()
 
-
   //Main Panel of the application
   val mainPanel = new JPanel
   val mainFrame = new JFrame
@@ -115,7 +114,6 @@ object GraphicInterfaceScala {
   mainFrame.setVisible(true)
   mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE)
 
-
   private def createProcessingChart = {
     val dataset = new TimeSeriesCollection(processingData)
     val chart = ChartFactory.createTimeSeriesChart("Processing Inputs", "Time", "Value", dataset, true, true, false)
@@ -143,7 +141,6 @@ object GraphicInterfaceScala {
     chartPanel
   }
 
-
   def createBarChart(title: String, x: String, y: String, data: DefaultCategoryDataset): ChartPanel = {
     val barChart = ChartFactory.createBarChart(title, x, y, data, PlotOrientation.VERTICAL, true, true, false)
     val chartPanel = new ChartPanel(barChart)
@@ -151,11 +148,11 @@ object GraphicInterfaceScala {
     chartPanel
   }
 
-  def addNode(nodeID: String) = {
+  def addNode(nodeID: String): Boolean = {
     nodeIDs.add(nodeID)
   }
 
-  def removeNode(nodeID: String) = {
+  def removeNode(nodeID: String): Boolean = {
     nodeIDs.remove(nodeID)
   }
 
@@ -227,6 +224,5 @@ object GraphicInterfaceScala {
     errorData.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN)
     errorData.getColumnModel.getColumn(0).setMaxWidth(125)
     errorData.getColumnModel.getColumn(0).setMinWidth(125)
-
   }
 }

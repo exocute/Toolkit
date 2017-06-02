@@ -52,8 +52,8 @@ case class ActDB(nodeCount: Int, processedCount: Int, avgTime: Double, sumProces
 
   def decNodeCount = ActDB(nodeCount - 1, processedCount, avgTime, sumProcessed)
 
-  def updateProcessedAndAverage(value: Long) = ActDB(nodeCount, processedCount + 1, (sumProcessed + value) / (processedCount + 1), sumProcessed + value)
-
+  def updateProcessedAndAverage(value: Long) =
+    ActDB(nodeCount, processedCount + 1, (sumProcessed + value) / (processedCount + 1), sumProcessed + value)
 }
 
 case class DataBase(nodesDB: HashMap[String, InfoNode],
@@ -91,7 +91,6 @@ case class DataBase(nodesDB: HashMap[String, InfoNode],
 
 case class Graphics(top5: List[String], actData: List[String]) {
   def setTop(top: List[String], data: List[String]) = Graphics(top, data)
-
 }
 
 class SystemAnalyser(updateTime: Int = 2, logs: LinkedBlockingDeque[LogType]) extends Thread {
@@ -215,16 +214,15 @@ class SystemAnalyser(updateTime: Int = 2, logs: LinkedBlockingDeque[LogType]) ex
       case LogInformationLost(_, _, _, _) =>
         //TODO should be updated on the next version
         data.setCountLev(data.countLevels.incWarn)
-
     }
 
   }
 
-  def getTop5Activities(actDB: HashMap[String, ActDB]): List[(String, Int)] = {
+  private def getTop5Activities(actDB: HashMap[String, ActDB]): List[(String, Int)] = {
     actDB.toList.sortWith(_._2.nodeCount > _._2.nodeCount).take(5).map(x => (x._1, x._2.nodeCount))
   }
 
-  def updateGraphics(database: DataBase, graphics: Graphics) = {
+  private def updateGraphics(database: DataBase, graphics: Graphics): (List[String], List[String]) = {
     //Update Activities Top
     val top5Activities = getTop5Activities(database.actDB)
     val listTop5 = top5Activities.map(x => x._1)
@@ -285,10 +283,9 @@ class SystemAnalyser(updateTime: Int = 2, logs: LinkedBlockingDeque[LogType]) ex
     }
 
     (listTop5, nActRankList)
-
   }
 
-  def startGraphics(graphics: Graphics) = {
+  private def startGraphics(graphics: Graphics): Unit = {
     //Update Level Count
     for (x <- SIGNIFICANT)
       GraphicInterfaceScala.addSignificantEvents(x, 0.0)
@@ -302,7 +299,6 @@ class SystemAnalyser(updateTime: Int = 2, logs: LinkedBlockingDeque[LogType]) ex
 
     //set priorityEventsHeader
     GraphicInterfaceScala.errorHeader(Array("Date", "Message"))
-
   }
 
   def processLevel(logType: LogType, data: DataBase): SignificantCount = logType match {

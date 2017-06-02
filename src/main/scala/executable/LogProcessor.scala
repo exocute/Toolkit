@@ -6,9 +6,9 @@ import java.util.Date
 import java.util.concurrent.LinkedBlockingDeque
 
 import exonode.clifton.config.ProtocolConfig
-import exonode.clifton.signals.Log.{Log, LogType}
 import exonode.clifton.node.SpaceCache
 import exonode.clifton.node.entries.ExoEntry
+import exonode.clifton.signals.Log.LogType
 
 /**
   * Created by #GrowinScala
@@ -17,9 +17,9 @@ import exonode.clifton.node.entries.ExoEntry
   */
 object LogProcessor extends Thread {
 
-  val LogFile: String = "log.cfv"
-
   setDaemon(true)
+
+  private val LogFile: String = "log.cfv"
 
   private val IntervalTime = 1000
   private val MaxLogsCalls = 20
@@ -42,7 +42,8 @@ object LogProcessor extends Thread {
         for (exoEntry <- res) {
           val log = exoEntry.payload
           logs.push(log)
-          file.write(dateFormat.format(date) + ProtocolConfig.LogSeparator + log.logType + ProtocolConfig.LogSeparator + log.message + "\n")
+          file.write(dateFormat.format(date) + ProtocolConfig.LogSeparator + log.logType +
+            ProtocolConfig.LogSeparator + log.message + "\n")
         }
         file.close()
       } else
