@@ -28,14 +28,6 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
 
   private val signalSpace = SpaceCache.getSignalSpace
 
-  private def startGraph(grpFile: String): ExoGraph = {
-    ExocuteConfig.setDefaultHosts()
-    StarterExoGraph.addGraphFile(new File(grpFile), List(jarFile), MaxTimeForEachTest) match {
-      case Success(exoGraph) => exoGraph
-      case Failure(e) => throw e
-    }
-  }
-
   private def startGraphManual(grpText: String): ExoGraph = {
     ExocuteConfig.setDefaultHosts()
     StarterExoGraph.addGraphText(grpText, List(jarFile), MaxTimeForEachTest) match {
@@ -68,6 +60,7 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
 
   before {
     SpaceCache.cleanAllSpaces()
+    config = ProtocolConfig.Default
     println("Space Cleaned")
     Thread.sleep(500)
   }
@@ -219,7 +212,7 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
     Thread.sleep(30 * 1000)
 
     // make some of the nodes crash
-    val nodesToKill = scala.util.Random.shuffle(nodes).take(nNodesToKill)
+    val nodesToKill = Random.shuffle(nodes).take(nNodesToKill)
     killNodes(nodesToKill)
 
     // finally collect the results like there was no crash
@@ -229,7 +222,7 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
 
   }
 
-  "FilterActivity" should "collect the correct results after a few seconds" in {
+  "Filter activity" should "collect the correct results after a few seconds" in {
     val MAX = 20
 
     val exoGraph = startGraphManual(
@@ -258,7 +251,7 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
     }
   }
 
-  "FilterFlatMap" should "collect the correct results after a few seconds" in {
+  "FlatMap activity" should "collect the correct results after a few seconds" in {
     val MAX = 20
 
     val exoGraph = startGraphManual(
@@ -275,16 +268,59 @@ class IntegrationTest extends FlatSpec with BeforeAndAfter {
     val someInput = Stream.continually(Random.nextInt(MAX)).take(amountOfInputs)
 
     //inject input
-    val injIndex = inj.injectMany(someInput.map(_.asInstanceOf[Serializable]))
+    val injIndex = inj.injectMany(someInput.map(_.asInstanceOf[Serializable])).toList
 
     //wait a few seconds
     Thread.sleep(config.NodeCheckTableTime * 3)
 
     injIndex.flatMap(coll.collectAllByIndex) match {
       case list =>
-        val expected = someInput.map(n => n * 2).flatMap(n => 1 to Math.min(n, MAX)).map(_.asInstanceOf[Serializable])
+        val expected = someInput.toList.map(n => n * 2).flatMap(n => 1 to Math.min(n, MAX)).map(_.asInstanceOf[Serializable])
         assert(list == expected)
     }
+  }
+
+  "Multiple node failure (including analyser)" should "recover all data, without any loss, after some time" in {
+    val MAX = 20
+
+    val exoGraph = startGraphManual(
+      """Graph graph
+        |Activity A exocute.classes.DoubleString
+        |Activity B exocute.classes.Reverse:60
+        |Activity C exocute.classes.UpperCase
+        |Connection A->B->C""".stripMargin)
+
+    val inj = exoGraph.injector
+    val coll = exoGraph.collector
+
+    config = new ProtocolConfigDefault {
+      override val BackupTimeoutTime: Long = 60 * 1000
+    }
+    signalSpace.write(ExoEntry[ProtocolConfig](ProtocolConfig.ConfigMarker, config), MaxTimeForEachTest)
+
+    val nInputs = 15
+    val analyser = launchNNodes(1)
+
+    Thread.sleep(ExpectedTimeToConsensus)
+    println("We should have an analyser...")
+    val allNodes = launchNNodes(nInputs)
+
+    val inputs = randomAlphaNumericString(10).take(nInputs).toList
+
+    //inject input
+    val injIndex = inj.injectMany(inputs)
+
+    //wait a few seconds
+    Thread.sleep(40)
+
+    // kill analyser and a few other nodes
+    killNodes(analyser)
+    killNodes(Random.shuffle(allNodes).take(5))
+
+    // finally collect the results like there was no crash
+    val results = coll.collectMany(nInputs, 10 * 60 * 1000)
+    assert(results.size == nInputs)
+    assert(results.map(_.toString).sorted == inputs.map(i => (i + i).reverse.toUpperCase).sorted)
   }
 
 }
