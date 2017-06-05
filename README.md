@@ -8,9 +8,12 @@ Exocute is designed to make the job of distributing, coordinating and executing 
 If you have a program written in a ‘host’ language and you don’t know Java/Scala, then a better place to start would be the host bindings information, or talking to the team about the specific host requirements. <br />
 We assume only a level of Java skill required to implement your particular application and not any knowledge of distributed Java/Scala programming, or distributed programming in general.<br />
 
-For more information about the Toolkit: https://goo.gl/t98vJW
+For more information about the Toolkit: https://goo.gl/z2Afay
 
 ## Releases
+
+05/06/2017 <br />
+--> **Toolkit v1.3** <br />
 
 28/04/2017 <br />
 --> **Toolkit v1.2** <br />
@@ -35,7 +38,7 @@ Options available: <br />
 | `-s`                             | sets signal space                       |
 | `-d  `                           | sets data space                         |
 | `-j `                            | sets jar space                          |
-| `-jarfile file_name[.jar] `       | Sets the jar file containing all classes that will be used in the grp         |
+| `-jarfile file_name[.jar] `      | Sets the jar file containing all classes that will be used in the grp         |
 | `-cleanspaces`                   | cleans all the entries form every space |
 | `--help    `                     | display help and exit                   |
 | `--version`                      | ouput version information and exit      |
@@ -76,7 +79,7 @@ Activity ID {name}:{params}
 [Import {param}]              
 [Export {param}]              
 
-Connection from->to : from->to_1,to_2 
+Connection from -> to : from -> (to_1,to_2) 
 
 Notes: <br />
 1) Connection can be set using the word connection multiple times or separating the connection with ':'<br />
@@ -92,10 +95,10 @@ Notes: <br />
  
 | Software       | Version        | Link / sbt                             |
 | ---------------|:--------------:| --------------------------------------:|
-| Scala          | 2.12.1         |                                        |
+| Scala          | 2.12.2         |                                        |
 | Java           | 1.8            | http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html   |
 | FlyObjectSpace | 2.2.0-SNAPSHOT | https://github.com/fly-object-space/fly-scala   |
 | Parboiled      | 2.1.4          | https://github.com/sirthias/parboiled2   |
 | ScalaTest      | 3.0.1          | libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test"   |
 | Swave          | 0.7.0          | https://github.com/sirthias/swave
-| ExoNode        | 1.2            | https://github.com/exocute/ExoNode   |
+| ExoNode        | 1.3            | https://github.com/exocute/ExoNode   |
